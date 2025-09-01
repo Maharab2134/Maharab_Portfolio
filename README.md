@@ -34,7 +34,7 @@ A modern, responsive portfolio website built with React, Tailwind CSS, and Node.
 
 1. Clone the repository:
    ```bash
-   git clone <https://github.com/Maharab2134/Maharab_Portfolio>
+   git clone https://github.com/Maharab2134/Maharab_Portfolio
    cd portfolio
    ```
 
