@@ -1,4 +1,4 @@
-# Akash's Portfolio Website
+# Portfolio Website
 
 A modern, responsive portfolio website built with React, Tailwind CSS, and Node.js.
 
@@ -34,7 +34,7 @@ A modern, responsive portfolio website built with React, Tailwind CSS, and Node.
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone <https://github.com/Maharab2134/Maharab_Portfolio>
    cd portfolio
    ```
 
