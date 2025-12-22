@@ -262,6 +262,19 @@ const Footer = () => {
                 endless passion
               </motion.span>
             </motion.p>
+
+            {/* Back to Top Button */}
+            <motion.button
+              onClick={scrollToTop}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 ring-1 ring-white/20 hover:ring-white/30"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-white/20 rounded-full">
+                {FaArrowUp({ size: 12 } as IconBaseProps)}
+              </span>
+              Back to top
+            </motion.button>
           </div>
         </motion.div>
       </div>

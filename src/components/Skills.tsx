@@ -123,6 +123,7 @@ const Skills = () => {
         { icon: SiVsco, name: 'VS Code', color: '#007ACC', level: 95 },
         { icon: FaAndroid, name: 'Android Studio', color: '#3DDC84', level: 95 },
         { icon: SiPostman, name: 'Postman', color: '#FF6C37', level: 85 },
+        { icon: SiJira, name: 'Jira', color: '#0052CC', level: 75 },
         { icon: FaFigma, name: 'Figma', color: '#F24E1E', level: 70 },
         { icon: SiArduino, name: 'Arduino', color: '#00979D', level: 65 },
       ]
