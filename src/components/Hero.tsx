@@ -124,7 +124,7 @@ const Hero = () => {
                 boxShadow: "0 0 20px rgba(168, 85, 247, 0.4)"
               }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-8 py-3 text-lg font-medium text-white transition-all duration-300 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
+              className="flex items-center gap-2 px-8 py-3 text-lg font-medium text-white transition-all duration-300 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 ring-1 ring-white/20 hover:ring-white/30 drop-shadow-glow"
             >
               <motion.span 
                 className="inline-block"

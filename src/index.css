@@ -11,7 +11,15 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #0a192f;
+  /* Elegant layered background with subtle gradients and dot grid */
+  background:
+    linear-gradient(180deg, #0a192f 0%, #0f172a 50%, #0a192f 100%),
+    radial-gradient(1000px 600px at 10% 10%, rgba(100,255,218,0.06), transparent 60%),
+    radial-gradient(1000px 600px at 90% 90%, rgba(168,85,247,0.08), transparent 60%),
+    radial-gradient(circle at 25px 25px, rgba(100,255,218,0.05) 2px, transparent 2px),
+    radial-gradient(circle at 75px 75px, rgba(100,255,218,0.03) 1px, transparent 1px);
+  background-size: auto, auto, auto, 100px 100px, 100px 100px;
+  background-position: center, center, center, 0 0, 0 0;
   color: #ccd6f6;
 }
 
