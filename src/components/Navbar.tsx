@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  FaBars, 
-  FaTimes, 
-  FaHome, 
-  FaUser, 
-  FaGraduationCap, 
-  FaCode, 
-  FaProjectDiagram, 
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FaBars,
+  FaChevronDown,
+  FaTimes,
+  FaHome,
+  FaUser,
+  FaGraduationCap,
+  FaCode,
+  FaProjectDiagram,
   FaEnvelope,
-  FaUserCircle 
-} from 'react-icons/fa';
-import { IconBaseProps } from 'react-icons';
+  FaUserCircle,
+  FaStickyNote,
+} from "react-icons/fa";
+import { IconBaseProps } from "react-icons";
 
 interface NavbarProps {
   isMenuOpen: boolean;
@@ -20,14 +22,23 @@ interface NavbarProps {
 
 const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
   const [scrolled, setScrolled] = useState(false);
-  const [activeLink, setActiveLink] = useState('');
+  const [activeLink, setActiveLink] = useState("");
+  const [isMobileEducationOpen, setIsMobileEducationOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
 
-      const sections = ['home', 'about', 'education', 'skills', 'projects', 'contact'];
-      const currentSection = sections.find(section => {
+      const sections = [
+        "home",
+        "about",
+        "education",
+        "certificates",
+        "skills",
+        "projects",
+        "contact",
+      ];
+      const currentSection = sections.find((section) => {
         const element = document.getElementById(section);
         if (element) {
           const rect = element.getBoundingClientRect();
@@ -41,18 +52,27 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const navLinks = [
-    { name: 'Home', href: '#home', icon: FaHome },
-    { name: 'About', href: '#about', icon: FaUser },
-    { name: 'Education', href: '#education', icon: FaGraduationCap },
-    { name: 'Skills', href: '#skills', icon: FaCode },
-    { name: 'Projects', href: '#projects', icon: FaProjectDiagram },
-    { name: 'Contact', href: '#contact', icon: FaEnvelope },
+    { name: "Home", href: "#home", icon: FaHome },
+    { name: "About", href: "#about", icon: FaUser },
+    { name: "Education", href: "#education", icon: FaGraduationCap },
+    { name: "Skills", href: "#skills", icon: FaCode },
+    { name: "Projects", href: "#projects", icon: FaProjectDiagram },
+    { name: "Contact", href: "#contact", icon: FaEnvelope },
   ];
+
+  const isEducationActive =
+    activeLink === "education" || activeLink === "certificates";
+
+  useEffect(() => {
+    if (isMenuOpen && isEducationActive) {
+      setIsMobileEducationOpen(true);
+    }
+  }, [isMenuOpen, isEducationActive]);
 
   return (
     <motion.nav
@@ -60,7 +80,9 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
       animate={{ y: 0 }}
       transition={{ duration: 0.6 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-[#0f172a]/90 backdrop-blur-md shadow-lg' : 'bg-transparent'
+        scrolled
+          ? "bg-[#0f172a]/90 backdrop-blur-md shadow-lg"
+          : "bg-transparent"
       }`}
     >
       <div className="px-6 mx-auto max-w-7xl">
@@ -73,28 +95,28 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
             {/* Animated Person Icon */}
             <motion.div
               className="relative"
-              whileHover={{ 
+              whileHover={{
                 scale: 1.2,
-                rotate: [0, -10, 10, 0]
+                rotate: [0, -10, 10, 0],
               }}
-              transition={{ 
+              transition={{
                 duration: 0.6,
-                rotate: { duration: 0.5 }
+                rotate: { duration: 0.5 },
               }}
             >
               <motion.div
                 className="p-2 border rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm border-purple-500/30"
                 animate={{
                   boxShadow: [
-                    '0 0 0px rgba(168, 85, 247, 0.4)',
-                    '0 0 10px rgba(168, 85, 247, 0.6)',
-                    '0 0 0px rgba(168, 85, 247, 0.4)',
+                    "0 0 0px rgba(168, 85, 247, 0.4)",
+                    "0 0 10px rgba(168, 85, 247, 0.6)",
+                    "0 0 0px rgba(168, 85, 247, 0.4)",
                   ],
                 }}
                 transition={{
                   duration: 2,
                   repeat: Infinity,
-                  repeatType: "reverse"
+                  repeatType: "reverse",
                 }}
               >
                 <motion.div
@@ -105,12 +127,12 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
                   transition={{
                     duration: 3,
                     repeat: Infinity,
-                    repeatType: "reverse"
+                    repeatType: "reverse",
                   }}
                 >
-                  {FaUserCircle({ 
-                    size: 20, 
-                    className: "text-purple-400" 
+                  {FaUserCircle({
+                    size: 20,
+                    className: "text-purple-400",
                   } as IconBaseProps)}
                 </motion.div>
               </motion.div>
@@ -123,18 +145,18 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
                   animate={{
                     scale: [0, 1, 0],
                     opacity: [0, 1, 0],
-                    x: [0, (i-1)*8, 0],
-                    y: [0, (i-1)*8, 0],
+                    x: [0, (i - 1) * 8, 0],
+                    y: [0, (i - 1) * 8, 0],
                   }}
                   transition={{
                     duration: 2,
                     repeat: Infinity,
                     delay: i * 0.3,
-                    ease: "easeInOut"
+                    ease: "easeInOut",
                   }}
                   style={{
-                    left: '50%',
-                    top: '50%',
+                    left: "50%",
+                    top: "50%",
                   }}
                 />
               ))}
@@ -150,20 +172,20 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
               <motion.span
                 className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500"
                 animate={{
-                  backgroundPosition: ['0%', '100%', '0%']
+                  backgroundPosition: ["0%", "100%", "0%"],
                 }}
                 transition={{
                   duration: 3,
                   repeat: Infinity,
-                  repeatType: "reverse"
+                  repeatType: "reverse",
                 }}
                 style={{
-                  backgroundSize: '200% 100%'
+                  backgroundSize: "200% 100%",
                 }}
               >
                 MH
               </motion.span>
-              
+
               {/* Pulsing dot */}
               <motion.div
                 className="w-1 h-1 bg-green-400 rounded-full"
@@ -174,7 +196,7 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
                 transition={{
                   duration: 2,
                   repeat: Infinity,
-                  repeatType: "reverse"
+                  repeatType: "reverse",
                 }}
               />
             </motion.a>
@@ -184,7 +206,75 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
           <div className="items-center hidden space-x-8 md:flex">
             {navLinks.map((link, index) => {
               const IconComponent = link.icon;
-              const isActive = activeLink === link.href.substring(1);
+              const isActive =
+                link.name === "Education"
+                  ? isEducationActive
+                  : activeLink === link.href.substring(1);
+
+              if (link.name === "Education") {
+                return (
+                  <motion.div
+                    key={link.name}
+                    className="relative group"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <motion.a
+                      href={link.href}
+                      className={`flex items-center gap-2 relative ${
+                        isActive
+                          ? "text-white"
+                          : "text-gray-300 hover:text-white"
+                      }`}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <motion.span
+                        className="relative"
+                        whileHover={{ rotate: 360 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        {IconComponent({ size: 16 } as IconBaseProps)}
+                        {isActive && (
+                          <motion.span
+                            className="absolute w-2 h-2 rounded-full -top-1 -right-1 bg-gradient-to-r from-purple-400 to-pink-500"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        )}
+                      </motion.span>
+                      <span>{link.name}</span>
+                      {FaChevronDown({ size: 10 } as IconBaseProps)}
+
+                      <motion.span
+                        className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 transition-all duration-300 ${
+                          isActive ? "w-full" : "w-0 group-hover:w-full"
+                        }`}
+                        initial={{ width: 0 }}
+                        whileHover={{ width: "100%" }}
+                      />
+                    </motion.a>
+
+                    <div className="absolute left-0 z-20 pt-3 transition-all duration-200 opacity-0 pointer-events-none top-full group-hover:opacity-100 group-hover:pointer-events-auto">
+                      <a
+                        href="#certificates"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md whitespace-nowrap border border-white/10 backdrop-blur-sm ${
+                          activeLink === "certificates"
+                            ? "bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white"
+                            : "bg-[#0f172a]/95 text-gray-300 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        {FaStickyNote({ size: 14 } as IconBaseProps)}
+                        <span className="text-sm font-medium">
+                          Certificates
+                        </span>
+                      </a>
+                    </div>
+                  </motion.div>
+                );
+              }
 
               return (
                 <motion.a
@@ -216,9 +306,9 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
                   </motion.span>
                   <span>{link.name}</span>
 
-                  <motion.span 
+                  <motion.span
                     className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 transition-all duration-300 ${
-                      isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                      isActive ? "w-full" : "w-0 group-hover:w-full"
                     }`}
                     initial={{ width: 0 }}
                     whileHover={{ width: "100%" }}
@@ -236,7 +326,9 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
             >
-              {isMenuOpen ? FaTimes({ size: 20 } as IconBaseProps) : FaBars({ size: 20 } as IconBaseProps)}
+              {isMenuOpen
+                ? FaTimes({ size: 20 } as IconBaseProps)
+                : FaBars({ size: 20 } as IconBaseProps)}
             </motion.button>
           </div>
         </div>
@@ -248,21 +340,103 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="md:hidden bg-[#0f172a]/95 backdrop-blur-md border-t border-white/10"
+          className="md:hidden bg-[#0f172a]/95 backdrop-blur-md border-t border-white/10 max-h-[calc(100vh-4rem)] overflow-y-auto"
         >
           <div className="px-4 pt-4 pb-3 space-y-2">
             {navLinks.map((link, index) => {
               const IconComponent = link.icon;
-              const isActive = activeLink === link.href.substring(1);
+              const isActive =
+                link.name === "Education"
+                  ? isEducationActive
+                  : activeLink === link.href.substring(1);
+
+              if (link.name === "Education") {
+                return (
+                  <div key={link.name}>
+                    <motion.button
+                      type="button"
+                      className={`flex items-center gap-3 px-3 py-3 rounded-md transition-all duration-300 relative group ${
+                        isActive
+                          ? "text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20"
+                          : "text-gray-300 hover:text-white hover:bg-white/5"
+                      }`}
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setIsMobileEducationOpen((prev) => !prev)}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <motion.span
+                        className={`p-2 rounded-lg ${
+                          isActive
+                            ? "bg-gradient-to-r from-purple-400 to-pink-500 text-white"
+                            : "bg-white/5 text-gray-300 group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-500 group-hover:text-white"
+                        }`}
+                        whileHover={{ rotate: 360, scale: 1.1 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        {IconComponent({ size: 16 } as IconBaseProps)}
+                      </motion.span>
+
+                      <span className="font-medium">{link.name}</span>
+
+                      <motion.span
+                        animate={{ rotate: isMobileEducationOpen ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="ml-auto"
+                      >
+                        {FaChevronDown({ size: 10 } as IconBaseProps)}
+                      </motion.span>
+                    </motion.button>
+
+                    {isMobileEducationOpen && (
+                      <div className="mt-1 ml-12 space-y-1">
+                        <motion.a
+                          href="#education"
+                          className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-300 ${
+                            activeLink === "education"
+                              ? "text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20"
+                              : "text-gray-400 hover:text-white hover:bg-white/5"
+                          }`}
+                          whileHover={{ scale: 1.02, x: 5 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {FaGraduationCap({ size: 14 } as IconBaseProps)}
+                          <span className="text-sm font-medium">Education</span>
+                        </motion.a>
+
+                        <motion.a
+                          href="#certificates"
+                          className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-300 ${
+                            activeLink === "certificates"
+                              ? "text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20"
+                              : "text-gray-400 hover:text-white hover:bg-white/5"
+                          }`}
+                          whileHover={{ scale: 1.02, x: 5 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {FaStickyNote({ size: 14 } as IconBaseProps)}
+                          <span className="text-sm font-medium">
+                            Certificates
+                          </span>
+                        </motion.a>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
 
               return (
                 <motion.a
                   key={link.name}
                   href={link.href}
                   className={`flex items-center gap-3 px-3 py-3 rounded-md transition-all duration-300 relative group ${
-                    isActive 
-                      ? 'text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20' 
-                      : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    isActive
+                      ? "text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20"
+                      : "text-gray-300 hover:text-white hover:bg-white/5"
                   }`}
                   whileHover={{ scale: 1.02, x: 5 }}
                   whileTap={{ scale: 0.98 }}
@@ -273,9 +447,9 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
                 >
                   <motion.span
                     className={`p-2 rounded-lg ${
-                      isActive 
-                        ? 'bg-gradient-to-r from-purple-400 to-pink-500 text-white' 
-                        : 'bg-white/5 text-gray-300 group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-500 group-hover:text-white'
+                      isActive
+                        ? "bg-gradient-to-r from-purple-400 to-pink-500 text-white"
+                        : "bg-white/5 text-gray-300 group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-500 group-hover:text-white"
                     }`}
                     whileHover={{ rotate: 360, scale: 1.1 }}
                     transition={{ duration: 0.5 }}

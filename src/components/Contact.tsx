@@ -15,7 +15,7 @@ const Contact = () => {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -154,7 +154,10 @@ const Contact = () => {
               className="w-full max-w-md p-6 mx-auto space-y-4 border rounded-lg bg-tertiary/50 backdrop-blur-sm border-secondary/20"
             >
               <div>
-                <label htmlFor="name" className="block mb-1 text-sm font-medium text-white">
+                <label
+                  htmlFor="name"
+                  className="block mb-1 text-sm font-medium text-white"
+                >
                   Name
                 </label>
                 <input
@@ -169,7 +172,10 @@ const Contact = () => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block mb-1 text-sm font-medium text-white">
+                <label
+                  htmlFor="email"
+                  className="block mb-1 text-sm font-medium text-white"
+                >
                   Email
                 </label>
                 <input
@@ -184,7 +190,10 @@ const Contact = () => {
               </div>
 
               <div>
-                <label htmlFor="message" className="block mb-1 text-sm font-medium text-white">
+                <label
+                  htmlFor="message"
+                  className="block mb-1 text-sm font-medium text-white"
+                >
                   Message
                 </label>
                 <textarea
@@ -200,7 +209,7 @@ const Contact = () => {
 
               <motion.button
                 type="submit"
-                className="w-full px-4 py-2 font-semibold text-white transition-colors rounded-md bg-secondary/30 hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:ring-offset-2 focus:ring-offset-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 font-semibold transition-colors rounded-md text-primary bg-secondary/80 hover:bg-secondary hover:text-primary focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:ring-offset-2 focus:ring-offset-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -212,7 +221,9 @@ const Contact = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={`mt-4 text-center text-sm ${
-                    status.type === "success" ? "text-green-500" : "text-red-500"
+                    status.type === "success"
+                      ? "text-green-500"
+                      : "text-red-500"
                   }`}
                 >
                   {status.message}
