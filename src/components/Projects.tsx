@@ -49,7 +49,7 @@ interface Project {
   description: string;
   technologies: string[];
   image: string;
-  link: string;
+  link?: string;
   github?: string;
   sourceCodePrivate?: boolean;
   featured?: boolean;
@@ -65,6 +65,8 @@ interface ProjectCardProps {
 const ProjectCard = ({ project, index, onProjectClick }: ProjectCardProps) => {
   const [imgSrc, setImgSrc] = useState(() => toProxyImageUrl(project.image));
   const isSourceCodePrivate = project.sourceCodePrivate === true;
+  const hasGithubLink = Boolean(project.github?.trim());
+  const hasLiveLink = Boolean(project.link?.trim());
 
   useEffect(() => {
     setImgSrc(toProxyImageUrl(project.image));
@@ -143,7 +145,7 @@ const ProjectCard = ({ project, index, onProjectClick }: ProjectCardProps) => {
         )}
       </div>
       <div className="flex items-center justify-between gap-3 pt-1">
-        {!isSourceCodePrivate && project.github ? (
+        {!isSourceCodePrivate && hasGithubLink && (
           <motion.a
             href={project.github}
             target="_blank"
@@ -164,7 +166,9 @@ const ProjectCard = ({ project, index, onProjectClick }: ProjectCardProps) => {
             </motion.span>
             Source Code
           </motion.a>
-        ) : (
+        )}
+
+        {isSourceCodePrivate && (
           <div className="inline-flex items-center text-sm text-amber-300/90">
             <span className="mr-1.5">
               {renderIcon(FaLock as React.ComponentType<IconBaseProps>, {
@@ -175,25 +179,27 @@ const ProjectCard = ({ project, index, onProjectClick }: ProjectCardProps) => {
           </div>
         )}
 
-        <motion.a
-          href={project.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center text-sm transition-colors text-cyan-300 hover:text-cyan-200"
-          whileHover={{ x: -3 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          View Live
-          <span className="ml-1.5">
-            {renderIcon(
-              FaExternalLinkAlt as React.ComponentType<IconBaseProps>,
-              {
-                size: 12,
-              },
-            )}
-          </span>
-        </motion.a>
+        {hasLiveLink && (
+          <motion.a
+            href={project.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-sm transition-colors text-cyan-300 hover:text-cyan-200"
+            whileHover={{ x: -3 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            View Live
+            <span className="ml-1.5">
+              {renderIcon(
+                FaExternalLinkAlt as React.ComponentType<IconBaseProps>,
+                {
+                  size: 12,
+                },
+              )}
+            </span>
+          </motion.a>
+        )}
       </div>
     </motion.div>
   );
@@ -210,6 +216,8 @@ const ProjectModal = ({
 }) => {
   if (!project || !isOpen) return null;
   const isSourceCodePrivate = project.sourceCodePrivate === true;
+  const hasGithubLink = Boolean(project.github?.trim());
+  const hasLiveLink = Boolean(project.link?.trim());
 
   return (
     <AnimatePresence>
@@ -308,7 +316,7 @@ const ProjectModal = ({
 
               {/* Links */}
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                {!isSourceCodePrivate && project.github && (
+                {!isSourceCodePrivate && hasGithubLink && (
                   <motion.a
                     href={project.github}
                     target="_blank"
@@ -334,20 +342,22 @@ const ProjectModal = ({
                   </div>
                 )}
 
-                <motion.a
-                  href={project.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center w-full gap-2 px-6 py-3 font-medium text-white transition-colors bg-purple-500 rounded-lg sm:w-auto hover:bg-purple-600"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {renderIcon(
-                    FaExternalLinkAlt as React.ComponentType<IconBaseProps>,
-                    { size: 16 },
-                  )}
-                  View Live
-                </motion.a>
+                {hasLiveLink && (
+                  <motion.a
+                    href={project.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center w-full gap-2 px-6 py-3 font-medium text-white transition-colors bg-purple-500 rounded-lg sm:w-auto hover:bg-purple-600"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {renderIcon(
+                      FaExternalLinkAlt as React.ComponentType<IconBaseProps>,
+                      { size: 16 },
+                    )}
+                    View Live
+                  </motion.a>
+                )}
               </div>
             </div>
           </motion.div>
@@ -726,6 +736,7 @@ const Projects = () => {
       link: "https://image-classifier.com",
       github: "https://github.com/Maharab2134/image-classifier",
       featured: true,
+      sourceCodePrivate: true,
     },
     {
       title: "Sentiment Analysis Tool",
@@ -746,6 +757,7 @@ const Projects = () => {
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1rpRFs4UedKCCcHdYL_v0wGPfdOZ0qg9E",
       link: "https://sentiment-analyzer.com",
       github: "https://github.com/Maharab2134/sentiment-analyzer",
+      sourceCodePrivate: true,
     },
     {
       title: "Recommendation System",
@@ -765,6 +777,7 @@ const Projects = () => {
       image: "/images/recommender.jpg",
       link: "https://recommender.com",
       github: "https://github.com/Maharab2134/recommender",
+      sourceCodePrivate: true,
     },
     {
       title: "Time Series Forecasting",
@@ -781,9 +794,11 @@ const Projects = () => {
         "LSTM",
         "Statsmodels",
       ],
-      image: "/images/forecasting.jpg",
+      image:
+        "https://drive.google.com/file/d/1uL9IaOAvIIUeMriPFY9gB5dZDh3KImrE/view?usp=drive_link",
       link: "https://forecasting.com",
       github: "https://github.com/Maharab2134/forecasting",
+      sourceCodePrivate: true,
     },
   ];
 
@@ -803,10 +818,12 @@ const Projects = () => {
         "Firebase",
         "Python",
       ],
-      image: "/images/smart-home.jpg",
+      image:
+        "https://drive.google.com/file/d/1-n_olWQeEIS10Ng2-xCdVTGiBdmbwOJA/view?usp=drive_link",
       link: "https://smart-home-demo.com",
       github: "https://github.com/Maharab2134/smart-home-iot",
       featured: true,
+      sourceCodePrivate: true,
     },
     {
       title: "Agricultural Monitoring System",
@@ -823,7 +840,8 @@ const Projects = () => {
         "MongoDB",
         "Django",
       ],
-      image: "/images/agriculture-iot.jpg",
+      image:
+        "https://drive.google.com/file/d/1bTt2507LWcYpotpPHVEwLg5zu4G8s2-z/view?usp=drive_link",
       link: "https://agri-monitoring.com",
       github: "https://github.com/Maharab2134/agriculture-iot",
     },
