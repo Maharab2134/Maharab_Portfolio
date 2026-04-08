@@ -1,12 +1,21 @@
-import { motion } from 'framer-motion';
-import { FaGithub, FaLinkedin, FaTwitter, FaHeart, FaEnvelope, FaPhone, FaMapMarkerAlt, FaArrowUp } from 'react-icons/fa';
-import { IconBaseProps } from 'react-icons';
+import { motion } from "framer-motion";
+import {
+  FaGithub,
+  FaLinkedin,
+  FaTwitter,
+  FaHeart,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaArrowUp,
+} from "react-icons/fa";
+import { IconBaseProps } from "react-icons";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const socialLinks = [
@@ -15,28 +24,35 @@ const Footer = () => {
       href: "https://github.com/Maharab2134",
       color: "hover:text-gray-300",
       bgColor: "hover:bg-gray-700",
-      name: "GitHub"
+      name: "GitHub",
     },
     {
       icon: FaLinkedin,
       href: "https://www.linkedin.com/in/md-maharab-hosen-679a70253/",
       color: "hover:text-blue-400",
       bgColor: "hover:bg-blue-500/20",
-      name: "LinkedIn"
+      name: "LinkedIn",
     },
     {
       icon: FaTwitter,
       href: "https://twitter.com/yourusername",
       color: "hover:text-blue-300",
       bgColor: "hover:bg-blue-400/20",
-      name: "Twitter"
-    }
+      name: "Twitter",
+    },
   ];
 
-  const quickLinks = ['Home', 'About', 'Education', 'Skills', 'Projects', 'Contact'];
+  const quickLinks = [
+    "Home",
+    "About",
+    "Education",
+    "Skills",
+    "Projects",
+    "Contact",
+  ];
 
   return (
-    <footer className="relative py-16 bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#0f172a] overflow-hidden">
+    <footer className="relative py-12 overflow-hidden bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#0f172a] sm:py-16">
       {/* Background Elements */}
       <div className="absolute inset-0">
         {/* Animated Gradient Orbs */}
@@ -49,7 +65,7 @@ const Footer = () => {
           transition={{
             duration: 8,
             repeat: Infinity,
-            repeatType: "reverse"
+            repeatType: "reverse",
           }}
         />
         <motion.div
@@ -61,10 +77,10 @@ const Footer = () => {
           transition={{
             duration: 6,
             repeat: Infinity,
-            repeatType: "reverse"
+            repeatType: "reverse",
           }}
         />
-        
+
         {/* Grid Pattern */}
         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:50px_50px]" />
       </div>
@@ -86,14 +102,17 @@ const Footer = () => {
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500">
                 <span className="text-lg font-bold text-white">MH</span>
               </div>
-              <h3 className="text-2xl font-bold text-white">Md. Maharab Hosen</h3>
+              <h3 className="text-xl font-bold text-white break-words sm:text-2xl">
+                Md. Maharab Hosen
+              </h3>
             </motion.div>
-            
-            <p className="leading-relaxed text-gray-300">
-              Passionate full-stack developer crafting digital experiences with cutting-edge technologies. 
-              Turning ideas into reality through code and creativity.
+
+            <p className="text-sm leading-relaxed text-gray-300 sm:text-base">
+              Passionate full-stack developer crafting digital experiences with
+              cutting-edge technologies. Turning ideas into reality through code
+              and creativity.
             </p>
-            
+
             {/* Social Links */}
             <div className="flex space-x-4">
               {socialLinks.map((social, index) => (
@@ -103,10 +122,10 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 transition-all duration-300 ${social.color} ${social.bgColor}`}
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     y: -5,
-                    rotate: [0, -5, 5, 0]
+                    rotate: [0, -5, 5, 0],
                   }}
                   whileTap={{ scale: 0.9 }}
                   initial={{ opacity: 0, y: 20 }}
@@ -175,20 +194,20 @@ const Footer = () => {
                   icon: FaEnvelope,
                   content: "maharab442@gmail.com",
                   href: "mailto:maharab442@gmail.com",
-                  color: "from-purple-400 to-pink-400"
+                  color: "from-purple-400 to-pink-400",
                 },
                 {
                   icon: FaPhone,
                   content: "+880 15862 82609",
                   href: "tel:+8801586282609",
-                  color: "from-green-400 to-blue-400"
+                  color: "from-green-400 to-blue-400",
                 },
                 {
                   icon: FaMapMarkerAlt,
                   content: "Rupnagar R/A Mirpur - 02, Dhaka, Bangladesh",
                   href: "#",
-                  color: "from-orange-400 to-red-400"
-                }
+                  color: "from-orange-400 to-red-400",
+                },
               ].map((contact, index) => (
                 <motion.li
                   key={index}
@@ -203,11 +222,14 @@ const Footer = () => {
                     whileHover={{ scale: 1.1, rotate: 360 }}
                     transition={{ duration: 0.5 }}
                   >
-                    {contact.icon({ size: 16, className: "text-white" } as IconBaseProps)}
+                    {contact.icon({
+                      size: 16,
+                      className: "text-white",
+                    } as IconBaseProps)}
                   </motion.div>
                   <a
                     href={contact.href}
-                    className="text-gray-300 transition-all duration-300 group-hover:text-white group-hover:translate-x-2"
+                    className="text-sm text-gray-300 break-words transition-all duration-300 group-hover:text-white group-hover:translate-x-2"
                   >
                     {contact.content}
                   </a>
@@ -226,37 +248,34 @@ const Footer = () => {
           className="pt-12 mt-12 text-center border-t border-white/10"
         >
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <motion.p
-              className="text-gray-400"
-              whileHover={{ scale: 1.05 }}
-            >
-              © {currentYear} Md. Maharab Hosen. Crafted with{' '}
+            <motion.p className="text-gray-400" whileHover={{ scale: 1.05 }}>
+              © {currentYear} Md. Maharab Hosen. Crafted with{" "}
               <motion.span
                 className="inline-block text-red-500"
-                animate={{ 
+                animate={{
                   scale: [1, 1.3, 1],
-                  rotate: [0, 10, -10, 0]
+                  rotate: [0, 10, -10, 0],
                 }}
-                transition={{ 
-                  duration: 2, 
+                transition={{
+                  duration: 2,
                   repeat: Infinity,
-                  repeatType: "reverse"
+                  repeatType: "reverse",
                 }}
               >
                 {FaHeart({ size: 16 } as IconBaseProps)}
-              </motion.span>{' '}
-              and{' '}
+              </motion.span>{" "}
+              and{" "}
               <motion.span
                 className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500"
-                animate={{ 
-                  backgroundPosition: ['0%', '100%', '0%'] 
+                animate={{
+                  backgroundPosition: ["0%", "100%", "0%"],
                 }}
-                transition={{ 
-                  duration: 3, 
-                  repeat: Infinity 
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
                 }}
-                style={{ 
-                  backgroundSize: '200% 100%' 
+                style={{
+                  backgroundSize: "200% 100%",
                 }}
               >
                 endless passion
@@ -270,7 +289,7 @@ const Footer = () => {
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
-              <span className="inline-flex items-center justify-center w-5 h-5 bg-white/20 rounded-full">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20">
                 {FaArrowUp({ size: 12 } as IconBaseProps)}
               </span>
               Back to top

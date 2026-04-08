@@ -75,7 +75,7 @@ const Contact = () => {
               <h3 className="mb-6 text-2xl font-semibold text-textPrimary">
                 Let's Connect
               </h3>
-              <p className="text-lg text-textSecondary">
+              <p className="text-base text-textSecondary sm:text-lg">
                 I'm currently looking for new opportunities. Whether you have a
                 question or just want to say hi, I'll try my best to get back to
                 you!
@@ -97,7 +97,7 @@ const Contact = () => {
                 </motion.div>
                 <a
                   href="mailto:maharab442@gmail.com"
-                  className="transition-colors duration-300 text-textSecondary hover:text-secondary"
+                  className="text-sm transition-colors duration-300 break-all text-textSecondary hover:text-secondary sm:text-base"
                 >
                   maharab442@gmail.com
                 </a>
@@ -117,7 +117,7 @@ const Contact = () => {
                 </motion.div>
                 <a
                   href="tel:+8801586282609"
-                  className="transition-colors duration-300 text-textSecondary hover:text-secondary"
+                  className="text-sm transition-colors duration-300 text-textSecondary hover:text-secondary sm:text-base"
                 >
                   +880 15862 82609
                 </a>
@@ -135,7 +135,7 @@ const Contact = () => {
                 >
                   {FaMapMarkerAlt({ size: 24 })}
                 </motion.div>
-                <span className="text-textSecondary">
+                <span className="text-sm break-words text-textSecondary sm:text-base">
                   Rupnagar R/A, Road - 08, Mirpur - 02, Dhaka - 1216
                 </span>
               </motion.div>

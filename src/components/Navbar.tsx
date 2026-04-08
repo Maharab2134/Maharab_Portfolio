@@ -85,7 +85,7 @@ const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
           : "bg-transparent"
       }`}
     >
-      <div className="px-6 mx-auto max-w-7xl">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6">
         <div className="flex items-center justify-between w-full h-16">
           {/* Left: Brand with Person Icon */}
           <motion.div
