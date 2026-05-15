@@ -114,7 +114,7 @@ const Hero = () => {
               {FaLinkedin({ size: 28 })}
             </motion.a>
             <motion.a
-              href="https://twitter.com/yourusername"
+              href="https://x.com/Mahar22234"
               target="_blank"
               rel="noopener noreferrer"
               className="transition-all duration-300 text-white/80 hover:text-white"

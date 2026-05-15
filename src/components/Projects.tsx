@@ -713,6 +713,52 @@ const Projects = () => {
       link: "https://real-estate.com",
       github: "https://github.com/Maharab2134/real-estate",
     },
+
+    {
+      title: "Midtown Aabashon Ltd – Corporate Website",
+      description:
+        "Modern real estate corporate website with responsive design and structured property showcase.",
+      longDescription:
+        "A fully responsive corporate website developed for Midtown Aabashon Ltd to establish a strong online presence. The platform presents company information, property listings, and contact features through a clean and structured UI. Built with performance optimization and SEO-friendly architecture in mind, the website ensures fast loading speed, cross-device compatibility, and enhanced user engagement.",
+      technologies: [
+        "React",
+        "HTML5",
+        "CSS3",
+        "Tailwind CSS",
+        "Node.js",
+        "Responsive Design",
+        "SEO Optimization",
+      ],
+      image:
+        "https://drive.google.com/file/d/1XR0TijAWiGsUX67Y0zCBNyJwTnZiojP4/view?usp=drive_link",
+      link: "https://midtownaabashonltd.com/",
+      github: "https://github.com/Maharab2134/land-project-umar",
+      sourceCodePrivate: true,
+    },
+    {
+      title: "AuthNova – Full-Stack Authentication Platform",
+      description:
+        "Production-grade authentication system with JWT, 2FA, and advanced security protections.",
+      longDescription:
+        "AuthNova is a full-stack authentication platform built with React, Node.js, Express, and MongoDB. It implements secure JWT-based access and refresh token flow, password hashing with bcrypt, two-factor authentication, account lockout, login history tracking, suspicious login alerts, and advanced security protections including rate limiting, CSRF protection, and Helmet hardening. The backend follows an MVC architecture, while the frontend is structured with reusable UI components to ensure scalability, maintainability, and a modern user experience.",
+      technologies: [
+        "React",
+        "Tailwind CSS",
+        "Node.js",
+        "Express.js",
+        "MongoDB",
+        "Mongoose",
+        "JWT",
+        "REST API",
+        "MVC Architecture",
+        "Security Best Practices",
+      ],
+      image:
+        "https://drive.google.com/file/d/1OSRuklnOpq9D5LDy8SWsJwjEqc_gz_Uw/view?usp=drive_link",
+      link: "",
+      github: "https://github.com/Maharab2134/secur-auth-system",
+      sourceCodePrivate: true,
+    },
   ];
 
   const mlProjects: Project[] = [
