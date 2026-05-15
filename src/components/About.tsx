@@ -200,7 +200,7 @@ const About = () => {
               className="pt-4"
             >
               <motion.a
-                href="/PDF/Maharab_2.pdf"
+                href="/PDF/Maharab_Hosen.pdf"
                 download
                 className="inline-flex items-center px-6 py-3 text-white transition-all duration-300 border-2 rounded-full border-secondary hover:bg-secondary/10"
                 whileHover={{ scale: 1.05 }}
