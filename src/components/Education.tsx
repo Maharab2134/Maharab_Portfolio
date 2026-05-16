@@ -18,7 +18,7 @@ const Education = () => {
     {
       degree: "Higher Secondary Certificate (HSC)",
       institution: "Bangla Bazar Fatema Khanam Degree College",
-      year: "2019 - 2020",
+      year: "2019 - 2021",
       description: "Completed with excellent results in Science group.",
       achievements: ["Active member of Science Club"],
     },
