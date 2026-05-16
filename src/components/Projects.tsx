@@ -49,6 +49,7 @@ interface Project {
   description: string;
   technologies: string[];
   image: string;
+  projectNumber?: number;
   link?: string;
   github?: string;
   sourceCodePrivate?: boolean;
@@ -59,7 +60,7 @@ interface Project {
 interface ProjectCardProps {
   project: Project;
   index: number;
-  onProjectClick: (project: Project) => void;
+  onProjectClick: (project: Project, projectNumber: number) => void;
 }
 
 const ProjectCard = ({ project, index, onProjectClick }: ProjectCardProps) => {
@@ -78,7 +79,7 @@ const ProjectCard = ({ project, index, onProjectClick }: ProjectCardProps) => {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
       whileHover={{ y: -5 }}
-      onClick={() => onProjectClick(project)}
+      onClick={() => onProjectClick(project, index + 1)}
       className={`bg-white/5 rounded-xl backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300 p-4 cursor-pointer group ${
         project.featured ? "ring-2 ring-purple-500/50" : ""
       } hover:shadow-lg hover:shadow-purple-500/10`}
@@ -374,7 +375,7 @@ const ProjectGrid = ({
 }: {
   projects: Project[];
   showAll: boolean;
-  onProjectClick: (project: Project) => void;
+  onProjectClick: (project: Project, projectNumber: number) => void;
 }) => (
   <AnimatePresence mode="wait">
     <motion.div
@@ -405,7 +406,6 @@ const Projects = () => {
   const [showAllWeb, setShowAllWeb] = useState(false);
   const [showAllML, setShowAllML] = useState(false);
   const [showAllIoT, setShowAllIoT] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const appProjects: Project[] = [
     {
@@ -447,7 +447,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1uTZCWKh6PftTikrXZOde-l4spvCPWBEM",
-      link: "https://BachLife-app.co",
+      link: "",
       github: "https://github.com/Maharab2134/BachLife-app",
     },
     {
@@ -467,7 +467,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1Kq8wcbRws98TnO3lqmRSNYx04NlR1oXk",
-      link: "https://social-app.com",
+      link: "",
       github: "https://github.com/Maharab2134/Social_Media_App",
     },
     {
@@ -487,7 +487,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1ayPzSd5py__Qx1tssMfoCvckFkKrEBOZ",
-      link: "https://food-delivery.com",
+      link: "",
       github: "https://github.com/Maharab2134/food-delivery",
     },
     {
@@ -505,7 +505,7 @@ const Projects = () => {
         "SharedPreferences",
       ],
       image: "/images/",
-      link: "https://food-delivery.com",
+      link: "",
       github: "https://github.com/Maharab2134/food-delivery",
     },
   ];
@@ -590,7 +590,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=12D1PINGBSmaXEH2bOdVD7zQ-ayGvtJao",
-      link: "https://task-manager.com",
+      link: "",
       github: "https://github.com/Maharab2134/task-manager",
     },
     {
@@ -610,7 +610,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1H6jas_QgY48qzTZS_K_ANrxz8Chb5L_E",
-      link: "https://elearning.com",
+      link: "",
       github: "https://github.com/Maharab2134/elearning",
     },
     {
@@ -630,7 +630,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1hrg0W_SWuACCeCDxzxp2N4zSO6HzJsvr",
-      link: "https://elearning.com",
+      link: "",
       github: "https://github.com/Maharab2134/deshiShop",
     },
     {
@@ -670,7 +670,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1oGgvwPBWbmULSUlN6DFac668_CuyVD-i",
-      link: "https://foodshare.com",
+      link: "",
       github: "https://github.com/Maharab2134/FoodShare_Web",
     },
     {
@@ -690,7 +690,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1Mue_kK8G70L_hojQijfp5jVlX8yJYHV-",
-      link: "https://pathpilot.com",
+      link: "",
       github: "https://github.com/Maharab2134/PathPilot",
     },
     {
@@ -710,7 +710,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1nV3zKlPlP0YJFf_KYOaiOAuugrd0Zrhy",
-      link: "https://real-estate.com",
+      link: "",
       github: "https://github.com/Maharab2134/real-estate",
     },
 
@@ -779,7 +779,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1u94a_6dY2HjrRldtcVg2YaHaaifNI42t",
-      link: "https://image-classifier.com",
+      link: "",
       github: "https://github.com/Maharab2134/image-classifier",
       featured: true,
       sourceCodePrivate: true,
@@ -801,7 +801,7 @@ const Projects = () => {
       ],
       image:
         "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1rpRFs4UedKCCcHdYL_v0wGPfdOZ0qg9E",
-      link: "https://sentiment-analyzer.com",
+      link: "",
       github: "https://github.com/Maharab2134/sentiment-analyzer",
       sourceCodePrivate: true,
     },
@@ -821,7 +821,7 @@ const Projects = () => {
         "Matplotlib",
       ],
       image: "/images/recommender.jpg",
-      link: "https://recommender.com",
+      link: "",
       github: "https://github.com/Maharab2134/recommender",
       sourceCodePrivate: true,
     },
@@ -842,7 +842,7 @@ const Projects = () => {
       ],
       image:
         "https://drive.google.com/file/d/1uL9IaOAvIIUeMriPFY9gB5dZDh3KImrE/view?usp=drive_link",
-      link: "https://forecasting.com",
+      link: "",
       github: "https://github.com/Maharab2134/forecasting",
       sourceCodePrivate: true,
     },
@@ -866,7 +866,7 @@ const Projects = () => {
       ],
       image:
         "https://drive.google.com/file/d/1-n_olWQeEIS10Ng2-xCdVTGiBdmbwOJA/view?usp=drive_link",
-      link: "https://smart-home-demo.com",
+      link: "",
       github: "https://github.com/Maharab2134/smart-home-iot",
       featured: true,
       sourceCodePrivate: true,
@@ -888,7 +888,7 @@ const Projects = () => {
       ],
       image:
         "https://drive.google.com/file/d/1bTt2507LWcYpotpPHVEwLg5zu4G8s2-z/view?usp=drive_link",
-      link: "https://agri-monitoring.com",
+      link: "",
       github: "https://github.com/Maharab2134/agriculture-iot",
     },
     {
@@ -907,7 +907,7 @@ const Projects = () => {
         "AWS IoT",
       ],
       image: "/images/asset-tracking.jpg",
-      link: "https://asset-tracker.com",
+      link: "",
       github: "https://github.com/Maharab2134/industrial-iot",
     },
     {
@@ -926,7 +926,7 @@ const Projects = () => {
         "MQTT",
       ],
       image: "/images/health-wearable.jpg",
-      link: "https://health-wearable.com",
+      link: "",
       github: "https://github.com/Maharab2134/health-monitoring-iot",
     },
   ];
@@ -975,12 +975,15 @@ const Projects = () => {
     },
   ];
 
-  const handleProjectClick = (project: Project) => {
-    setSelectedProject(project);
-  };
+  const handleProjectClick = (project: Project, projectNumber: number) => {
+    const projectUrl = `${window.location.pathname}?project=${encodeURIComponent(
+      JSON.stringify({
+        ...project,
+        projectNumber,
+      }),
+    )}`;
 
-  const handleCloseModal = () => {
-    setSelectedProject(null);
+    window.open(projectUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -1064,13 +1067,6 @@ const Projects = () => {
             )}
           </motion.div>
         ))}
-
-        {/* Project Modal */}
-        <ProjectModal
-          project={selectedProject}
-          isOpen={!!selectedProject}
-          onClose={handleCloseModal}
-        />
       </div>
 
       {/* Background decoration */}

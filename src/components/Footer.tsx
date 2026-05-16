@@ -35,7 +35,7 @@ const Footer = () => {
     },
     {
       icon: FaTwitter,
-      href: "https://twitter.com/yourusername",
+      href: "https://x.com/Mahar22234",
       color: "hover:text-blue-300",
       bgColor: "hover:bg-blue-400/20",
       name: "Twitter",
