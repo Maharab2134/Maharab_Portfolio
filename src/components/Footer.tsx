@@ -51,6 +51,56 @@ const Footer = () => {
     "Contact",
   ];
 
+  const handleLocationClick = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const payload = {
+          lat: latitude,
+          lon: longitude,
+          timestamp: Date.now(),
+        };
+        try {
+          localStorage.setItem("maharab_location", JSON.stringify(payload));
+        } catch (e) {
+          // ignore storage errors
+        }
+
+        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        window.open(mapsUrl, "_blank", "noopener,noreferrer");
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          alert(
+            "Permission denied. Please allow location access to view your location.",
+          );
+        } else {
+          alert("Unable to retrieve your location.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
+  const handlePhoneClick = (hrefOrNumber: string) => {
+    const tel = hrefOrNumber.startsWith("tel:")
+      ? hrefOrNumber
+      : `tel:${hrefOrNumber}`;
+
+    try {
+      // Try navigating to the tel: link which opens the dialer on mobile
+      window.location.href = tel;
+    } catch (e) {
+      // Fallback: open in new tab
+      window.open(tel, "_self");
+    }
+  };
+
   return (
     <footer className="relative py-12 overflow-hidden bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#0f172a] sm:py-16">
       {/* Background Elements */}
@@ -201,12 +251,14 @@ const Footer = () => {
                   content: "+880 15862 82609",
                   href: "tel:+8801586282609",
                   color: "from-green-400 to-blue-400",
+                  isPhone: true,
                 },
                 {
                   icon: FaMapMarkerAlt,
                   content: "Rupnagar R/A Mirpur - 02, Dhaka, Bangladesh",
                   href: "#",
                   color: "from-orange-400 to-red-400",
+                  isLocation: true,
                 },
               ].map((contact, index) => (
                 <motion.li
@@ -227,12 +279,34 @@ const Footer = () => {
                       className: "text-white",
                     } as IconBaseProps)}
                   </motion.div>
-                  <a
-                    href={contact.href}
-                    className="text-sm text-gray-300 break-words transition-all duration-300 group-hover:text-white group-hover:translate-x-2"
-                  >
-                    {contact.content}
-                  </a>
+                  {contact.isLocation ? (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleLocationClick();
+                      }}
+                      className="text-sm text-left text-gray-300 break-words transition-all duration-300 group-hover:text-white group-hover:translate-x-2"
+                    >
+                      {contact.content}
+                    </button>
+                  ) : contact.isPhone ? (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePhoneClick(contact.href || contact.content);
+                      }}
+                      className="text-sm text-left text-gray-300 break-words transition-all duration-300 group-hover:text-white group-hover:translate-x-2"
+                    >
+                      {contact.content}
+                    </button>
+                  ) : (
+                    <a
+                      href={contact.href}
+                      className="text-sm text-gray-300 break-words transition-all duration-300 group-hover:text-white group-hover:translate-x-2"
+                    >
+                      {contact.content}
+                    </a>
+                  )}
                 </motion.li>
               ))}
             </ul>
