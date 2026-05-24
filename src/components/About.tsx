@@ -1,5 +1,9 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+// ============================================
+// ABOUT.tsx - UPDATED (with Video Intro CTA)
+// ============================================
+
+import React, { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaDownload,
   FaCode,
@@ -9,6 +13,8 @@ import {
   FaServer,
   FaRocket,
   FaChevronDown,
+  FaTimes,
+  FaPlay,
 } from "react-icons/fa";
 import { IconBaseProps, IconType } from "react-icons";
 
@@ -29,7 +35,7 @@ const toProxyImageUrl = (url: string) => {
     return `https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=${fileId}`;
   }
 
-  const driveUcMatch = url.match(/drive\.google\.com\/uc\?[^\s]*id=([^&]+)/);
+  const driveUcMatch = url.match(/drive\.google\.com\/uc\?[^^]*id=([^&]+)/);
   if (driveUcMatch?.[1]) {
     const fileId = driveUcMatch[1];
     return `https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=${fileId}`;
@@ -38,8 +44,36 @@ const toProxyImageUrl = (url: string) => {
   return url;
 };
 
+const toDrivePreviewUrl = (url: string, autoplay = false) => {
+  if (!url || typeof url !== "string") return url;
+  const driveShareMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if (driveShareMatch?.[1]) {
+    const fileId = driveShareMatch[1];
+    return `https://drive.google.com/file/d/${fileId}/preview${
+      autoplay ? "?autoplay=1" : ""
+    }`;
+  }
+  const driveUcMatch = url.match(/id=([^&]+)/);
+  if (driveUcMatch?.[1]) {
+    const fileId = driveUcMatch[1];
+    return `https://drive.google.com/file/d/${fileId}/preview${
+      autoplay ? "?autoplay=1" : ""
+    }`;
+  }
+  return url;
+};
+
 const About = () => {
   const [showAllSkillsMobile, setShowAllSkillsMobile] = useState(false);
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const introDriveLink =
+    "https://drive.google.com/file/d/1BzSWgFEBgruUq-3wkTWfEiip3Rzxr-Pm/view?usp=drive_link";
+
+  const closeVideo = () => {
+    setIsVideoOpen(false);
+  };
 
   const skills: {
     icon: IconType;
@@ -68,7 +102,7 @@ const About = () => {
     },
     {
       icon: FaServer,
-      text: "API Development & Integration",
+      text: "API Integration",
       color: "from-orange-400 to-amber-400",
     },
     {
@@ -181,7 +215,7 @@ const About = () => {
                     src={toProxyImageUrl(
                       "https://drive.google.com/file/d/1vBSH9y7WpSNJhVfoiOOcwyki-PyoSQlj/view?usp=drive_link",
                     )}
-                    alt="Md. Maharab Hosen"
+                    alt="Software Developer"
                     className="object-cover w-full h-full transition-transform duration-700 rounded-2xl group-hover:scale-105"
                     initial={{ opacity: 0, scale: 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
@@ -217,7 +251,7 @@ const About = () => {
                 </motion.div>
               </motion.div>
 
-              {/* Stats Cards attached to image container edges */}
+              {/* Stats Cards */}
               <motion.div
                 className="absolute z-20 px-4 py-2.5 border top-0 right-3 -translate-y-full backdrop-blur-xl bg-purple-900/65 rounded-2xl border-purple-300/40"
                 animate={{ scale: [1, 1.03, 1] }}
@@ -250,21 +284,53 @@ const About = () => {
             viewport={{ once: true }}
             className="flex flex-col justify-center space-y-8"
           >
-            {/* Title */}
+            {/* Story-based Title */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <h3 className="mb-2 text-sm font-semibold tracking-widest text-purple-400 uppercase">
-                Introduction
+              <h3 className="mb-3 text-sm font-semibold tracking-widest text-purple-400 uppercase">
+                My Journey
               </h3>
-              <h2 className="text-3xl font-bold leading-tight md:text-4xl">
-                <span className="text-white">I am </span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400">
-                  Md. Maharab Hosen
+              <h2 className="mb-4 text-3xl font-bold leading-tight md:text-4xl">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+                  Turning Coffee into Code
+                </span>
+                <br />
+                <span className="text-2xl md:text-3xl text-white/70">
+                  Since 2022
                 </span>
               </h2>
+
+              {/* Role Badges */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {[
+                  {
+                    text: "Software Engineer",
+                    gradient: "from-blue-400 to-cyan-400",
+                  },
+                  {
+                    text: "CSE @ BUBT",
+                    gradient: "from-purple-400 to-pink-400",
+                  },
+                  {
+                    text: "Full Stack Developer",
+                    gradient: "from-green-400 to-emerald-400",
+                  },
+                ].map((badge, i) => (
+                  <motion.span
+                    key={badge.text}
+                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ delay: 0.2 + i * 0.1, duration: 0.4 }}
+                    viewport={{ once: true }}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-full bg-gradient-to-r ${badge.gradient} bg-opacity-10 border border-white/10 backdrop-blur-sm text-white/90`}
+                  >
+                    {badge.text}
+                  </motion.span>
+                ))}
+              </div>
             </motion.div>
 
             {/* Description */}
@@ -274,11 +340,15 @@ const About = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-base leading-relaxed text-gray-300 md:text-lg"
             >
-              A passionate full-stack developer with expertise in creating
-              beautiful and functional web applications. With a strong
-              foundation in both front-end and back-end development, I strive to
-              build seamless user experiences that combine aesthetic appeal with
-              robust functionality.
+              A passionate software engineer crafting innovative digital
+              experiences across{" "}
+              <span className="font-semibold text-cyan-400">Mobile</span>,{" "}
+              <span className="font-semibold text-blue-400">Web</span>,{" "}
+              <span className="font-semibold text-purple-400">AI/ML</span>, and{" "}
+              <span className="font-semibold text-pink-400">IoT</span> domains.
+              From building cross-platform Flutter apps to full-stack MERN
+              solutions, I turn ideas into reality with clean code and creative
+              thinking.
             </motion.p>
 
             {/* Skills Grid */}
@@ -289,7 +359,7 @@ const About = () => {
               className="space-y-4"
             >
               <h4 className="text-xl font-bold text-white md:text-2xl">
-                What I Do
+                What I Do Best
               </h4>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {skills.map((skill, index) => (
@@ -298,6 +368,7 @@ const About = () => {
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: 0.05 * index }}
+                    viewport={{ once: true }}
                     whileHover={{ scale: 1.05, x: 5 }}
                     className={`${
                       index >= 3 && !showAllSkillsMobile
@@ -331,9 +402,7 @@ const About = () => {
                   >
                     {showAllSkillsMobile ? "Show Less" : "Show More"}
                     <span
-                      className={`transition-transform duration-300 ${
-                        showAllSkillsMobile ? "rotate-180" : "rotate-0"
-                      }`}
+                      className={`transition-transform duration-300 ${showAllSkillsMobile ? "rotate-180" : "rotate-0"}`}
                     >
                       {renderIcon(
                         FaChevronDown as React.ComponentType<IconBaseProps>,
@@ -345,17 +414,39 @@ const About = () => {
               )}
             </motion.div>
 
-            {/* CTA Button */}
+            {/* ✅ UPDATED: CTA Buttons with Video */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="pt-4"
+              className="flex flex-wrap gap-3 pt-4"
             >
+              
+              {/* <motion.button
+                type="button"
+                onClick={() => setIsVideoOpen(true)}
+                className="inline-flex items-center px-6 py-3 text-base font-semibold text-white transition-all duration-300 border-2 rounded-full bg-gradient-to-r from-cyan-600 to-blue-600 border-transparent hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] group"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.span
+                  className="mr-3"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  {renderIcon(FaPlay as React.ComponentType<IconBaseProps>, {
+                    size: 16,
+                  })}
+                </motion.span>
+                <span>Watch Intro</span>
+              </motion.button> */}
+
+              
+              {/* Download Resume Button */}
               <motion.a
                 href="/PDF/Maharab_Hosen.pdf"
                 download
-                className="inline-flex items-center px-6 py-3.5 text-base font-semibold text-white transition-all duration-300 border-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 border-transparent hover:shadow-[0_0_30px_rgba(147,51,234,0.5)] group"
+                className="inline-flex items-center px-6 py-3 text-base font-semibold text-white transition-all duration-300 border-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 border-transparent hover:shadow-[0_0_30px_rgba(147,51,234,0.5)] group"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -366,10 +457,10 @@ const About = () => {
                 >
                   {renderIcon(
                     FaDownload as React.ComponentType<IconBaseProps>,
-                    { size: 20 },
+                    { size: 18 },
                   )}
                 </motion.span>
-                <span>Download Resume</span>
+                <span>Resume</span>
                 <motion.span
                   className="ml-2"
                   animate={{ x: [0, 5, 0] }}
@@ -382,6 +473,70 @@ const About = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* ✅ Video Modal */}
+      <AnimatePresence>
+        {isVideoOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/80 backdrop-blur-sm"
+            onClick={closeVideo}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="relative w-full max-w-4xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <motion.button
+                onClick={closeVideo}
+                className="absolute right-0 z-50 flex items-center justify-center w-10 h-10 text-white transition-all duration-300 border rounded-full -top-12 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/20"
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label="Close video"
+              >
+                {renderIcon(FaTimes as React.ComponentType<IconBaseProps>, {
+                  size: 20,
+                })}
+              </motion.button>
+
+              {/* Video Container */}
+              <div className="relative overflow-hidden border shadow-2xl rounded-2xl bg-black/50 backdrop-blur-xl border-white/10">
+                <iframe
+                  key={isVideoOpen ? "intro-video-open" : "intro-video-closed"}
+                  src={toDrivePreviewUrl(introDriveLink, true)}
+                  title="Intro Video"
+                  className="w-full bg-black aspect-video"
+                  allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
+                  frameBorder={0}
+                />
+              </div>
+
+              {/* Video title */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-4 text-center"
+              >
+                <h3 className="text-lg font-semibold text-white sm:text-xl">
+                  Introduction Video
+                </h3>
+                <p className="mt-1 text-sm text-white/60">
+                  Watch my introduction video to learn more about me and my
+                  work.
+                </p>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Decorative Particles */}
       <div className="absolute inset-0 pointer-events-none">
