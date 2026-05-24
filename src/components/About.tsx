@@ -2,7 +2,7 @@
 // ABOUT.tsx - UPDATED (with Video Intro CTA)
 // ============================================
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaDownload,
