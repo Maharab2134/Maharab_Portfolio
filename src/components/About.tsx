@@ -14,7 +14,6 @@ import {
   FaRocket,
   FaChevronDown,
   FaTimes,
-  FaPlay,
 } from "react-icons/fa";
 import { IconBaseProps, IconType } from "react-icons";
 
@@ -66,7 +65,6 @@ const toDrivePreviewUrl = (url: string, autoplay = false) => {
 const About = () => {
   const [showAllSkillsMobile, setShowAllSkillsMobile] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const introDriveLink =
     "https://drive.google.com/file/d/1BzSWgFEBgruUq-3wkTWfEiip3Rzxr-Pm/view?usp=drive_link";
@@ -421,7 +419,6 @@ const About = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="flex flex-wrap gap-3 pt-4"
             >
-              
               {/* <motion.button
                 type="button"
                 onClick={() => setIsVideoOpen(true)}
@@ -441,7 +438,6 @@ const About = () => {
                 <span>Watch Intro</span>
               </motion.button> */}
 
-              
               {/* Download Resume Button */}
               <motion.a
                 href="/PDF/Maharab_Hosen.pdf"
