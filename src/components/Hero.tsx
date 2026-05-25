@@ -530,64 +530,7 @@ const Hero = () => {
           </motion.a>
         </motion.div>
 
-        {/* Social Links */}
-        <motion.div
-          variants={itemVariants}
-          className="flex justify-center gap-2.5"
-        >
-          {SOCIAL_LINKS.map(({ href, label, icon: Icon, color }) => (
-            <div key={label} className="relative">
-              <motion.a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                className={`group relative flex items-center justify-center w-10 h-10 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm text-white/50 ${color} transition-all duration-300 sm:w-11 sm:h-11`}
-                whileHover={{
-                  scale: 1.15,
-                  borderColor: "rgba(168, 85, 247, 0.3)",
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                }}
-                whileTap={{ scale: 0.9 }}
-                onHoverStart={
-                  shouldReduceEffects
-                    ? undefined
-                    : () => setActiveTooltip(label)
-                }
-                onHoverEnd={
-                  shouldReduceEffects ? undefined : () => setActiveTooltip(null)
-                }
-              >
-                {renderIcon(Icon as React.ComponentType<IconBaseProps>, {
-                  size: 18,
-                })}
-
-                {/* Hover ring effect */}
-                <motion.div
-                  className="absolute inset-0 border-2 rounded-full border-purple-500/0 group-hover:border-purple-500/30"
-                  initial={false}
-                  transition={{ duration: 0.3 }}
-                />
-              </motion.a>
-
-              {/* Tooltip */}
-              <AnimatePresence>
-                {activeTooltip === label && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.9 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute -bottom-9 left-1/2 -translate-x-1/2 px-2.5 py-1 text-xs font-medium text-white bg-white/10 backdrop-blur-xl rounded-lg border border-white/10 whitespace-nowrap"
-                  >
-                    {label}
-                    <div className="absolute w-2 h-2 rotate-45 -translate-x-1/2 border-t border-l -top-1 left-1/2 bg-white/10 border-white/10 backdrop-blur-xl" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </motion.div>
+       
 
         {/* Tech stack floating badges */}
         <motion.div
@@ -619,60 +562,6 @@ const Hero = () => {
           ))}
         </motion.div>
       </motion.div>
-
-      {/* ===== SCROLL INDICATORS ===== */}
-
-      {/* Scroll Down */}
-      <AnimatePresence>
-        {showScrollDown && (
-          <motion.div
-            key="hero-scroll"
-            className="fixed z-50 transform -translate-x-1/2 left-1/2 bottom-6 sm:bottom-8"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ opacity: { duration: 0.4 }, y: { duration: 0.4 } }}
-          >
-            <button
-              aria-label="Scroll down"
-              className="cursor-pointer group"
-              onClick={() =>
-                window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
-              }
-            >
-              <motion.div
-                className="flex flex-col items-center gap-1.5"
-                animate={{ y: [0, 8, 0] }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <span className="text-[9px] font-medium tracking-[0.3em] uppercase text-white/30 group-hover:text-white/60 transition-colors">
-                  Scroll
-                </span>
-                <div className="relative w-[20px] h-[32px] rounded-full border-2 border-white/20 group-hover:border-white/40 transition-colors flex justify-center">
-                  <motion.div
-                    className="w-1 h-1.5 mt-1.5 rounded-full bg-white/50"
-                    animate={{ y: [0, 10, 0], opacity: [1, 0.3, 1] }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
-                </div>
-                {renderIcon(FaArrowDown as React.ComponentType<IconBaseProps>, {
-                  size: 9,
-                  className:
-                    "text-white/20 group-hover:text-white/40 transition-colors",
-                })}
-              </motion.div>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Scroll to Top */}
       <AnimatePresence>
