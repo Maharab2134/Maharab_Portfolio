@@ -20,7 +20,7 @@ import {
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { IconBaseProps } from "react-icons";
 import { TypeAnimation } from "react-type-animation";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 const renderIcon = (
   Icon: React.ComponentType<IconBaseProps>,
@@ -126,6 +126,8 @@ const Hero = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -138,6 +140,36 @@ const Hero = () => {
   useEffect(() => {
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    const updatePreferences = () => {
+      if (typeof window === "undefined") return;
+      const touchMedia = window.matchMedia("(hover: none), (pointer: coarse)");
+      const reducedMedia = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+      setIsTouchDevice(touchMedia.matches);
+      setPrefersReducedMotion(reducedMedia.matches);
+    };
+
+    updatePreferences();
+    window.addEventListener("resize", updatePreferences);
+    return () => window.removeEventListener("resize", updatePreferences);
+  }, []);
+
+  const shouldReduceEffects = isTouchDevice || prefersReducedMotion;
+  const floatingOrbs = useMemo(
+    () => (shouldReduceEffects ? FLOATING_ORBS.slice(0, 2) : FLOATING_ORBS),
+    [shouldReduceEffects],
+  );
+  const stars = useMemo(
+    () => (shouldReduceEffects ? STARS.slice(0, 18) : STARS),
+    [shouldReduceEffects],
+  );
+  const meteors = useMemo(
+    () => (shouldReduceEffects ? [] : METEORS),
+    [shouldReduceEffects],
+  );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -161,11 +193,37 @@ const Hero = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Show scroll-down indicator only when Hero is visible
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [showScrollDown, setShowScrollDown] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // show indicator when hero is mostly visible
+          setShowScrollDown(
+            entry.isIntersecting && entry.intersectionRatio > 0.3,
+          );
+        });
+      },
+      { threshold: [0, 0.3, 0.6, 1] },
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <section
       id="home"
-      onMouseMove={handleMouseMove}
-      className="relative flex items-center justify-center min-h-screen overflow-hidden bg-[#030014]"
+      ref={sectionRef}
+      onMouseMove={shouldReduceEffects ? undefined : handleMouseMove}
+      className="relative flex items-center justify-center min-h-[100svh] overflow-hidden bg-[#030014] md:min-h-screen"
     >
       {/* ===== LAYERED BACKGROUND SYSTEM ===== */}
 
@@ -198,7 +256,7 @@ const Hero = () => {
 
       {/* Floating orbs with parallax */}
       <div className="absolute inset-0 overflow-hidden">
-        {FLOATING_ORBS.map((orb, i) => (
+        {floatingOrbs.map((orb, i) => (
           <motion.div
             key={i}
             className={`absolute rounded-full bg-gradient-to-br ${orb.color} blur-3xl`}
@@ -228,7 +286,7 @@ const Hero = () => {
 
       {/* Star field */}
       <div className="absolute inset-0">
-        {STARS.map((star, i) => (
+        {stars.map((star, i) => (
           <motion.div
             key={i}
             className="absolute bg-white rounded-full"
@@ -253,7 +311,7 @@ const Hero = () => {
       </div>
 
       {/* Shooting meteors */}
-      {METEORS.map((meteor, i) => (
+      {meteors.map((meteor, i) => (
         <motion.div
           key={i}
           className="absolute"
@@ -438,7 +496,10 @@ const Hero = () => {
 
           {/* Secondary CTA */}
           <motion.a
-            href="#contact"
+            href="/#hire"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open Hire page in a new tab"
             className="relative group inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium text-white rounded-full border border-transparent bg-purple-600/10 hover:bg-purple-600/20 backdrop-blur-sm transition-all duration-300 sm:px-7 sm:py-3"
             whileHover={{
               scale: 1.03,
@@ -488,8 +549,14 @@ const Hero = () => {
                   backgroundColor: "rgba(255,255,255,0.05)",
                 }}
                 whileTap={{ scale: 0.9 }}
-                onHoverStart={() => setActiveTooltip(label)}
-                onHoverEnd={() => setActiveTooltip(null)}
+                onHoverStart={
+                  shouldReduceEffects
+                    ? undefined
+                    : () => setActiveTooltip(label)
+                }
+                onHoverEnd={
+                  shouldReduceEffects ? undefined : () => setActiveTooltip(null)
+                }
               >
                 {renderIcon(Icon as React.ComponentType<IconBaseProps>, {
                   size: 18,
@@ -556,45 +623,56 @@ const Hero = () => {
       {/* ===== SCROLL INDICATORS ===== */}
 
       {/* Scroll Down */}
-      <motion.button
-        aria-label="Scroll down"
-        className="absolute z-50 transform -translate-x-1/2 cursor-pointer bottom-6 left-1/2 group sm:bottom-8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1, y: [0, 10, 0] }}
-        transition={{
-          opacity: { duration: 1, delay: 2 },
-          y: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
-        }}
-        onClick={() =>
-          window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
-        }
-      >
-        <motion.div
-          className="flex flex-col items-center gap-1.5"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <span className="text-[9px] font-medium tracking-[0.3em] uppercase text-white/30 group-hover:text-white/60 transition-colors">
-            Scroll
-          </span>
-          <div className="relative w-[20px] h-[32px] rounded-full border-2 border-white/20 group-hover:border-white/40 transition-colors flex justify-center">
-            <motion.div
-              className="w-1 h-1.5 mt-1.5 rounded-full bg-white/50"
-              animate={{ y: [0, 10, 0], opacity: [1, 0.3, 1] }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          </div>
-          {renderIcon(FaArrowDown as React.ComponentType<IconBaseProps>, {
-            size: 9,
-            className:
-              "text-white/20 group-hover:text-white/40 transition-colors",
-          })}
-        </motion.div>
-      </motion.button>
+      <AnimatePresence>
+        {showScrollDown && (
+          <motion.div
+            key="hero-scroll"
+            className="fixed z-50 transform -translate-x-1/2 left-1/2 bottom-6 sm:bottom-8"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ opacity: { duration: 0.4 }, y: { duration: 0.4 } }}
+          >
+            <button
+              aria-label="Scroll down"
+              className="cursor-pointer group"
+              onClick={() =>
+                window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
+              }
+            >
+              <motion.div
+                className="flex flex-col items-center gap-1.5"
+                animate={{ y: [0, 8, 0] }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <span className="text-[9px] font-medium tracking-[0.3em] uppercase text-white/30 group-hover:text-white/60 transition-colors">
+                  Scroll
+                </span>
+                <div className="relative w-[20px] h-[32px] rounded-full border-2 border-white/20 group-hover:border-white/40 transition-colors flex justify-center">
+                  <motion.div
+                    className="w-1 h-1.5 mt-1.5 rounded-full bg-white/50"
+                    animate={{ y: [0, 10, 0], opacity: [1, 0.3, 1] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                </div>
+                {renderIcon(FaArrowDown as React.ComponentType<IconBaseProps>, {
+                  size: 9,
+                  className:
+                    "text-white/20 group-hover:text-white/40 transition-colors",
+                })}
+              </motion.div>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Scroll to Top */}
       <AnimatePresence>

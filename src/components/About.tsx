@@ -1,5 +1,5 @@
 // ============================================
-// ABOUT.tsx - UPDATED (with Video Intro CTA)
+// ABOUT.tsx - UPDATED (with Introduction section above "My Journey")
 // ============================================
 
 import React, { useState } from "react";
@@ -174,10 +174,10 @@ const About = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7 }}
             viewport={{ once: true }}
-            className="relative flex justify-center"
+            className="relative flex justify-center pb-16"
           >
             <div className="relative w-full max-w-md">
-              {/* Glow Effect Behind Image */}
+              {/* Glow Effect */}
               <motion.div
                 className="absolute inset-0 rounded-3xl bg-gradient-to-r from-purple-500/50 to-pink-500/50 blur-2xl"
                 animate={{
@@ -191,7 +191,8 @@ const About = () => {
                 }}
               />
 
-              {/* Image Container with Glassmorphism */}
+              {/* Main Image Card */}
+              {/* Main Image Card */}
               <motion.div
                 className="relative overflow-hidden border shadow-2xl backdrop-blur-xl bg-white/5 rounded-3xl border-white/10 group"
                 whileHover={{ scale: 1.02 }}
@@ -205,9 +206,14 @@ const About = () => {
                       "linear-gradient(45deg, transparent, rgba(147, 51, 234, 0.5), transparent)",
                   }}
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
                 />
 
+                {/* Image */}
                 <div className="relative p-2">
                   <motion.img
                     src={toProxyImageUrl(
@@ -215,61 +221,38 @@ const About = () => {
                     )}
                     alt="Software Developer"
                     className="object-cover w-full h-full transition-transform duration-700 rounded-2xl group-hover:scale-105"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/images/image.png";
-                    }}
-                    loading="eager"
-                    decoding="async"
                   />
                 </div>
 
-                {/* Overlay on Hover */}
+                {/* Top Right Card */}
                 <motion.div
-                  className="absolute inset-0 transition-all duration-500 opacity-0 bg-gradient-to-t from-purple-900/90 via-purple-500/50 to-transparent group-hover:opacity-100 rounded-3xl"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                />
-
-                <motion.div
-                  className="absolute bottom-0 left-0 right-0 p-8 text-white transition-all duration-500 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
-                  initial={{ y: 20, opacity: 0 }}
-                  whileHover={{ y: 0, opacity: 1 }}
+                  className="absolute z-20 px-4 py-2.5 border top-3 right-3 backdrop-blur-xl bg-purple-900/65 rounded-2xl border-purple-300/40 shadow-xl"
+                  animate={{ scale: [1, 1.03, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <h3 className="text-3xl font-bold text-transparent bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text">
-                    Full Stack Developer
-                  </h3>
-                  <p className="mt-2 text-sm text-purple-200">
-                    Building digital experiences
+                  <p className="text-xl font-bold leading-none text-white">
+                    2+
+                  </p>
+
+                  <p className="mt-1 text-xs font-medium text-purple-100">
+                    Years Experience
                   </p>
                 </motion.div>
-              </motion.div>
 
-              {/* Stats Cards */}
-              <motion.div
-                className="absolute z-20 px-4 py-2.5 border top-0 right-3 -translate-y-full backdrop-blur-xl bg-purple-900/65 rounded-2xl border-purple-300/40"
-                animate={{ scale: [1, 1.03, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <p className="text-xl font-bold leading-none text-white">2+</p>
-                <p className="mt-1 text-xs font-medium text-purple-100">
-                  Years Experience
-                </p>
-              </motion.div>
+                {/* Bottom Left Card */}
+                <motion.div
+                  className="absolute z-20 px-4 py-2.5 border bottom-3 left-3 backdrop-blur-xl bg-pink-900/65 rounded-2xl border-pink-300/40 shadow-xl"
+                  animate={{ scale: [1, 1.03, 1] }}
+                  transition={{ duration: 2.4, repeat: Infinity }}
+                >
+                  <p className="text-xl font-bold leading-none text-white">
+                    50+
+                  </p>
 
-              <motion.div
-                className="absolute z-20 px-4 py-2.5 border bottom-0 left-3 translate-y-full backdrop-blur-xl bg-pink-900/65 rounded-2xl border-pink-300/40"
-                animate={{ scale: [1, 1.03, 1] }}
-                transition={{ duration: 2.4, repeat: Infinity }}
-              >
-                <p className="text-xl font-bold leading-none text-white">50+</p>
-                <p className="mt-1 text-xs font-medium text-pink-100">
-                  Projects Done
-                </p>
+                  <p className="mt-1 text-xs font-medium text-pink-100">
+                    Projects Done
+                  </p>
+                </motion.div>
               </motion.div>
             </div>
           </motion.div>
@@ -282,72 +265,53 @@ const About = () => {
             viewport={{ once: true }}
             className="flex flex-col justify-center space-y-8"
           >
-            {/* Story-based Title */}
+            {/* ✅ NEW: Introduction Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              transition={{ duration: 0.5, delay: 0.05 }}
+              className="pb-6 border-b border-white/10"
             >
               <h3 className="mb-3 text-sm font-semibold tracking-widest text-purple-400 uppercase">
-                My Journey
+                Introduction
               </h3>
-              <h2 className="mb-4 text-3xl font-bold leading-tight md:text-4xl">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
-                  Turning Coffee into Code
-                </span>
-                <br />
-                <span className="text-2xl md:text-3xl text-white/70">
-                  Since 2022
-                </span>
-              </h2>
-
-              {/* Role Badges */}
-              <div className="flex flex-wrap gap-2 mt-4">
-                {[
-                  {
-                    text: "Software Engineer",
-                    gradient: "from-blue-400 to-cyan-400",
-                  },
-                  {
-                    text: "CSE @ BUBT",
-                    gradient: "from-purple-400 to-pink-400",
-                  },
-                  {
-                    text: "Full Stack Developer",
-                    gradient: "from-green-400 to-emerald-400",
-                  },
-                ].map((badge, i) => (
+              <p className="text-base leading-relaxed md:text-lg text-white/80">
+                Assalamu Alaikum! 👋 I'm{" "}
+                <a
+                  href="/#journey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative inline-flex items-center gap-1 font-bold text-transparent transition-all duration-300 group bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 hover:from-purple-300 hover:via-pink-300 hover:to-cyan-300"
+                >
+                  <span className="relative">
+                    Md. Maharab Hosen
+                    {/* Animated underline */}
+                    <motion.span
+                      className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 -bottom-0.5"
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </span>
+                  {/* Link arrow icon */}
                   <motion.span
-                    key={badge.text}
-                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ delay: 0.2 + i * 0.1, duration: 0.4 }}
-                    viewport={{ once: true }}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-full bg-gradient-to-r ${badge.gradient} bg-opacity-10 border border-white/10 backdrop-blur-sm text-white/90`}
+                    className="inline-flex items-center justify-center w-4 h-4 ml-1 text-purple-400 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5"
+                    aria-hidden="true"
                   >
-                    {badge.text}
+                    ↗
                   </motion.span>
-                ))}
-              </div>
+                </a>
+                , a passionate{" "}
+                <span className="font-semibold text-white">
+                  Full Stack Developer
+                </span>{" "}
+                and{" "}
+                <span className="font-semibold text-white">
+                  Software Engineering student
+                </span>{" "}
+                from Bangladesh 🇧🇩.
+              </p>
             </motion.div>
-
-            {/* Description */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-base leading-relaxed text-gray-300 md:text-lg"
-            >
-              A passionate software engineer crafting innovative digital
-              experiences across{" "}
-              <span className="font-semibold text-cyan-400">Mobile</span>,{" "}
-              <span className="font-semibold text-blue-400">Web</span>,{" "}
-              <span className="font-semibold text-purple-400">AI/ML</span>, and{" "}
-              <span className="font-semibold text-pink-400">IoT</span> domains.
-              From building cross-platform Flutter apps to full-stack MERN
-              solutions, I turn ideas into reality with clean code and creative
-              thinking.
-            </motion.p>
 
             {/* Skills Grid */}
             <motion.div
@@ -412,32 +376,13 @@ const About = () => {
               )}
             </motion.div>
 
-            {/* ✅ UPDATED: CTA Buttons with Video */}
+            {/* CTA Button */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
               className="flex flex-wrap gap-3 pt-4"
             >
-              {/* <motion.button
-                type="button"
-                onClick={() => setIsVideoOpen(true)}
-                className="inline-flex items-center px-6 py-3 text-base font-semibold text-white transition-all duration-300 border-2 rounded-full bg-gradient-to-r from-cyan-600 to-blue-600 border-transparent hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] group"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <motion.span
-                  className="mr-3"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  {renderIcon(FaPlay as React.ComponentType<IconBaseProps>, {
-                    size: 16,
-                  })}
-                </motion.span>
-                <span>Watch Intro</span>
-              </motion.button> */}
-
               {/* Download Resume Button */}
               <motion.a
                 href="/PDF/Maharab_Hosen.pdf"
@@ -456,7 +401,7 @@ const About = () => {
                     { size: 18 },
                   )}
                 </motion.span>
-                <span>Resume</span>
+                <span>Download Resume</span>
                 <motion.span
                   className="ml-2"
                   animate={{ x: [0, 5, 0] }}
@@ -470,7 +415,7 @@ const About = () => {
         </div>
       </div>
 
-      {/* ✅ Video Modal */}
+      {/* Video Modal */}
       <AnimatePresence>
         {isVideoOpen && (
           <motion.div

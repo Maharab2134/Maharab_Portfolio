@@ -25,16 +25,26 @@ body {
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 html,
 body {
+  min-height: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 #root {
+  min-height: 100%;
   overflow-x: hidden;
+}
+
+@media (hover: none), (pointer: coarse), (max-width: 768px) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /* Custom scrollbar */
