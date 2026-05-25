@@ -14,7 +14,6 @@ import {
   FaGithub,
   FaLinkedin,
   FaTwitter,
-  FaArrowDown,
   FaPaperPlane,
 } from "react-icons/fa";
 import { HiOutlineSparkles } from "react-icons/hi2";
@@ -195,27 +194,11 @@ const Hero = () => {
 
   // Show scroll-down indicator only when Hero is visible
   const sectionRef = useRef<HTMLElement | null>(null);
-  const [showScrollDown, setShowScrollDown] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const el = sectionRef.current;
     if (!el) return;
-
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // show indicator when hero is mostly visible
-          setShowScrollDown(
-            entry.isIntersecting && entry.intersectionRatio > 0.3,
-          );
-        });
-      },
-      { threshold: [0, 0.3, 0.6, 1] },
-    );
-
-    obs.observe(el);
-    return () => obs.disconnect();
   }, []);
 
   return (
@@ -619,9 +602,6 @@ const Hero = () => {
           ))}
         </motion.div>
       </motion.div>
-
-      {/* ===== SCROLL INDICATORS ===== */}
-
       
       {/* Scroll to Top */}
       <AnimatePresence>
