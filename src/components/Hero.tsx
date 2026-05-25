@@ -530,7 +530,64 @@ const Hero = () => {
           </motion.a>
         </motion.div>
 
-       
+        {/* Social Links */}
+        <motion.div
+          variants={itemVariants}
+          className="flex justify-center gap-2.5"
+        >
+          {SOCIAL_LINKS.map(({ href, label, icon: Icon, color }) => (
+            <div key={label} className="relative">
+              <motion.a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                className={`group relative flex items-center justify-center w-10 h-10 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm text-white/50 ${color} transition-all duration-300 sm:w-11 sm:h-11`}
+                whileHover={{
+                  scale: 1.15,
+                  borderColor: "rgba(168, 85, 247, 0.3)",
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                }}
+                whileTap={{ scale: 0.9 }}
+                onHoverStart={
+                  shouldReduceEffects
+                    ? undefined
+                    : () => setActiveTooltip(label)
+                }
+                onHoverEnd={
+                  shouldReduceEffects ? undefined : () => setActiveTooltip(null)
+                }
+              >
+                {renderIcon(Icon as React.ComponentType<IconBaseProps>, {
+                  size: 18,
+                })}
+
+                {/* Hover ring effect */}
+                <motion.div
+                  className="absolute inset-0 border-2 rounded-full border-purple-500/0 group-hover:border-purple-500/30"
+                  initial={false}
+                  transition={{ duration: 0.3 }}
+                />
+              </motion.a>
+
+              {/* Tooltip */}
+              <AnimatePresence>
+                {activeTooltip === label && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.9 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute -bottom-9 left-1/2 -translate-x-1/2 px-2.5 py-1 text-xs font-medium text-white bg-white/10 backdrop-blur-xl rounded-lg border border-white/10 whitespace-nowrap"
+                  >
+                    {label}
+                    <div className="absolute w-2 h-2 rotate-45 -translate-x-1/2 border-t border-l -top-1 left-1/2 bg-white/10 border-white/10 backdrop-blur-xl" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </motion.div>
 
         {/* Tech stack floating badges */}
         <motion.div
@@ -563,6 +620,9 @@ const Hero = () => {
         </motion.div>
       </motion.div>
 
+      {/* ===== SCROLL INDICATORS ===== */}
+
+      
       {/* Scroll to Top */}
       <AnimatePresence>
         {showScrollTop && (
