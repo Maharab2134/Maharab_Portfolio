@@ -281,7 +281,7 @@ const About = () => {
                   href="/#journey"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="relative inline-flex items-center gap-1 font-bold text-transparent transition-all duration-300 group bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 hover:from-purple-300 hover:via-pink-300 hover:to-cyan-300"
+                  className="relative inline-flex items-center gap-1 font-bold text-transparent transition-all duration-300 group bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 hover:from-purple-300 hover:via-pink-300 hover:to-cyan-300 whitespace-nowrap"
                 >
                   <span className="relative">
                     Md. Maharab Hosen
