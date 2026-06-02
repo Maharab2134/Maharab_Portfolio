@@ -276,18 +276,21 @@ const About = () => {
                 Introduction
               </h3>
               <p className="text-base leading-relaxed md:text-lg text-white/80">
-                Assalamu Alaikum! 👋 I'm{" "}
+                <span className="block sm:inline">
+                  Assalamu Alaikum! 👋 I'm
+                </span>{" "}
                 <a
                   href="/#journey"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="relative inline-flex items-center gap-1 font-bold text-transparent transition-all duration-300 group bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 hover:from-purple-300 hover:via-pink-300 hover:to-cyan-300 whitespace-nowrap"
+                  className="relative inline-flex items-center gap-1 font-bold text-transparent break-words transition-all duration-300 group bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 hover:from-purple-300 hover:via-pink-300 hover:to-cyan-300"
                 >
                   <span className="relative">
                     Md. Maharab Hosen
                     {/* Animated underline */}
                     <motion.span
                       className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 -bottom-0.5"
+                      style={{ transformOrigin: "left" }}
                       initial={{ scaleX: 0 }}
                       whileHover={{ scaleX: 1 }}
                       transition={{ duration: 0.3 }}
@@ -295,7 +298,7 @@ const About = () => {
                   </span>
                   {/* Link arrow icon */}
                   <motion.span
-                    className="inline-flex items-center justify-center w-4 h-4 ml-1 text-purple-400 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5"
+                    className="hidden w-4 h-4 ml-1 text-purple-400 transition-transform duration-300 sm:inline-flex items-center justify-center group-hover:translate-x-1 group-hover:-translate-y-0.5"
                     aria-hidden="true"
                   >
                     ↗
