@@ -61,16 +61,6 @@ const services = [
   },
 ];
 
-// Budget ranges
-const budgetRanges = [
-  "৳ 50,000",
-  "৳ 50,000 - ৳ 1,00,000",
-  "৳ 1,00,000 - ৳ 5,00,000",
-  "৳ 5,00,000 - ৳ 10,00,000",
-  "৳ 10,00,000+",
-  "Not Sure Yet",
-];
-
 // Timeline options
 const timelineOptions = [
   "ASAP",
@@ -656,28 +646,17 @@ const Hire = () => {
                           ৳
                         </span>
                       </div>
-                      <select
+                      <input
+                        type="text"
                         id="budget"
                         name="budget"
                         value={formData.budget}
                         onChange={handleChange}
+                        placeholder="Enter your budget (e.g., ৳ 1,00,000 or 'Not sure')"
                         className={`w-full pl-12 pr-4 py-3 bg-white/5 border ${
                           errors.budget ? "border-red-500" : "border-white/10"
-                        } rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all appearance-none cursor-pointer`}
-                      >
-                        <option value="" className="bg-[#0f172a]">
-                          Select budget
-                        </option>
-                        {budgetRanges.map((range) => (
-                          <option
-                            key={range}
-                            value={range}
-                            className="bg-[#0f172a]"
-                          >
-                            {range}
-                          </option>
-                        ))}
-                      </select>
+                        } rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all appearance-none`}
+                      />
                     </div>
                     {errors.budget && (
                       <p className="mt-1 text-xs text-red-400">

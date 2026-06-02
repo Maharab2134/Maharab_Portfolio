@@ -22,20 +22,30 @@ function App() {
     if (typeof window === "undefined") return false;
     const params = new URLSearchParams(window.location.search);
     return Boolean(
-      params.get("journey") || window.location.hash === "#journey",
+      params.get("journey") ||
+      window.location.hash === "#journey" ||
+      window.location.pathname === "/journey",
     );
   });
 
   const [showHire, setShowHire] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.location.hash === "#hire";
+    return (
+      window.location.hash === "#hire" || window.location.pathname === "/hire"
+    );
   });
 
   // listen to hash changes so in-page navigation to #journey or #hire works
   useEffect(() => {
     const onHash = () => {
-      setShowJourney(window.location.hash === "#journey");
-      setShowHire(window.location.hash === "#hire");
+      setShowJourney(
+        window.location.hash === "#journey" ||
+          window.location.pathname === "/journey",
+      );
+      setShowHire(
+        window.location.hash === "#hire" ||
+          window.location.pathname === "/hire",
+      );
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
