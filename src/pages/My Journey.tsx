@@ -370,7 +370,7 @@ const MyJourney = () => {
             I'm always open to new opportunities and collaborations.
           </p>
           <motion.a
-            href="/hire"
+            href="/#hire"
             className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold text-white transition-all duration-300 border-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 border-transparent hover:shadow-[0_0_40px_rgba(147,51,234,0.6)]"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
