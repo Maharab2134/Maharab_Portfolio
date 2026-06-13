@@ -14,13 +14,13 @@ const Certificates = () => {
 
   const certifications = [
     {
-      title: "Google Project Management Professional Certificate",
-      issuer: "Google / Coursera",
-      year: "2025",
-      type: "Professional",
-      link: "https://www.coursera.org/professional-certificates/google-project-management",
+      title: "Software Engineer Certificate",
+      issuer: "HackerRank",
+      year: "2026",
+      type: "Skill Assessment & Verification",
+      link: "https://www.hackerrank.com/certificates/42cafa841d01",
       details:
-        "Completed training on project planning, risk management, stakeholder communication, and agile delivery fundamentals.",
+        "Verified proficiency in software engineering, problem-solving, and programming fundamentals.",
     },
     {
       title: "BUBT Intra University Programming Contest 2022",

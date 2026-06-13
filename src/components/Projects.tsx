@@ -596,6 +596,27 @@ const Projects = () => {
       github: "https://github.com/Maharab2134/secur-auth-system",
       sourceCodePrivate: true,
     },
+    
+    {
+      title: "TripFly BD – Travel & Tour Booking Platform",
+      description:
+        "A comprehensive travel and tour booking platform with seamless user experience and robust backend infrastructure.",
+      longDescription:
+        "TripFly BD is a full-stack travel booking platform designed to provide users with an intuitive interface for exploring destinations, comparing prices, and making reservations. The system features a modern UI built with React, a scalable backend using Node.js and Express, and a robust database powered by MongoDB. Additional functionalities include user authentication, payment processing, real-time availability checks, and detailed itinerary management.",
+      technologies: [
+        "React",
+        "Tailwind CSS",
+        "Node.js",
+        "PostgreSQL",
+        "JWT",
+        "REST API",
+      ],
+      image:
+        "https://drive.google.com/file/d/1npkGAUsEzqOWNhpJzGhsV7umYPbCcFEf/view?usp=drive_link",
+      link: "https://www.tripflybd.com/",
+      github: "https://github.com/Maharab2134/secur-auth-system",
+      sourceCodePrivate: true,
+    },
   ];
 
   const mlProjects: Project[] = [
