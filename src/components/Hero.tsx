@@ -21,6 +21,7 @@ import {
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { TypeAnimation } from "react-type-animation";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { getLiveProfile } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -57,6 +58,21 @@ const Hero: React.FC = () => {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeTab, setActiveTab] = useState<"spec" | "capabilities">("spec");
+  const [resumeUrl, setResumeUrl] = useState(PORTFOLIO_INFO.resumeUrl);
+
+  useEffect(() => {
+    getLiveProfile().then((p) => {
+      if (p && p.resumeUrl) setResumeUrl(p.resumeUrl);
+    });
+
+    const handleProfileUpdate = () => {
+      getLiveProfile().then((p) => {
+        if (p && p.resumeUrl) setResumeUrl(p.resumeUrl);
+      });
+    };
+    window.addEventListener("portfolio_profile_updated", handleProfileUpdate);
+    return () => window.removeEventListener("portfolio_profile_updated", handleProfileUpdate);
+  }, []);
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
@@ -271,7 +287,9 @@ const Hero: React.FC = () => {
               </a>
 
               <a
-                href={PORTFOLIO_INFO.resumeUrl}
+                href={resumeUrl}
+                target="_blank"
+                rel="noreferrer"
                 download
                 className="inline-flex items-center gap-2 px-5 py-3.5 text-sm font-semibold text-slate-200 transition-all duration-300 border rounded-full bg-white/5 border-white/15 hover:bg-white/10 hover:text-white hover:border-cyan-500/40 backdrop-blur-sm active:scale-95"
               >

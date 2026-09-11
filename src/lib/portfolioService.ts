@@ -309,8 +309,31 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
     const cached = localStorage.getItem("maharab_cached_profile");
     if (cached) {
       const parsed = JSON.parse(cached);
-      if (parsed && parsed.name) {
-        return { ...PORTFOLIO_INFO, ...parsed };
+      if (parsed && (parsed.name || parsed.resume_url || parsed.resumeUrl)) {
+        return {
+          ...PORTFOLIO_INFO,
+          ...parsed,
+          name: parsed.name || PORTFOLIO_INFO.name,
+          shortName: parsed.short_name || parsed.shortName || PORTFOLIO_INFO.shortName,
+          title: parsed.title || PORTFOLIO_INFO.title,
+          bio: parsed.bio || PORTFOLIO_INFO.bio,
+          email: parsed.email || PORTFOLIO_INFO.email,
+          phone: parsed.phone || PORTFOLIO_INFO.phone,
+          location: parsed.location || PORTFOLIO_INFO.location,
+          resumeUrl: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+          stats: {
+            ...PORTFOLIO_INFO.stats,
+            yearsExperience: parsed.years_experience || parsed.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
+            projectsCompleted: parsed.projects_completed || parsed.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
+            satisfactionRate: parsed.satisfaction_rate || parsed.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
+          },
+          socials: {
+            ...PORTFOLIO_INFO.socials,
+            github: parsed.github_url || parsed.github || parsed.socials?.github || PORTFOLIO_INFO.socials.github,
+            linkedin: parsed.linkedin_url || parsed.linkedin || parsed.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
+            twitter: parsed.twitter_url || parsed.twitter || parsed.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
+          },
+        };
       }
     }
   } catch (e) {}
@@ -360,22 +383,31 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
 export const saveLiveProfile = async (
   profileData: any
 ): Promise<{ success: boolean; error?: string }> => {
-  // Save to localStorage
+  // Normalize and cache
+  const toCache = {
+    ...profileData,
+    resume_url: profileData.resume_url || profileData.resumeUrl,
+    resumeUrl: profileData.resume_url || profileData.resumeUrl,
+  };
+
   try {
-    localStorage.setItem("maharab_cached_profile", JSON.stringify(profileData));
+    localStorage.setItem("maharab_cached_profile", JSON.stringify(toCache));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_profile_updated"));
+    }
   } catch (e) {}
 
   if (isSupabaseConfigured && supabase) {
     try {
       const dbProfile = {
         name: profileData.name,
-        short_name: profileData.short_name,
+        short_name: profileData.short_name || profileData.shortName,
         title: profileData.title,
         bio: profileData.bio,
         email: profileData.email,
         phone: profileData.phone,
         location: profileData.location,
-        resume_url: profileData.resume_url,
+        resume_url: profileData.resume_url || profileData.resumeUrl,
         available_for_hire: profileData.available_for_hire,
         years_experience: profileData.years_experience,
         projects_completed: profileData.projects_completed,

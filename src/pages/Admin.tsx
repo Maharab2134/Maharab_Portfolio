@@ -364,6 +364,9 @@ const Admin: React.FC = () => {
   const [storageRlsError, setStorageRlsError] = useState<string | null>(null);
   const [storageRlsCopied, setStorageRlsCopied] = useState(false);
   const [databaseFixCopied, setDatabaseFixCopied] = useState(false);
+  const [resumeCopied, setResumeCopied] = useState(false);
+  const [resumeManualSaving, setResumeManualSaving] = useState(false);
+  const [resumeSavedToast, setResumeSavedToast] = useState(false);
 
   // Check auth session
   useEffect(() => {
@@ -778,8 +781,11 @@ const Admin: React.FC = () => {
       setProjectForm((prev) => ({ ...prev, image_url: publicData.publicUrl }));
       setUploadStatus("Image uploaded successfully to Supabase Storage!");
     } else {
-      setProfileForm((prev) => ({ ...prev, resume_url: publicData.publicUrl }));
-      setUploadStatus(`Resume uploaded successfully! URL: ${publicData.publicUrl}`);
+      const newResumeUrl = publicData.publicUrl;
+      const updatedProfile = { ...profileForm, resume_url: newResumeUrl };
+      setProfileForm(updatedProfile);
+      setUploadStatus(`Resume uploaded and set live on website! URL: ${newResumeUrl}`);
+      await saveLiveProfile(updatedProfile);
     }
     setTimeout(() => setUploadStatus(""), 4000);
   };
@@ -3204,26 +3210,65 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   </div>
                 </div>
 
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-300">
+                      Live Resume / CV File URL:
+                    </label>
+                    {resumeSavedToast && (
+                      <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                        {renderIcon(FaCheckCircle, { size: 12 })}
+                        <span>Live CV URL Updated &amp; Saved!</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={profileForm.resume_url}
+                      onChange={(e) => setProfileForm({ ...profileForm, resume_url: e.target.value })}
+                      placeholder="https://..."
+                      className="flex-1 px-3.5 py-2.5 text-xs text-white bg-slate-950/80 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 font-mono transition-all"
+                    />
+                    <button
+                      type="button"
+                      disabled={resumeManualSaving}
+                      onClick={async () => {
+                        setResumeManualSaving(true);
+                        await saveLiveProfile(profileForm);
+                        setResumeManualSaving(false);
+                        setResumeSavedToast(true);
+                        setTimeout(() => setResumeSavedToast(false), 3000);
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-xs font-bold text-white transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
+                    >
+                      {resumeManualSaving ? "Saving..." : "Save & Activate"}
+                    </button>
+                  </div>
+                </div>
+
                 <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-white/10">
                   <a
                     href={profileForm.resume_url || "/PDF/Maharab_Hosen.pdf"}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
                   >
                     {renderIcon(FaExternalLinkAlt, { size: 10 })}
-                    <span>Preview Current Resume</span>
+                    <span>Preview Live Resume</span>
                   </a>
 
                   <button
+                    type="button"
                     onClick={() => {
                       navigator.clipboard.writeText(profileForm.resume_url || "/PDF/Maharab_Hosen.pdf");
-                      alert("Resume URL copied to clipboard!");
+                      setResumeCopied(true);
+                      setTimeout(() => setResumeCopied(false), 2500);
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border border-white/10 text-slate-300 hover:text-white transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border border-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    {renderIcon(FaCopy, { size: 10 })}
-                    <span>Copy URL</span>
+                    {renderIcon(resumeCopied ? FaCheck : FaCopy, { size: 10 })}
+                    <span>{resumeCopied ? "Copied!" : "Copy URL"}</span>
                   </button>
                 </div>
               </div>

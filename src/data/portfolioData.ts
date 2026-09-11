@@ -38,7 +38,8 @@ export const PORTFOLIO_INFO = {
   whatsappUrl: "https://wa.me/8801586282609",
   location: "Mirpur, Dhaka, Bangladesh",
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=Mirpur+Dhaka+Bangladesh",
-  resumeUrl: "/PDF/Maharab_Hosen.pdf",
+  resumeUrl:
+    "https://zcmeryxyifkxbxkmgvfe.supabase.co/storage/v1/object/public/portfolio-assets/resumes/1789151663633_9bxyr9.pdf",
   introVideoId: "1BzSWgFEBgruUq-3wkTWfEiip3Rzxr-Pm",
   profileImage: "/images/img.jpg",
   stats: {

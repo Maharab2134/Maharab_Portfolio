@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaDownload,
@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
 import { toProxyImageUrl } from "../data/projectsData";
+import { getLiveProfile } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -28,6 +29,21 @@ const AVATAR_FALLBACK = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
 const About: React.FC = () => {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [imgSrc, setImgSrc] = useState(toProxyImageUrl(PORTFOLIO_INFO.profileImage));
+  const [resumeUrl, setResumeUrl] = useState(PORTFOLIO_INFO.resumeUrl);
+
+  useEffect(() => {
+    getLiveProfile().then((p) => {
+      if (p && p.resumeUrl) setResumeUrl(p.resumeUrl);
+    });
+
+    const handleProfileUpdate = () => {
+      getLiveProfile().then((p) => {
+        if (p && p.resumeUrl) setResumeUrl(p.resumeUrl);
+      });
+    };
+    window.addEventListener("portfolio_profile_updated", handleProfileUpdate);
+    return () => window.removeEventListener("portfolio_profile_updated", handleProfileUpdate);
+  }, []);
 
   const introDrivePreview = `https://drive.google.com/file/d/${PORTFOLIO_INFO.introVideoId}/preview?autoplay=1`;
 
@@ -153,7 +169,9 @@ const About: React.FC = () => {
             {/* Action Buttons (Matches Hero and Rest of Site) */}
             <div className="flex flex-wrap items-center gap-3 pt-3">
               <a
-                href={PORTFOLIO_INFO.resumeUrl}
+                href={resumeUrl}
+                target="_blank"
+                rel="noreferrer"
                 download
                 className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all duration-300 rounded-xl shadow-lg bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:shadow-purple-500/30 hover:scale-105 active:scale-95"
               >
