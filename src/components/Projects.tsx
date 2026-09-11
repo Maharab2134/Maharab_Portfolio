@@ -188,11 +188,16 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
   const [columns, setColumns] = useState<number>(3);
 
   useEffect(() => {
-    getLiveProjects().then((data) => {
-      if (data && data.length > 0) {
-        setProjectsList(data);
-      }
-    });
+    const fetchProjects = () => {
+      getLiveProjects().then((data) => {
+        if (data && data.length > 0) {
+          setProjectsList(data);
+        }
+      });
+    };
+    fetchProjects();
+    window.addEventListener("portfolio_projects_updated", fetchProjects);
+    return () => window.removeEventListener("portfolio_projects_updated", fetchProjects);
   }, []);
 
   useEffect(() => {

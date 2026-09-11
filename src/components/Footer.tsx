@@ -9,36 +9,56 @@ import {
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { useLiveProfile } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
 const Footer: React.FC = () => {
+  const profile = useLiveProfile();
   const currentYear = new Date().getFullYear();
+
+  const name = profile.name || PORTFOLIO_INFO.name;
+  const email = profile.email || PORTFOLIO_INFO.email;
+  const phone = profile.phone || PORTFOLIO_INFO.phone;
+  const location = profile.location || PORTFOLIO_INFO.location;
+  const mapsUrl = profile.mapsUrl || PORTFOLIO_INFO.mapsUrl;
+  const profileImage = profile.profileImage || PORTFOLIO_INFO.profileImage;
+  const github = profile.socials?.github || PORTFOLIO_INFO.socials.github;
+  const linkedin = profile.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin;
+  const twitter = profile.socials?.twitter || PORTFOLIO_INFO.socials.twitter;
+
+  const initials = (profile.shortName || name || "MH")
+    .split(" ")
+    .filter(Boolean)
+    .map((w: string) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   const socialLinks = [
     {
       icon: FaGithub,
-      href: PORTFOLIO_INFO.socials.github,
+      href: github,
       label: "GitHub",
       color: "hover:text-white hover:border-purple-400",
     },
     {
       icon: FaLinkedin,
-      href: PORTFOLIO_INFO.socials.linkedin,
+      href: linkedin,
       label: "LinkedIn",
       color: "hover:text-cyan-300 hover:border-cyan-400",
     },
     {
       icon: FaTwitter,
-      href: PORTFOLIO_INFO.socials.twitter,
+      href: twitter,
       label: "Twitter / X",
       color: "hover:text-sky-300 hover:border-sky-400",
     },
     {
       icon: FaEnvelope,
-      href: `mailto:${PORTFOLIO_INFO.email}`,
+      href: `mailto:${email}`,
       label: "Email",
       color: "hover:text-pink-300 hover:border-pink-400",
     },
@@ -69,23 +89,23 @@ const Footer: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="relative flex items-center justify-center w-10 h-10 overflow-hidden font-bold text-white rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 shadow-md shadow-purple-500/20 border border-white/20">
                 <img
-                  src={PORTFOLIO_INFO.profileImage}
-                  alt={PORTFOLIO_INFO.name}
+                  src={profileImage}
+                  alt={name}
                   className="object-cover object-top w-full h-full"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
                   }}
                 />
                 <span className="absolute inset-0 flex items-center justify-center -z-10">
-                  MH
+                  {initials || "MH"}
                 </span>
               </div>
               <span className="text-xl font-bold tracking-tight text-white">
-                {PORTFOLIO_INFO.name}
+                {name}
               </span>
             </div>
             <p className="text-sm leading-relaxed text-slate-400 max-w-sm">
-              Full-Stack Software Engineer &amp; Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.
+              {profile.bio || "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design."}
             </p>
 
             {/* Social Links */}
@@ -132,27 +152,27 @@ const Footer: React.FC = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2.5 text-slate-400">
                 {renderIcon(FaEnvelope, { size: 13, className: "text-purple-400 flex-shrink-0" })}
-                <a href={`mailto:${PORTFOLIO_INFO.email}`} className="hover:text-white transition-colors truncate">
-                  {PORTFOLIO_INFO.email}
+                <a href={`mailto:${email}`} className="hover:text-white transition-colors truncate">
+                  {email}
                 </a>
               </li>
 
               <li className="flex items-center gap-2.5 text-slate-400">
                 {renderIcon(FaPhoneAlt, { size: 12, className: "text-cyan-400 flex-shrink-0" })}
-                <a href={`tel:${PORTFOLIO_INFO.phone.replace(/\s+/g, "")}`} className="hover:text-white transition-colors">
-                  {PORTFOLIO_INFO.phone}
+                <a href={`tel:${phone.replace(/\s+/g, "")}`} className="hover:text-white transition-colors">
+                  {phone}
                 </a>
               </li>
 
               <li className="flex items-center gap-2.5 text-slate-400">
                 {renderIcon(FaMapMarkerAlt, { size: 13, className: "text-pink-400 flex-shrink-0" })}
                 <a
-                  href={PORTFOLIO_INFO.mapsUrl}
+                  href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  {PORTFOLIO_INFO.location}
+                  {location}
                 </a>
               </li>
             </ul>
@@ -162,7 +182,7 @@ const Footer: React.FC = () => {
         {/* Bottom Copyright & Status */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 text-xs text-slate-500">
           <p className="flex items-center gap-1.5">
-            <span>© {currentYear} {PORTFOLIO_INFO.name}. Built with</span>
+            <span>© {currentYear} {name}. Built with</span>
             {renderIcon(FaHeart, { size: 12, className: "text-rose-500 inline" })}
             <span>React, TypeScript &amp; Tailwind CSS.</span>
           </p>

@@ -52,6 +52,7 @@ import {
   deleteLiveProject,
   getLiveProfile,
   saveLiveProfile,
+  saveLiveResumeUrl,
   getLiveEducation,
   saveLiveEducation,
   getLiveCertificates,
@@ -728,9 +729,25 @@ const Admin: React.FC = () => {
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     const filePath = `${destination === "resume" ? "resumes" : "projects"}/${fileName}`;
 
+    // If uploading a new resume, delete previous CV files from storage so old ones are automatically removed
+    if (destination === "resume") {
+      try {
+        const { data: existingFiles } = await supabase.storage
+          .from("portfolio-assets")
+          .list("resumes");
+
+        if (existingFiles && existingFiles.length > 0) {
+          const filesToRemove = existingFiles.map((f) => `resumes/${f.name}`);
+          await supabase.storage.from("portfolio-assets").remove(filesToRemove);
+        }
+      } catch (cleanupErr) {
+        console.warn("Storage cleanup note:", cleanupErr);
+      }
+    }
+
     const { error: uploadError } = await supabase.storage
       .from("portfolio-assets")
-      .upload(filePath, file);
+      .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
       const isRls =
@@ -782,12 +799,17 @@ const Admin: React.FC = () => {
       setUploadStatus("Image uploaded successfully to Supabase Storage!");
     } else {
       const newResumeUrl = publicData.publicUrl;
-      const updatedProfile = { ...profileForm, resume_url: newResumeUrl };
+      const updatedProfile = {
+        ...profileForm,
+        resume_url: newResumeUrl,
+        resumeUrl: newResumeUrl,
+      };
       setProfileForm(updatedProfile);
-      setUploadStatus(`Resume uploaded and set live on website! URL: ${newResumeUrl}`);
+      setUploadStatus(`CV uploaded & activated! Old CV removed from cloud storage, and new CV is now live across the website.`);
+      await saveLiveResumeUrl(newResumeUrl);
       await saveLiveProfile(updatedProfile);
     }
-    setTimeout(() => setUploadStatus(""), 4000);
+    setTimeout(() => setUploadStatus(""), 6000);
   };
 
   const STORAGE_RLS_FIX_SQL = `-- 1. Create 'portfolio-assets' bucket if not already created

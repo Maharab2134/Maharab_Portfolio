@@ -12,6 +12,7 @@ import {
   FaRocket,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { useLiveProfile } from "../lib/portfolioService";
 
 interface NavbarProps {
   isMenuOpen: boolean;
@@ -33,6 +34,7 @@ const navLinks = [
 ];
 
 const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePage }) => {
+  const profile = useLiveProfile();
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
 
@@ -96,6 +98,16 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
     }
   };
 
+  const displayName = profile.shortName || profile.name || "Md. Maharab";
+  const displayTitle = profile.title || "Software Developer";
+  const initials = (profile.shortName || profile.name || "MH")
+    .split(" ")
+    .filter(Boolean)
+    .map((w: string) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <motion.header
       initial={{ y: -80, opacity: 0 }}
@@ -112,29 +124,29 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
           <a
             href="#home"
             onClick={(e) => handleLinkClick(e, "#home")}
-            aria-label="Md. Maharab Hosen Home"
+            aria-label={`${profile.name || PORTFOLIO_INFO.name} Home`}
             className="flex items-center gap-3 group"
           >
             <div className="relative flex items-center justify-center w-10 h-10 overflow-hidden font-bold text-white transition-transform duration-300 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 group-hover:scale-105 shadow-md shadow-purple-500/20 border border-white/20">
               <img
-                src={PORTFOLIO_INFO.profileImage}
-                alt={PORTFOLIO_INFO.name}
+                src={profile.profileImage || PORTFOLIO_INFO.profileImage}
+                alt={profile.name || PORTFOLIO_INFO.name}
                 className="object-cover object-top w-full h-full"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}
               />
               <span className="absolute inset-0 flex items-center justify-center text-base tracking-wider -z-10">
-                MH
+                {initials || "MH"}
               </span>
               <div className="absolute inset-0 transition-opacity opacity-0 bg-white/20 group-hover:opacity-100" />
             </div>
             <div className="flex flex-col">
               <span className="text-base font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-purple-300">
-                Md. Maharab
+                {displayName}
               </span>
               <span className="text-[11px] font-medium tracking-wide text-cyan-400/80">
-                Software Developer
+                {displayTitle}
               </span>
             </div>
           </a>

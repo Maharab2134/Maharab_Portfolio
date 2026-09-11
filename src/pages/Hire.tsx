@@ -12,6 +12,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { useLiveProfile } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -45,13 +46,19 @@ const SERVICES = [
 ];
 
 const Hire: React.FC = () => {
+  const profile = useLiveProfile();
+  const name = profile.name || PORTFOLIO_INFO.name;
+  const email = profile.email || PORTFOLIO_INFO.email;
+  const rawWhatsapp = profile.whatsappNumber || PORTFOLIO_INFO.whatsappNumber || profile.phone || PORTFOLIO_INFO.phone;
+  const whatsappNumber = rawWhatsapp.replace(/\D+/g, "");
+
   useEffect(() => {
-    document.title = "Hire Md. Maharab Hosen | Software Engineer";
+    document.title = `Hire ${name} | Software Engineer`;
     window.scrollTo({ top: 0, behavior: "smooth" });
     return () => {
-      document.title = `${PORTFOLIO_INFO.name} | Portfolio`;
+      document.title = `${name} | Portfolio`;
     };
-  }, []);
+  }, [name]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -103,7 +110,7 @@ const Hire: React.FC = () => {
       `*Project Scope:* ${formData.description}`,
     ].join("%0A%0A");
 
-    const url = `https://wa.me/${PORTFOLIO_INFO.whatsappNumber}?text=${text}`;
+    const url = `https://wa.me/${whatsappNumber}?text=${text}`;
     window.open(url, "_blank", "noopener,noreferrer");
     setSubmittedStatus("Redirecting to WhatsApp to send your detailed brief...");
   };
@@ -111,7 +118,7 @@ const Hire: React.FC = () => {
   const handleSubmitEmail = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.email.trim() || !formData.description.trim()) {
-      alert("Please fill in your name, email, and project description.");
+      setSubmittedStatus("Please fill in your name, email, and project description.");
       return;
     }
 
@@ -127,7 +134,7 @@ const Hire: React.FC = () => {
       `Project Scope:\n${formData.description}`
     );
 
-    window.location.href = `mailto:${PORTFOLIO_INFO.email}?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     setSubmittedStatus("Opening your email client with your prefilled proposal...");
   };
 
@@ -386,10 +393,10 @@ const Hire: React.FC = () => {
                 Reach out directly at
               </p>
               <a
-                href={`mailto:${PORTFOLIO_INFO.email}`}
+                href={`mailto:${email}`}
                 className="inline-block mt-2 text-sm font-semibold text-cyan-400 hover:underline"
               >
-                {PORTFOLIO_INFO.email}
+                {email}
               </a>
             </div>
           </div>

@@ -12,11 +12,16 @@ const Education: React.FC = () => {
   const [educationList, setEducationList] = useState<EducationItem[]>(EDUCATION_DATA);
 
   useEffect(() => {
-    getLiveEducation().then((data) => {
-      if (data && data.length > 0) {
-        setEducationList(data);
-      }
-    });
+    const fetchEdu = () => {
+      getLiveEducation().then((data) => {
+        if (data && data.length > 0) {
+          setEducationList(data);
+        }
+      });
+    };
+    fetchEdu();
+    window.addEventListener("portfolio_education_updated", fetchEdu);
+    return () => window.removeEventListener("portfolio_education_updated", fetchEdu);
   }, []);
 
   return (

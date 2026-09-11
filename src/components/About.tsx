@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
 import { toProxyImageUrl } from "../data/projectsData";
-import { getLiveProfile } from "../lib/portfolioService";
+import { useLiveProfile } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -27,25 +27,19 @@ const AVATAR_FALLBACK = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
 `)}`;
 
 const About: React.FC = () => {
+  const profile = useLiveProfile();
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const [imgSrc, setImgSrc] = useState(toProxyImageUrl(PORTFOLIO_INFO.profileImage));
-  const [resumeUrl, setResumeUrl] = useState(PORTFOLIO_INFO.resumeUrl);
+  const [imgSrc, setImgSrc] = useState(toProxyImageUrl(profile.profileImage));
 
   useEffect(() => {
-    getLiveProfile().then((p) => {
-      if (p && p.resumeUrl) setResumeUrl(p.resumeUrl);
-    });
+    if (profile.profileImage) {
+      setImgSrc(toProxyImageUrl(profile.profileImage));
+    }
+  }, [profile.profileImage]);
 
-    const handleProfileUpdate = () => {
-      getLiveProfile().then((p) => {
-        if (p && p.resumeUrl) setResumeUrl(p.resumeUrl);
-      });
-    };
-    window.addEventListener("portfolio_profile_updated", handleProfileUpdate);
-    return () => window.removeEventListener("portfolio_profile_updated", handleProfileUpdate);
-  }, []);
-
-  const introDrivePreview = `https://drive.google.com/file/d/${PORTFOLIO_INFO.introVideoId}/preview?autoplay=1`;
+  const introVideoId = profile.introVideoId || PORTFOLIO_INFO.introVideoId;
+  const introDrivePreview = `https://drive.google.com/file/d/${introVideoId}/preview?autoplay=1`;
+  const resumeUrl = profile.resumeUrl || PORTFOLIO_INFO.resumeUrl;
 
   const highlights = [
     {
@@ -57,13 +51,13 @@ const About: React.FC = () => {
     {
       icon: FaMapMarkerAlt,
       label: "Location",
-      value: "Mirpur, Dhaka, Bangladesh",
+      value: profile.location || "Mirpur, Dhaka, Bangladesh",
       color: "text-pink-400 bg-pink-500/10 border-pink-500/20",
     },
     {
       icon: FaRocket,
       label: "Experience",
-      value: `${PORTFOLIO_INFO.stats.yearsExperience} Years • ${PORTFOLIO_INFO.stats.projectsCompleted} Projects Built`,
+      value: `${profile.stats?.yearsExperience ?? PORTFOLIO_INFO.stats.yearsExperience} Years • ${profile.stats?.projectsCompleted ?? PORTFOLIO_INFO.stats.projectsCompleted} Projects Built`,
       color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
     },
   ];
@@ -81,7 +75,7 @@ const About: React.FC = () => {
       <div className="relative px-4 mx-auto max-w-6xl sm:px-6 lg:px-8">
         {/* Section Heading (Exact match with other sections) */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
@@ -114,7 +108,7 @@ const About: React.FC = () => {
               <div className="p-2.5 overflow-hidden border rounded-3xl bg-white/[0.03] border-white/10 backdrop-blur-xl shadow-2xl shadow-black/40 group">
                 <img
                   src={imgSrc}
-                  alt={PORTFOLIO_INFO.name}
+                  alt={profile.name || PORTFOLIO_INFO.name}
                   onError={() => setImgSrc(AVATAR_FALLBACK)}
                   className="object-cover object-top w-full h-80 sm:h-96 rounded-2xl transition-transform duration-500 group-hover:scale-[1.02]"
                 />
@@ -135,14 +129,14 @@ const About: React.FC = () => {
               <h3 className="text-2xl font-bold text-white sm:text-3xl">
                 Hi, I'm{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
-                  {PORTFOLIO_INFO.name}
+                  {profile.name || PORTFOLIO_INFO.name}
                 </span>
               </h3>
               <p className="text-base sm:text-lg leading-relaxed text-slate-300">
-                A passionate <strong className="font-semibold text-white">Full-Stack Software Developer</strong> and Computer Science &amp; Engineering student at BUBT.
+                A passionate <strong className="font-semibold text-white">{profile.title || "Full-Stack Software Developer"}</strong> and Computer Science &amp; Engineering student at BUBT.
               </p>
               <p className="text-sm sm:text-base leading-relaxed text-slate-400">
-                I enjoy building modern web and mobile applications using <span className="text-slate-200">React, Next.js, Node.js, and Flutter</span>. My focus is on writing clean, scalable code and turning ideas into fast, user-friendly digital products.
+                {profile.bio || "I enjoy building modern web and mobile applications using React, Next.js, Node.js, and Flutter. My focus is on writing clean, scalable code and turning ideas into fast, user-friendly digital products."}
               </p>
             </div>
 

@@ -11,19 +11,23 @@ import {
   FaLightbulb,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO, MILESTONES_DATA } from "../data/portfolioData";
+import { useLiveProfile } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
 const MyJourney: React.FC = () => {
+  const profile = useLiveProfile();
+  const name = profile.name || PORTFOLIO_INFO.name;
+
   useEffect(() => {
-    document.title = "My Engineering Journey | Md. Maharab Hosen";
+    document.title = `My Engineering Journey | ${name}`;
     window.scrollTo({ top: 0, behavior: "smooth" });
     return () => {
-      document.title = `${PORTFOLIO_INFO.name} | Portfolio`;
+      document.title = `${name} | Portfolio`;
     };
-  }, []);
+  }, [name]);
 
   const handleReturnHome = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -22,11 +22,16 @@ const Certificates: React.FC = () => {
   const initialLimit = 4;
 
   useEffect(() => {
-    getLiveCertificates().then((data) => {
-      if (data && data.length > 0) {
-        setCertsList(data);
-      }
-    });
+    const fetchCerts = () => {
+      getLiveCertificates().then((data) => {
+        if (data && data.length > 0) {
+          setCertsList(data);
+        }
+      });
+    };
+    fetchCerts();
+    window.addEventListener("portfolio_certificates_updated", fetchCerts);
+    return () => window.removeEventListener("portfolio_certificates_updated", fetchCerts);
   }, []);
 
   const filteredCerts = certsList.filter((cert) => {

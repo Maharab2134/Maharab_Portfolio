@@ -20,59 +20,47 @@ import {
 } from "react-icons/fa";
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { TypeAnimation } from "react-type-animation";
-import { PORTFOLIO_INFO } from "../data/portfolioData";
-import { getLiveProfile } from "../lib/portfolioService";
+import { useLiveProfile } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
-const SOCIAL_LINKS = [
-  {
-    href: PORTFOLIO_INFO.socials.github,
-    label: "GitHub",
-    icon: FaGithub,
-    hoverColor: "hover:text-white hover:border-purple-400 hover:bg-purple-500/10",
-  },
-  {
-    href: PORTFOLIO_INFO.socials.linkedin,
-    label: "LinkedIn",
-    icon: FaLinkedin,
-    hoverColor: "hover:text-cyan-300 hover:border-cyan-400 hover:bg-cyan-500/10",
-  },
-  {
-    href: PORTFOLIO_INFO.socials.twitter,
-    label: "Twitter / X",
-    icon: FaTwitter,
-    hoverColor: "hover:text-sky-300 hover:border-sky-400 hover:bg-sky-500/10",
-  },
-  {
-    href: `mailto:${PORTFOLIO_INFO.email}`,
-    label: "Email Me",
-    icon: FaEnvelope,
-    hoverColor: "hover:text-pink-300 hover:border-pink-400 hover:bg-pink-500/10",
-  },
-];
-
 const Hero: React.FC = () => {
+  const profile = useLiveProfile();
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeTab, setActiveTab] = useState<"spec" | "capabilities">("spec");
-  const [resumeUrl, setResumeUrl] = useState(PORTFOLIO_INFO.resumeUrl);
 
-  useEffect(() => {
-    getLiveProfile().then((p) => {
-      if (p && p.resumeUrl) setResumeUrl(p.resumeUrl);
-    });
-
-    const handleProfileUpdate = () => {
-      getLiveProfile().then((p) => {
-        if (p && p.resumeUrl) setResumeUrl(p.resumeUrl);
-      });
-    };
-    window.addEventListener("portfolio_profile_updated", handleProfileUpdate);
-    return () => window.removeEventListener("portfolio_profile_updated", handleProfileUpdate);
-  }, []);
+  const socialLinks = useMemo(
+    () => [
+      {
+        href: profile.socials.github,
+        label: "GitHub",
+        icon: FaGithub,
+        hoverColor: "hover:text-white hover:border-purple-400 hover:bg-purple-500/10",
+      },
+      {
+        href: profile.socials.linkedin,
+        label: "LinkedIn",
+        icon: FaLinkedin,
+        hoverColor: "hover:text-cyan-300 hover:border-cyan-400 hover:bg-cyan-500/10",
+      },
+      {
+        href: profile.socials.twitter,
+        label: "Twitter / X",
+        icon: FaTwitter,
+        hoverColor: "hover:text-sky-300 hover:border-sky-400 hover:bg-sky-500/10",
+      },
+      {
+        href: `mailto:${profile.email}`,
+        label: "Email Me",
+        icon: FaEnvelope,
+        hoverColor: "hover:text-pink-300 hover:border-pink-400 hover:bg-pink-500/10",
+      },
+    ],
+    [profile]
+  );
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
@@ -198,7 +186,7 @@ const Hero: React.FC = () => {
               </p>
               <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl md:text-7xl">
                 <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-purple-200">
-                  {PORTFOLIO_INFO.name}
+                  {profile.name}
                 </span>
               </h1>
             </motion.div>
@@ -237,7 +225,7 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="max-w-xl text-base sm:text-lg leading-relaxed text-slate-300/90 font-light"
             >
-              Software Engineering student at <span className="font-semibold text-white">BUBT</span>. I bridge architectural discipline with human-centered product design to build scalable digital systems that withstand real-world loads.
+              {profile.tagline || profile.bio || "Software Engineering student at BUBT. I bridge architectural discipline with human-centered product design to build scalable digital systems."}
             </motion.p>
 
             {/* Stats Metric Strip */}
@@ -249,19 +237,19 @@ const Hero: React.FC = () => {
             >
               <div className="px-2 py-1 text-left">
                 <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 sm:text-2xl">
-                  {PORTFOLIO_INFO.stats.yearsExperience}
+                  {profile.stats.yearsExperience}
                 </p>
                 <p className="text-[11px] font-medium text-slate-400">Years Exp</p>
               </div>
               <div className="px-2 py-1 text-left border-x border-white/10">
                 <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 sm:text-2xl">
-                  {PORTFOLIO_INFO.stats.projectsCompleted}
+                  {profile.stats.projectsCompleted}
                 </p>
                 <p className="text-[11px] font-medium text-slate-400">Projects Built</p>
               </div>
               <div className="px-2 py-1 text-left">
                 <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 sm:text-2xl">
-                  {PORTFOLIO_INFO.stats.satisfactionRate}
+                  {profile.stats.satisfactionRate}
                 </p>
                 <p className="text-[11px] font-medium text-slate-400">Commitment</p>
               </div>
@@ -287,11 +275,11 @@ const Hero: React.FC = () => {
               </a>
 
               <a
-                href={resumeUrl}
+                href={profile.resumeUrl}
                 target="_blank"
                 rel="noreferrer"
                 download
-                className="inline-flex items-center gap-2 px-5 py-3.5 text-sm font-semibold text-slate-200 transition-all duration-300 border rounded-full bg-white/5 border-white/15 hover:bg-white/10 hover:text-white hover:border-cyan-500/40 backdrop-blur-sm active:scale-95"
+                className="inline-flex items-center gap-2 px-5 py-3.5 text-sm font-semibold text-slate-200 transition-all duration-300 border rounded-full bg-white/5 border-white/15 hover:bg-white/10 hover:text-white hover:border-cyan-500/40 backdrop-blur-sm active:scale-95 cursor-pointer"
               >
                 {renderIcon(FaFileDownload, { size: 12, className: "text-cyan-400" })}
                 <span>Download CV</span>
@@ -310,16 +298,18 @@ const Hero: React.FC = () => {
               </a>
             </motion.div>
 
-            {/* Social Dock & Quick Tech Chips */}
+            {/* Social Connection Pills */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.7, delay: 0.5 }}
-              className="flex flex-wrap items-center gap-4 pt-3"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
+              className="flex items-center gap-2.5 pt-2"
             >
-              {/* Social Icons */}
+              <span className="text-xs font-semibold tracking-wider uppercase text-slate-400 mr-1 hidden sm:inline">
+                Network:
+              </span>
               <div className="flex items-center gap-2">
-                {SOCIAL_LINKS.map(({ href, label, icon: Icon, hoverColor }) => (
+                {socialLinks.map(({ href, label, icon: Icon, hoverColor }) => (
                   <div key={label} className="relative">
                     <a
                       href={href}
@@ -418,8 +408,8 @@ const Hero: React.FC = () => {
               <div className="p-5 border-b border-white/5 bg-gradient-to-r from-purple-950/20 via-slate-900/40 to-cyan-950/20 flex items-center gap-4">
                 <div className="relative flex-shrink-0">
                   <img
-                    src={PORTFOLIO_INFO.profileImage}
-                    alt={PORTFOLIO_INFO.name}
+                    src={profile.profileImage}
+                    alt={profile.name}
                     className="w-16 h-16 rounded-2xl object-cover object-top border border-white/20 shadow-md shadow-black/40"
                   />
                   <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-950" />
@@ -428,14 +418,14 @@ const Hero: React.FC = () => {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-bold text-white">
-                      {PORTFOLIO_INFO.name}
+                      {profile.name}
                     </h3>
                     <span className="px-2 py-0.5 text-[10px] font-semibold text-cyan-300 rounded-full bg-cyan-500/10 border border-cyan-500/20">
                       CSE BUBT
                     </span>
                   </div>
                   <p className="text-xs text-slate-400">
-                    Full-Stack Engineer &amp; Mobile Developer
+                    {profile.title}
                   </p>
                   <p className="font-mono text-[11px] text-purple-300 flex items-center gap-1">
                     {renderIcon(FaShieldAlt, { size: 10 })}
@@ -481,7 +471,7 @@ const Hero: React.FC = () => {
                     </p>
                     <p className="pl-4">
                       <span className="text-purple-300">name</span>:{" "}
-                      <span className="text-emerald-300">"{PORTFOLIO_INFO.name}"</span>,
+                      <span className="text-emerald-300">"{profile.name}"</span>,
                     </p>
                     <p className="pl-4">
                       <span className="text-purple-300">institution</span>:{" "}

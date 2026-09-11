@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
 import { PROJECTS, Project } from "../data/projectsData";
 import {
@@ -207,6 +208,9 @@ export const saveLiveProject = async (
       nextList = [localUpdatedObj, ...currentList];
     }
     localStorage.setItem("maharab_cached_projects", JSON.stringify(nextList));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_projects_updated"));
+    }
   } catch (e) {
     console.error("Local storage save error:", e);
   }
@@ -284,6 +288,9 @@ export const deleteLiveProject = async (id: string): Promise<boolean> => {
     }
     const updated = currentList.filter((p) => p.id !== id);
     localStorage.setItem("maharab_cached_projects", JSON.stringify(updated));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_projects_updated"));
+    }
   } catch (e) {}
 
   // 2. Remove from Supabase if configured
@@ -352,11 +359,15 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
           name: row.name || PORTFOLIO_INFO.name,
           shortName: row.short_name || PORTFOLIO_INFO.shortName,
           title: row.title || PORTFOLIO_INFO.title,
+          tagline: row.tagline || PORTFOLIO_INFO.tagline,
           bio: row.bio || PORTFOLIO_INFO.bio,
           email: row.email || PORTFOLIO_INFO.email,
           phone: row.phone || PORTFOLIO_INFO.phone,
+          whatsappNumber: (row.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, ""),
+          whatsappUrl: `https://wa.me/${(row.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, "")}`,
           location: row.location || PORTFOLIO_INFO.location,
           resumeUrl: row.resume_url || PORTFOLIO_INFO.resumeUrl,
+          profileImage: row.profile_image || row.profileImage || PORTFOLIO_INFO.profileImage,
           stats: {
             ...PORTFOLIO_INFO.stats,
             yearsExperience: row.years_experience || PORTFOLIO_INFO.stats.yearsExperience,
@@ -383,15 +394,23 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
 export const saveLiveProfile = async (
   profileData: any
 ): Promise<{ success: boolean; error?: string }> => {
+  const resumeUrl = profileData.resume_url || profileData.resumeUrl;
+  const profileImage = profileData.profile_image || profileData.profileImage;
+
   // Normalize and cache
   const toCache = {
     ...profileData,
-    resume_url: profileData.resume_url || profileData.resumeUrl,
-    resumeUrl: profileData.resume_url || profileData.resumeUrl,
+    ...(resumeUrl ? { resume_url: resumeUrl, resumeUrl } : {}),
+    ...(profileImage ? { profile_image: profileImage, profileImage } : {}),
   };
 
   try {
-    localStorage.setItem("maharab_cached_profile", JSON.stringify(toCache));
+    const existingCached = localStorage.getItem("maharab_cached_profile");
+    const merged = {
+      ...(existingCached ? JSON.parse(existingCached) : {}),
+      ...toCache,
+    };
+    localStorage.setItem("maharab_cached_profile", JSON.stringify(merged));
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("portfolio_profile_updated"));
     }
@@ -399,15 +418,17 @@ export const saveLiveProfile = async (
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const dbProfile = {
+      const fieldMap: Record<string, any> = {
         name: profileData.name,
         short_name: profileData.short_name || profileData.shortName,
         title: profileData.title,
+        tagline: profileData.tagline,
         bio: profileData.bio,
         email: profileData.email,
         phone: profileData.phone,
         location: profileData.location,
-        resume_url: profileData.resume_url || profileData.resumeUrl,
+        resume_url: resumeUrl,
+        profile_image: profileImage,
         available_for_hire: profileData.available_for_hire,
         years_experience: profileData.years_experience,
         projects_completed: profileData.projects_completed,
@@ -416,6 +437,13 @@ export const saveLiveProfile = async (
         linkedin_url: profileData.linkedin || profileData.linkedin_url,
         twitter_url: profileData.twitter || profileData.twitter_url,
       };
+
+      const dbProfile: Record<string, any> = {};
+      for (const [key, val] of Object.entries(fieldMap)) {
+        if (val !== undefined) {
+          dbProfile[key] = val;
+        }
+      }
 
       const { data: existing } = await supabase.from("profile_info").select("id").limit(1);
       if (existing && existing.length > 0) {
@@ -429,6 +457,80 @@ export const saveLiveProfile = async (
   }
 
   return { success: true };
+};
+
+export const saveLiveResumeUrl = async (
+  newResumeUrl: string
+): Promise<{ success: boolean; error?: string }> => {
+  return await saveLiveProfile({
+    resume_url: newResumeUrl,
+    resumeUrl: newResumeUrl,
+  });
+};
+
+// Unified Live Profile Hook - auto synchronizes any updates live
+export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
+  const [profile, setProfile] = useState<typeof PORTFOLIO_INFO>(() => {
+    try {
+      const cached = localStorage.getItem("maharab_cached_profile");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && (parsed.name || parsed.resume_url || parsed.resumeUrl)) {
+          return {
+            ...PORTFOLIO_INFO,
+            ...parsed,
+            name: parsed.name || PORTFOLIO_INFO.name,
+            shortName: parsed.short_name || parsed.shortName || PORTFOLIO_INFO.shortName,
+            title: parsed.title || PORTFOLIO_INFO.title,
+            tagline: parsed.tagline || PORTFOLIO_INFO.tagline,
+            bio: parsed.bio || PORTFOLIO_INFO.bio,
+            email: parsed.email || PORTFOLIO_INFO.email,
+            phone: parsed.phone || PORTFOLIO_INFO.phone,
+            whatsappNumber: (parsed.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, ""),
+            whatsappUrl: `https://wa.me/${(parsed.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, "")}`,
+            location: parsed.location || PORTFOLIO_INFO.location,
+            resumeUrl: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+            profileImage: parsed.profile_image || parsed.profileImage || PORTFOLIO_INFO.profileImage,
+            stats: {
+              ...PORTFOLIO_INFO.stats,
+              yearsExperience: parsed.years_experience || parsed.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
+              projectsCompleted: parsed.projects_completed || parsed.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
+              satisfactionRate: parsed.satisfaction_rate || parsed.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
+            },
+            socials: {
+              ...PORTFOLIO_INFO.socials,
+              github: parsed.github_url || parsed.github || parsed.socials?.github || PORTFOLIO_INFO.socials.github,
+              linkedin: parsed.linkedin_url || parsed.linkedin || parsed.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
+              twitter: parsed.twitter_url || parsed.twitter || parsed.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
+            },
+          };
+        }
+      }
+    } catch (e) {}
+    return PORTFOLIO_INFO;
+  });
+
+  useEffect(() => {
+    let active = true;
+    const fetchLatest = async () => {
+      const live = await getLiveProfile();
+      if (active) setProfile(live);
+    };
+
+    fetchLatest();
+
+    const handleUpdate = () => {
+      fetchLatest();
+    };
+
+    window.addEventListener("portfolio_profile_updated", handleUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_profile_updated", handleUpdate);
+    };
+  }, []);
+
+  return profile;
 };
 
 // ============================================================================
@@ -477,6 +579,9 @@ export const saveLiveEducation = async (
   // 1. Immediately update localStorage
   try {
     localStorage.setItem("maharab_cached_education", JSON.stringify(educationList));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_education_updated"));
+    }
   } catch (e) {}
 
   // 2. Sync with Supabase cloud if configured
@@ -553,6 +658,9 @@ export const saveLiveCertificates = async (
   // 1. Immediately update localStorage
   try {
     localStorage.setItem("maharab_cached_certificates", JSON.stringify(certsList));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_certificates_updated"));
+    }
   } catch (e) {}
 
   // 2. Sync with Supabase cloud if configured

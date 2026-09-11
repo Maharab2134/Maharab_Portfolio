@@ -10,12 +10,14 @@ import {
   FaPaperPlane,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { useLiveProfile } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
 const Contact: React.FC = () => {
+  const profile = useLiveProfile();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,6 +28,14 @@ const Contact: React.FC = () => {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [submittedStatus, setSubmittedStatus] = useState<string | null>(null);
 
+  const email = profile.email || PORTFOLIO_INFO.email;
+  const phone = profile.phone || PORTFOLIO_INFO.phone;
+  const rawWhatsapp = profile.whatsappNumber || PORTFOLIO_INFO.whatsappNumber || phone;
+  const whatsappNumber = rawWhatsapp.replace(/\D+/g, "");
+  const whatsappUrl = profile.whatsappUrl || (whatsappNumber ? `https://wa.me/${whatsappNumber}` : PORTFOLIO_INFO.whatsappUrl);
+  const location = profile.location || PORTFOLIO_INFO.location;
+  const mapsUrl = profile.mapsUrl || PORTFOLIO_INFO.mapsUrl;
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -34,7 +44,7 @@ const Contact: React.FC = () => {
   };
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText(PORTFOLIO_INFO.email);
+    navigator.clipboard.writeText(email);
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2500);
   };
@@ -43,13 +53,13 @@ const Contact: React.FC = () => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.message.trim()) return;
 
-    const messageText = `Hi Maharab,%0A%0AMy name is ${encodeURIComponent(
+    const messageText = `Hi ${profile.shortName || profile.name || "Maharab"},%0A%0AMy name is ${encodeURIComponent(
       formData.name
     )} (${encodeURIComponent(formData.email || "No email provided")}).%0A%0ASubject: ${encodeURIComponent(
       formData.subject || "General Inquiry"
     )}%0A%0AMessage:%0A${encodeURIComponent(formData.message)}`;
 
-    const url = `https://wa.me/${PORTFOLIO_INFO.whatsappNumber}?text=${messageText}`;
+    const url = `https://wa.me/${whatsappNumber}?text=${messageText}`;
     window.open(url, "_blank", "noopener,noreferrer");
     setSubmittedStatus("Opening WhatsApp chat with your pre-filled inquiry...");
   };
@@ -62,7 +72,7 @@ const Contact: React.FC = () => {
     const body = encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
     );
-    window.location.href = `mailto:${PORTFOLIO_INFO.email}?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     setSubmittedStatus("Opening your default email client...");
   };
 
@@ -125,10 +135,10 @@ const Contact: React.FC = () => {
                       Email Address
                     </p>
                     <a
-                      href={`mailto:${PORTFOLIO_INFO.email}`}
+                      href={`mailto:${email}`}
                       className="text-sm font-semibold text-white hover:text-cyan-300 transition-colors truncate block"
                     >
-                      {PORTFOLIO_INFO.email}
+                      {email}
                     </a>
                   </div>
                   <button
@@ -151,12 +161,12 @@ const Contact: React.FC = () => {
                       WhatsApp Chat
                     </p>
                     <a
-                      href={PORTFOLIO_INFO.whatsappUrl}
+                      href={whatsappUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm font-semibold text-white hover:text-emerald-300 transition-colors truncate block"
                     >
-                      {PORTFOLIO_INFO.phone}
+                      {phone}
                     </a>
                   </div>
                 </div>
@@ -171,10 +181,10 @@ const Contact: React.FC = () => {
                       Phone Number
                     </p>
                     <a
-                      href={`tel:${PORTFOLIO_INFO.phone.replace(/\s+/g, "")}`}
+                      href={`tel:${phone.replace(/\s+/g, "")}`}
                       className="text-sm font-semibold text-white hover:text-cyan-300 transition-colors truncate block"
                     >
-                      {PORTFOLIO_INFO.phone}
+                      {phone}
                     </a>
                   </div>
                 </div>
@@ -189,12 +199,12 @@ const Contact: React.FC = () => {
                       Location
                     </p>
                     <a
-                      href={PORTFOLIO_INFO.mapsUrl}
+                      href={mapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm font-semibold text-white hover:text-pink-300 transition-colors block"
                     >
-                      {PORTFOLIO_INFO.location}
+                      {location}
                     </a>
                   </div>
                 </div>
