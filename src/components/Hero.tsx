@@ -1,174 +1,70 @@
-// ============================================
-// HERO.tsx - UPDATED (Minimalist Name)
-// ============================================
-
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   motion,
   useMotionValue,
   useTransform,
   useSpring,
   AnimatePresence,
-  Variants,
 } from "framer-motion";
 import {
   FaGithub,
   FaLinkedin,
   FaTwitter,
-  FaPaperPlane,
+  FaEnvelope,
+  FaFileDownload,
+  FaArrowDown,
+  FaRocket,
+  FaTerminal,
+  FaCheckCircle,
+  FaShieldAlt,
 } from "react-icons/fa";
 import { HiOutlineSparkles } from "react-icons/hi2";
-import { IconBaseProps } from "react-icons";
 import { TypeAnimation } from "react-type-animation";
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { PORTFOLIO_INFO } from "../data/portfolioData";
 
-const renderIcon = (
-  Icon: React.ComponentType<IconBaseProps>,
-  props: IconBaseProps = {},
-) => {
+const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
-// Floating orbs data
-const FLOATING_ORBS = [...Array(6)].map((_, i) => ({
-  size: Math.random() * 300 + 150,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  duration: Math.random() * 20 + 15,
-  delay: i * 2,
-  color:
-    i % 3 === 0
-      ? "from-purple-600/20 to-blue-600/20"
-      : i % 3 === 1
-        ? "from-pink-600/20 to-purple-600/20"
-        : "from-cyan-600/20 to-teal-600/20",
-}));
-
-// Star particles
-const STARS = [...Array(50)].map(() => ({
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: Math.random() * 2 + 1,
-  duration: Math.random() * 3 + 2,
-  delay: Math.random() * 5,
-  opacity: Math.random() * 0.5 + 0.1,
-}));
-
-// Meteor/shooting star data
-const METEORS = [...Array(4)].map((_, i) => ({
-  delay: i * 4 + Math.random() * 3,
-  duration: Math.random() * 1.5 + 0.8,
-  startX: Math.random() * 60 + 20,
-  startY: -10,
-}));
-
-// Grid lines data
-const GRID_LINES_H = [...Array(12)].map((_, i) => ({
-  top: `${(i + 1) * 8}%`,
-  delay: i * 0.1,
-}));
-const GRID_LINES_V = [...Array(12)].map((_, i) => ({
-  left: `${(i + 1) * 8}%`,
-  delay: i * 0.1,
-}));
-
 const SOCIAL_LINKS = [
   {
-    href: "https://github.com/Maharab2134",
+    href: PORTFOLIO_INFO.socials.github,
     label: "GitHub",
     icon: FaGithub,
-    color: "hover:text-gray-100 hover:shadow-gray-400/50",
+    hoverColor: "hover:text-white hover:border-purple-400 hover:bg-purple-500/10",
   },
   {
-    href: "https://www.linkedin.com/in/md-maharab-hosen-679a70253/",
+    href: PORTFOLIO_INFO.socials.linkedin,
     label: "LinkedIn",
     icon: FaLinkedin,
-    color: "hover:text-blue-400 hover:shadow-blue-400/50",
+    hoverColor: "hover:text-cyan-300 hover:border-cyan-400 hover:bg-cyan-500/10",
   },
   {
-    href: "https://x.com/Mahar22234",
-    label: "Twitter",
+    href: PORTFOLIO_INFO.socials.twitter,
+    label: "Twitter / X",
     icon: FaTwitter,
-    color: "hover:text-cyan-400 hover:shadow-cyan-400/50",
+    hoverColor: "hover:text-sky-300 hover:border-sky-400 hover:bg-sky-500/10",
+  },
+  {
+    href: `mailto:${PORTFOLIO_INFO.email}`,
+    label: "Email Me",
+    icon: FaEnvelope,
+    hoverColor: "hover:text-pink-300 hover:border-pink-400 hover:bg-pink-500/10",
   },
 ];
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.3,
-    },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 30,
-    filter: "blur(10px)",
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: {
-      duration: 0.8,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-};
-
-const Hero = () => {
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isLoaded, setIsLoaded] = useState(false);
+const Hero: React.FC = () => {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [activeTab, setActiveTab] = useState<"spec" | "capabilities">("spec");
 
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const smoothMouseX = useSpring(mouseX, { stiffness: 50, damping: 20 });
-  const smoothMouseY = useSpring(mouseY, { stiffness: 50, damping: 20 });
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+  const smoothMouseX = useSpring(mouseX, { stiffness: 60, damping: 25 });
+  const smoothMouseY = useSpring(mouseY, { stiffness: 60, damping: 25 });
 
-  const rotateX = useTransform(smoothMouseY, [0, 1], [2, -2]);
-  const rotateY = useTransform(smoothMouseX, [0, 1], [-2, 2]);
-
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    const updatePreferences = () => {
-      if (typeof window === "undefined") return;
-      const touchMedia = window.matchMedia("(hover: none), (pointer: coarse)");
-      const reducedMedia = window.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      );
-      setIsTouchDevice(touchMedia.matches);
-      setPrefersReducedMotion(reducedMedia.matches);
-    };
-
-    updatePreferences();
-    window.addEventListener("resize", updatePreferences);
-    return () => window.removeEventListener("resize", updatePreferences);
-  }, []);
-
-  const shouldReduceEffects = isTouchDevice || prefersReducedMotion;
-  const floatingOrbs = useMemo(
-    () => (shouldReduceEffects ? FLOATING_ORBS.slice(0, 2) : FLOATING_ORBS),
-    [shouldReduceEffects],
-  );
-  const stars = useMemo(
-    () => (shouldReduceEffects ? STARS.slice(0, 18) : STARS),
-    [shouldReduceEffects],
-  );
-  const meteors = useMemo(
-    () => (shouldReduceEffects ? [] : METEORS),
-    [shouldReduceEffects],
-  );
+  const rotateX = useTransform(smoothMouseY, [0, 1], [4, -4]);
+  const rotateY = useTransform(smoothMouseX, [0, 1], [-4, 4]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -176,479 +72,475 @@ const Hero = () => {
       const { innerWidth, innerHeight } = window;
       mouseX.set(clientX / innerWidth);
       mouseY.set(clientY / innerHeight);
-      setMousePosition({
-        x: (clientX / innerWidth - 0.5) * 30,
-        y: (clientY / innerHeight - 0.5) * 30,
-      });
     },
-    [mouseX, mouseY],
+    [mouseX, mouseY]
   );
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > window.innerHeight / 2);
+      setShowScrollTop(window.scrollY > 400);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Show scroll-down indicator only when Hero is visible
-  const sectionRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const el = sectionRef.current;
-    if (!el) return;
-  }, []);
+  const techBadges = useMemo(
+    () => [
+      "React",
+      "Next.js",
+      "TypeScript",
+      "Node.js",
+      "Flutter",
+      "PostgreSQL",
+      "MongoDB",
+      "Tailwind CSS",
+    ],
+    []
+  );
 
   return (
     <section
       id="home"
-      ref={sectionRef}
-      onMouseMove={shouldReduceEffects ? undefined : handleMouseMove}
-      className="relative flex items-center justify-center min-h-[100svh] overflow-hidden bg-[#030014] md:min-h-screen"
+      onMouseMove={handleMouseMove}
+      className="relative flex items-center min-h-screen pt-28 pb-10 sm:pb-14 overflow-hidden bg-[#030014]"
     >
-      {/* ===== LAYERED BACKGROUND SYSTEM ===== */}
-
-      {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#030014] via-[#0a0a2e] to-[#030014]" />
-
-      {/* Subtle grid overlay */}
-      <div className="absolute inset-0 opacity-[0.03]">
-        {GRID_LINES_H.map((line, i) => (
-          <motion.div
-            key={`h-${i}`}
-            className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent"
-            style={{ top: line.top }}
-            initial={{ opacity: 0, scaleX: 0 }}
-            animate={{ opacity: 1, scaleX: 1 }}
-            transition={{ duration: 2, delay: line.delay + 1 }}
-          />
-        ))}
-        {GRID_LINES_V.map((line, i) => (
-          <motion.div
-            key={`v-${i}`}
-            className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-purple-500 to-transparent"
-            style={{ left: line.left }}
-            initial={{ opacity: 0, scaleY: 0 }}
-            animate={{ opacity: 1, scaleY: 1 }}
-            transition={{ duration: 2, delay: line.delay + 1 }}
-          />
-        ))}
-      </div>
-
-      {/* Floating orbs with parallax */}
-      <div className="absolute inset-0 overflow-hidden">
-        {floatingOrbs.map((orb, i) => (
-          <motion.div
-            key={i}
-            className={`absolute rounded-full bg-gradient-to-br ${orb.color} blur-3xl`}
-            style={{
-              width: orb.size,
-              height: orb.size,
-              left: `${orb.x}%`,
-              top: `${orb.y}%`,
-              x: mousePosition.x * (i % 2 === 0 ? 1 : -1) * 0.5,
-              y: mousePosition.y * (i % 2 === 0 ? -1 : 1) * 0.5,
-            }}
-            animate={{
-              x: [0, 50 * (i % 2 === 0 ? 1 : -1), 0],
-              y: [0, 30 * (i % 2 === 0 ? -1 : 1), 0],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: orb.duration,
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: orb.delay,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Star field */}
-      <div className="absolute inset-0">
-        {stars.map((star, i) => (
-          <motion.div
-            key={i}
-            className="absolute bg-white rounded-full"
-            style={{
-              width: star.size,
-              height: star.size,
-              left: `${star.x}%`,
-              top: `${star.y}%`,
-            }}
-            animate={{
-              opacity: [star.opacity, star.opacity * 2.5, star.opacity],
-              scale: [1, 1.5, 1],
-            }}
-            transition={{
-              duration: star.duration,
-              repeat: Infinity,
-              delay: star.delay,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Shooting meteors */}
-      {meteors.map((meteor, i) => (
+      {/* Dynamic Background Glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Upper Left Ambient Glow */}
         <motion.div
-          key={i}
-          className="absolute"
-          style={{ left: `${meteor.startX}%`, top: `${meteor.startY}%` }}
+          className="absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full bg-gradient-to-br from-purple-600/25 via-indigo-600/15 to-transparent blur-[140px]"
           animate={{
-            x: [0, 300],
-            y: [0, 400],
-            opacity: [0, 1, 0],
+            x: [0, 35, 0],
+            y: [0, 25, 0],
           }}
-          transition={{
-            duration: meteor.duration,
-            repeat: Infinity,
-            repeatDelay: meteor.delay + 8,
-            ease: "easeIn",
-          }}
-        >
-          <div className="w-[2px] h-[2px] bg-white rounded-full shadow-[0_0_6px_2px_rgba(255,255,255,0.6)]">
-            <div className="absolute top-0 right-0 w-[80px] h-[1px] bg-gradient-to-l from-white/80 to-transparent -translate-x-full" />
-          </div>
-        </motion.div>
-      ))}
-
-      {/* Radial spotlight following mouse */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none opacity-30"
-        style={{
-          background: `radial-gradient(600px circle at ${(mousePosition.x / 30 + 0.5) * 100}% ${(mousePosition.y / 30 + 0.5) * 100}%, rgba(120, 80, 255, 0.08), transparent 70%)`,
-        }}
-      />
-
-      {/* ===== MAIN CONTENT ===== */}
-      <motion.div
-        className="relative z-10 px-4 py-24 mx-auto text-center max-w-7xl sm:px-6 sm:py-32"
-        style={{ rotateX, rotateY, transformPerspective: 1200 }}
-        variants={containerVariants}
-        initial="hidden"
-        animate={isLoaded ? "visible" : "hidden"}
-      >
-        {/* Status Badge */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <motion.div
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-full bg-white/[0.03] border-white/[0.08] text-white/70 backdrop-blur-xl"
-            whileHover={{
-              scale: 1.05,
-              borderColor: "rgba(168, 85, 247, 0.3)",
-              backgroundColor: "rgba(168, 85, 247, 0.05)",
-            }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <motion.span
-              className="relative flex w-2.5 h-2.5"
-              aria-hidden="true"
-            >
-              <span className="absolute inline-flex w-full h-full bg-green-400 rounded-full opacity-75 animate-ping" />
-              <span className="relative inline-flex w-2.5 h-2.5 bg-green-500 rounded-full" />
-            </motion.span>
-            Available for opportunities
-            {renderIcon(
-              HiOutlineSparkles as React.ComponentType<IconBaseProps>,
-              {
-                size: 16,
-                className: "text-purple-400 ml-1",
-              },
-            )}
-          </motion.div>
-        </motion.div>
-
-        <motion.div variants={itemVariants} className="mb-4">
-          <h2 className="text-base font-light tracking-[0.3em] uppercase text-white/50 sm:text-lg mb-1">
-            As-salamu alaykum 👋
-          </h2>
-          <h2 className="text-base font-light tracking-[0.3em] uppercase text-white/50 sm:text-lg mb-3">
-            I'm
-          </h2>
-        </motion.div>
-
-        {/* ✅ UPDATED: Single powerful name */}
-        <motion.div variants={itemVariants} className="mb-6">
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
-            <span className="relative inline-block">
-              <motion.span
-                className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400"
-                animate={{
-                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                }}
-                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-                style={{ backgroundSize: "200% 200%" }}
-              >
-                Md. Maharab
-              </motion.span>
-            </span>
-          </h1>
-        </motion.div>
-
-        {/* Role Type Animation */}
-        <motion.div variants={itemVariants} className="mb-8 sm:mb-10">
-          <div className="flex flex-col items-center justify-center gap-2 text-base sm:text-lg md:text-xl sm:flex-row">
-            <span className="font-light tracking-wide text-white/40">
-              I craft
-            </span>
-            <div className="relative">
-              <TypeAnimation
-                sequence={[
-                  "Full Stack Applications",
-                  2500,
-                  "Mobile Experiences",
-                  2500,
-                  "Quality Tested Software",
-                  2500,
-                  "Beautiful Interfaces",
-                  2500,
-                ]}
-                wrapper="span"
-                speed={40}
-                repeat={Infinity}
-                className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500"
-              />
-              {/* Blinking cursor enhancement */}
-              <motion.span
-                className="inline-block w-[2px] h-[1.1em] ml-1 align-middle bg-gradient-to-b from-cyan-400 to-purple-500 rounded-full"
-                animate={{ opacity: [1, 0] }}
-                transition={{
-                  duration: 0.8,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
-              />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Description */}
-        <motion.p
-          variants={itemVariants}
-          className="max-w-2xl mx-auto mb-10 text-sm font-light leading-relaxed sm:text-base text-white/40"
-        >
-          Passionate about transforming ideas into{" "}
-          <span className="font-medium text-white/70">
-            elegant digital solutions
-          </span>
-          . I blend cutting-edge technology with thoughtful design to build
-          experiences that{" "}
-          <span className="font-medium text-white/70">
-            captivate and inspire
-          </span>
-          .
-        </motion.p>
-
-        {/* CTA Buttons */}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* Center Right Ambient Glow */}
         <motion.div
-          variants={itemVariants}
-          className="flex flex-col items-center justify-center gap-3 mb-10 sm:flex-row sm:gap-4"
-        >
-          {/* Primary CTA */}
-          <motion.a
-            href="#projects"
-            className="relative group inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium text-white rounded-full overflow-hidden sm:px-7 sm:py-3"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            {/* Animated gradient background */}
+          className="absolute top-1/4 -right-32 w-[600px] h-[600px] rounded-full bg-gradient-to-bl from-cyan-500/20 via-blue-600/10 to-transparent blur-[150px]"
+          animate={{
+            x: [0, -35, 0],
+            y: [0, 45, 0],
+          }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* Bottom Ambient Glow */}
+        <motion.div
+          className="absolute -bottom-32 left-1/3 w-[650px] h-[450px] rounded-full bg-pink-600/15 blur-[160px]"
+          animate={{
+            scale: [1, 1.15, 1],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        {/* Futuristic Subtle Grid lines */}
+        <div
+          className="absolute inset-0 opacity-[0.035]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+      </div>
+
+      {/* Main Container */}
+      <div className="relative z-10 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8 w-full">
+        <div className="grid items-center grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
+          
+          {/* LEFT COLUMN: Narrative & Action Engine (7 cols) */}
+          <div className="text-left lg:col-span-7 space-y-6">
+            
+            {/* Live Availability Tag */}
             <motion.div
-              className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600"
-              animate={{
-                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-              }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              style={{ backgroundSize: "200% 200%" }}
-            />
-            {/* Glow effect */}
-            <div className="absolute inset-0 transition-opacity duration-500 rounded-full opacity-0 group-hover:opacity-100 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 blur-xl" />
-            <span className="relative z-10 flex items-center gap-2">
-              View My Work
-              <motion.span
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                →
-              </motion.span>
-            </span>
-          </motion.a>
-
-          {/* Secondary CTA */}
-          <motion.a
-            href="/#hire"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Open Hire page in a new tab"
-            className="relative group inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium text-white rounded-full border border-transparent bg-purple-600/10 hover:bg-purple-600/20 backdrop-blur-sm transition-all duration-300 sm:px-7 sm:py-3"
-            whileHover={{
-              scale: 1.03,
-            }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              <motion.span
-                initial={{ x: 0 }}
-                animate={{ x: [0, 4, 0] }}
-                transition={{
-                  duration: 1.6,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="flex items-center"
-              >
-                {renderIcon(
-                  FaPaperPlane as React.ComponentType<IconBaseProps>,
-                  {
-                    size: 13,
-                    className: "text-white/90",
-                  },
-                )}
-              </motion.span>
-              Hire Me
-            </span>
-          </motion.a>
-        </motion.div>
-
-        {/* Social Links */}
-        <motion.div
-          variants={itemVariants}
-          className="flex justify-center gap-2.5"
-        >
-          {SOCIAL_LINKS.map(({ href, label, icon: Icon, color }) => (
-            <div key={label} className="relative">
-              <motion.a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                className={`group relative flex items-center justify-center w-10 h-10 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm text-white/50 ${color} transition-all duration-300 sm:w-11 sm:h-11`}
-                whileHover={{
-                  scale: 1.15,
-                  borderColor: "rgba(168, 85, 247, 0.3)",
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                }}
-                whileTap={{ scale: 0.9 }}
-                onHoverStart={
-                  shouldReduceEffects
-                    ? undefined
-                    : () => setActiveTooltip(label)
-                }
-                onHoverEnd={
-                  shouldReduceEffects ? undefined : () => setActiveTooltip(null)
-                }
-              >
-                {renderIcon(Icon as React.ComponentType<IconBaseProps>, {
-                  size: 18,
-                })}
-
-                {/* Hover ring effect */}
-                <motion.div
-                  className="absolute inset-0 border-2 rounded-full border-purple-500/0 group-hover:border-purple-500/30"
-                  initial={false}
-                  transition={{ duration: 0.3 }}
-                />
-              </motion.a>
-
-              {/* Tooltip */}
-              <AnimatePresence>
-                {activeTooltip === label && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.9 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute -bottom-9 left-1/2 -translate-x-1/2 px-2.5 py-1 text-xs font-medium text-white bg-white/10 backdrop-blur-xl rounded-lg border border-white/10 whitespace-nowrap"
-                  >
-                    {label}
-                    <div className="absolute w-2 h-2 rotate-45 -translate-x-1/2 border-t border-l -top-1 left-1/2 bg-white/10 border-white/10 backdrop-blur-xl" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Tech stack floating badges */}
-        <motion.div
-          variants={itemVariants}
-          className="flex flex-wrap items-center justify-center max-w-lg gap-2 mx-auto mt-12"
-        >
-          {[
-            "React",
-            "Next.js",
-            "TypeScript",
-            "Node.js",
-            "Flutter",
-            "Figma",
-          ].map((tech, i) => (
-            <motion.span
-              key={tech}
-              className="px-2.5 py-1 text-[11px] font-medium rounded-full bg-white/[0.03] border border-white/[0.06] text-white/40 hover:text-white/70 hover:border-white/15 transition-all duration-300 cursor-default"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 2 + i * 0.1 }}
-              whileHover={{
-                scale: 1.1,
-                backgroundColor: "rgba(168, 85, 247, 0.08)",
-                borderColor: "rgba(168, 85, 247, 0.2)",
-              }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2.5 px-4 py-2 text-xs font-medium rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl text-slate-300 shadow-sm"
             >
-              {tech}
-            </motion.span>
-          ))}
-        </motion.div>
-      </motion.div>
-      
-      {/* Scroll to Top */}
+              <span className="relative flex w-2 h-2">
+                <span className="absolute inline-flex w-full h-full bg-emerald-400 rounded-full opacity-75 animate-ping" />
+                <span className="relative inline-flex w-2 h-2 bg-emerald-500 rounded-full" />
+              </span>
+              <span className="font-mono text-emerald-400 tracking-wider text-[11px] uppercase font-semibold">
+                Available for Hire
+              </span>
+              <span className="text-slate-600">•</span>
+              <span className="text-slate-300 hidden sm:inline">Software Engineer &amp; Mobile Dev</span>
+              {renderIcon(HiOutlineSparkles, { size: 14, className: "text-purple-400 ml-0.5" })}
+            </motion.div>
+
+            {/* Main Greeting & Name */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="space-y-2"
+            >
+              <p className="font-mono text-xs sm:text-sm font-semibold tracking-widest uppercase text-cyan-400">
+                &lt;Hello World, I am /&gt;
+              </p>
+              <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl md:text-7xl">
+                <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-purple-200">
+                  {PORTFOLIO_INFO.name}
+                </span>
+              </h1>
+            </motion.div>
+
+            {/* Dynamic Animated Typewriter Headline */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex flex-wrap items-center gap-2 text-lg sm:text-2xl font-medium text-slate-400"
+            >
+              <span>I engineer</span>
+              <div className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+                <TypeAnimation
+                  sequence={[
+                    "Scalable Full-Stack Web Apps",
+                    2400,
+                    "Cross-Platform Mobile Experiences",
+                    2400,
+                    "High-Throughput REST & GraphQL APIs",
+                    2400,
+                    "Secure Microservices Architecture",
+                    2400,
+                  ]}
+                  wrapper="span"
+                  speed={45}
+                  repeat={Infinity}
+                />
+              </div>
+            </motion.div>
+
+            {/* Subtitle Bio */}
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="max-w-xl text-base sm:text-lg leading-relaxed text-slate-300/90 font-light"
+            >
+              Software Engineering student at <span className="font-semibold text-white">BUBT</span>. I bridge architectural discipline with human-centered product design to build scalable digital systems that withstand real-world loads.
+            </motion.p>
+
+            {/* Stats Metric Strip */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.35 }}
+              className="grid grid-cols-3 max-w-md gap-3 p-3 border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl"
+            >
+              <div className="px-2 py-1 text-left">
+                <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 sm:text-2xl">
+                  {PORTFOLIO_INFO.stats.yearsExperience}
+                </p>
+                <p className="text-[11px] font-medium text-slate-400">Years Exp</p>
+              </div>
+              <div className="px-2 py-1 text-left border-x border-white/10">
+                <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 sm:text-2xl">
+                  {PORTFOLIO_INFO.stats.projectsCompleted}
+                </p>
+                <p className="text-[11px] font-medium text-slate-400">Projects Built</p>
+              </div>
+              <div className="px-2 py-1 text-left">
+                <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 sm:text-2xl">
+                  {PORTFOLIO_INFO.stats.satisfactionRate}
+                </p>
+                <p className="text-[11px] font-medium text-slate-400">Commitment</p>
+              </div>
+            </motion.div>
+
+            {/* Interactive Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-wrap items-center gap-3 pt-2"
+            >
+              <a
+                href="#projects"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-white transition-all duration-300 rounded-full shadow-lg bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 active:scale-95"
+              >
+                <span>Explore Featured Work</span>
+                {renderIcon(FaArrowDown, { size: 11, className: "animate-bounce" })}
+              </a>
+
+              <a
+                href={PORTFOLIO_INFO.resumeUrl}
+                download
+                className="inline-flex items-center gap-2 px-5 py-3.5 text-sm font-semibold text-slate-200 transition-all duration-300 border rounded-full bg-white/5 border-white/15 hover:bg-white/10 hover:text-white hover:border-cyan-500/40 backdrop-blur-sm active:scale-95"
+              >
+                {renderIcon(FaFileDownload, { size: 12, className: "text-cyan-400" })}
+                <span>Download CV</span>
+              </a>
+
+              <a
+                href="#hire"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.hash = "#hire";
+                }}
+                className="inline-flex items-center gap-2 px-5 py-3.5 text-sm font-semibold text-slate-300 transition-all duration-300 border rounded-full bg-white/[0.02] border-white/10 hover:bg-white/10 hover:text-white active:scale-95"
+              >
+                {renderIcon(FaRocket, { size: 12, className: "text-purple-400" })}
+                <span>Hire Me</span>
+              </a>
+            </motion.div>
+
+            {/* Social Dock & Quick Tech Chips */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.5 }}
+              className="flex flex-wrap items-center gap-4 pt-3"
+            >
+              {/* Social Icons */}
+              <div className="flex items-center gap-2">
+                {SOCIAL_LINKS.map(({ href, label, icon: Icon, hoverColor }) => (
+                  <div key={label} className="relative">
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      onMouseEnter={() => setActiveTooltip(label)}
+                      onMouseLeave={() => setActiveTooltip(null)}
+                      className={`flex items-center justify-center w-10 h-10 transition-all duration-300 border rounded-full text-slate-400 bg-white/[0.03] border-white/10 backdrop-blur-sm ${hoverColor} hover:scale-110 active:scale-95`}
+                    >
+                      {renderIcon(Icon, { size: 16 })}
+                    </a>
+                    <AnimatePresence>
+                      {activeTooltip === label && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 6, scale: 0.9 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute z-30 px-2.5 py-1 text-xs font-medium text-white -translate-x-1/2 border rounded-md shadow-lg pointer-events-none -bottom-8 left-1/2 bg-slate-900/90 border-white/10 backdrop-blur-md whitespace-nowrap"
+                        >
+                          {label}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </div>
+
+              <div className="w-px h-6 bg-white/10 hidden sm:block" />
+
+              {/* Core Tech Stack Mini Chips */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {techBadges.slice(0, 5).map((tech) => (
+                  <span
+                    key={tech}
+                    className="px-2.5 py-1 text-[11px] font-mono rounded-md bg-white/[0.03] border border-white/10 text-slate-400"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* RIGHT COLUMN: Unique Holographic Developer HUD / Interactive Terminal (5 cols) */}
+          <motion.div
+            style={{ rotateX, rotateY, transformPerspective: 1000 }}
+            className="relative lg:col-span-5"
+          >
+            {/* Ambient Background Aura */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-purple-600/20 via-pink-600/10 to-cyan-500/20 blur-2xl -z-10" />
+
+            {/* Floating Orbit Badge 1: Clean Architecture */}
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -top-5 -right-4 z-20 flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white rounded-xl bg-slate-900/90 border border-purple-500/40 backdrop-blur-xl shadow-xl shadow-purple-500/10"
+            >
+              <span className="w-2 h-2 rounded-full bg-purple-400" />
+              <span>Clean Architecture</span>
+            </motion.div>
+
+            {/* Floating Orbit Badge 2: Flutter & Android */}
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              className="absolute -bottom-5 -left-4 z-20 flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white rounded-xl bg-slate-900/90 border border-cyan-500/40 backdrop-blur-xl shadow-xl shadow-cyan-500/10"
+            >
+              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+              <span>Flutter 3 &amp; Android</span>
+            </motion.div>
+
+            {/* Main Cyber Terminal Glass Frame */}
+            <div className="overflow-hidden border shadow-2xl rounded-3xl bg-slate-950/85 border-white/15 backdrop-blur-2xl">
+              
+              {/* Terminal Title Bar */}
+              <div className="flex items-center justify-between px-4 py-3 border-b bg-white/[0.02] border-white/10">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-rose-500/80 inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
+                  <span className="ml-2 font-mono text-xs text-slate-400 flex items-center gap-1.5">
+                    {renderIcon(FaTerminal, { size: 10, className: "text-slate-500" })}
+                    maharab@engine: ~
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 font-mono text-[10px] text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>14ms ping</span>
+                </div>
+              </div>
+
+              {/* Developer Portrait & Identity Banner */}
+              <div className="p-5 border-b border-white/5 bg-gradient-to-r from-purple-950/20 via-slate-900/40 to-cyan-950/20 flex items-center gap-4">
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={PORTFOLIO_INFO.profileImage}
+                    alt={PORTFOLIO_INFO.name}
+                    className="w-16 h-16 rounded-2xl object-cover object-top border border-white/20 shadow-md shadow-black/40"
+                  />
+                  <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-950" />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-white">
+                      {PORTFOLIO_INFO.name}
+                    </h3>
+                    <span className="px-2 py-0.5 text-[10px] font-semibold text-cyan-300 rounded-full bg-cyan-500/10 border border-cyan-500/20">
+                      CSE BUBT
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Full-Stack Engineer &amp; Mobile Developer
+                  </p>
+                  <p className="font-mono text-[11px] text-purple-300 flex items-center gap-1">
+                    {renderIcon(FaShieldAlt, { size: 10 })}
+                    <span>OWASP Top 10 Hardened Architecture</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Terminal Interactive Tabs */}
+              <div className="flex border-b border-white/5 bg-black/30 text-xs font-mono">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("spec")}
+                  className={`flex-1 py-2.5 px-4 text-center transition-colors border-r border-white/5 ${
+                    activeTab === "spec"
+                      ? "text-cyan-300 bg-white/[0.04] border-b-2 border-cyan-400 font-semibold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  system_spec.json
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("capabilities")}
+                  className={`flex-1 py-2.5 px-4 text-center transition-colors ${
+                    activeTab === "capabilities"
+                      ? "text-purple-300 bg-white/[0.04] border-b-2 border-purple-400 font-semibold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  live_metrics.sh
+                </button>
+              </div>
+
+              {/* Terminal Code / Capabilities View */}
+              <div className="p-5 font-mono text-xs leading-relaxed overflow-x-auto min-h-[190px]">
+                {activeTab === "spec" ? (
+                  <div className="space-y-1.5 text-slate-300">
+                    <p className="text-slate-500">{"// Engine runtime parameters"}</p>
+                    <p>
+                      <span className="text-pink-400">const</span>{" "}
+                      <span className="text-cyan-300">engineer</span> = &#123;
+                    </p>
+                    <p className="pl-4">
+                      <span className="text-purple-300">name</span>:{" "}
+                      <span className="text-emerald-300">"{PORTFOLIO_INFO.name}"</span>,
+                    </p>
+                    <p className="pl-4">
+                      <span className="text-purple-300">institution</span>:{" "}
+                      <span className="text-emerald-300">"BUBT (CSE)"</span>,
+                    </p>
+                    <p className="pl-4">
+                      <span className="text-purple-300">primaryStack</span>: [
+                      <span className="text-amber-300">"Next.js"</span>,{" "}
+                      <span className="text-amber-300">"Flutter"</span>,{" "}
+                      <span className="text-amber-300">"Node.js"</span>],
+                    </p>
+                    <p className="pl-4">
+                      <span className="text-purple-300">database</span>: [
+                      <span className="text-amber-300">"PostgreSQL"</span>,{" "}
+                      <span className="text-amber-300">"MongoDB"</span>],
+                    </p>
+                    <p className="pl-4">
+                      <span className="text-purple-300">status</span>:{" "}
+                      <span className="text-cyan-300">"Ready to Deploy &amp; Scale 🚀"</span>
+                    </p>
+                    <p>&#125;;</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 text-slate-300">
+                    <p className="text-slate-500">{"// Diagnostic capabilities"}</p>
+                    <div className="flex items-center gap-2 text-emerald-400">
+                      {renderIcon(FaCheckCircle, { size: 12 })}
+                      <span>Zero OWASP Top 10 Vulnerabilities</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-cyan-300">
+                      {renderIcon(FaCheckCircle, { size: 12 })}
+                      <span>Sub-100ms API Latencies (Redis / Node)</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-purple-300">
+                      {renderIcon(FaCheckCircle, { size: 12 })}
+                      <span>60fps Smooth Mobile Renders (Flutter)</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-pink-300">
+                      {renderIcon(FaCheckCircle, { size: 12 })}
+                      <span>Full CI/CD &amp; Automated Testing</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Terminal Bottom Command Line */}
+              <div className="px-4 py-2.5 border-t border-white/5 bg-black/40 flex items-center justify-between font-mono text-[11px] text-slate-400">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-400">&gt;</span>
+                  <span>readyForInterview: true</span>
+                </div>
+                <span className="text-purple-400 font-semibold">100% Verified</span>
+              </div>
+            </div>
+          </motion.div>
+
+        </div>
+      </div>
+
+      {/* Global Floating Scroll to Top button */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
-            aria-label="Scroll to top"
-            className="fixed z-50 bottom-5 right-4 sm:bottom-6 sm:right-6 group"
-            initial={{ opacity: 0, scale: 0.5, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            aria-label="Scroll back to top"
+            className="fixed z-40 p-3 text-white transition-all duration-300 border rounded-full shadow-lg bottom-6 right-6 bg-slate-900/80 border-white/20 backdrop-blur-xl hover:bg-purple-600/30 hover:border-purple-400 hover:scale-110 active:scale-95"
           >
-            <div className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/[0.1] text-white/60 group-hover:text-white group-hover:border-purple-500/30 group-hover:bg-purple-500/10 transition-all duration-300">
-              <motion.span
-                className="text-base"
-                animate={{ y: [0, -2, 0] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                ↑
-              </motion.span>
-              {/* Progress ring (decorative) */}
-              <svg
-                className="absolute inset-0 w-full h-full -rotate-90"
-                viewBox="0 0 48 48"
-              >
-                <circle
-                  cx="24"
-                  cy="24"
-                  r="22"
-                  fill="none"
-                  stroke="rgba(168, 85, 247, 0.3)"
-                  strokeWidth="1"
-                  strokeDasharray="138.2"
-                  strokeDashoffset="0"
-                  className="transition-opacity duration-500 opacity-0 group-hover:opacity-100"
-                />
-              </svg>
-            </div>
+            {renderIcon(FaArrowDown, { size: 14, className: "rotate-180" })}
           </motion.button>
         )}
       </AnimatePresence>
-
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#030014] to-transparent pointer-events-none z-20" />
     </section>
   );
 };
 
 export default Hero;
+

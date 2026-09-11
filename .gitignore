@@ -1,2 +1,11 @@
 node_modules/
 .cache/
+build/
+dist/
+
+# Environment Variables (Keep Private!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

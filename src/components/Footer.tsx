@@ -1,399 +1,177 @@
-import { motion } from "framer-motion";
+import React from "react";
 import {
   FaGithub,
   FaLinkedin,
   FaTwitter,
   FaHeart,
   FaEnvelope,
-  FaPhone,
+  FaPhoneAlt,
   FaMapMarkerAlt,
-  FaArrowUp,
 } from "react-icons/fa";
-import { IconBaseProps } from "react-icons";
+import { PORTFOLIO_INFO } from "../data/portfolioData";
 
-const Footer = () => {
+const renderIcon = (Icon: any, props: any = {}) => {
+  return <Icon {...props} />;
+};
+
+const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const socialLinks = [
     {
       icon: FaGithub,
-      href: "https://github.com/Maharab2134",
-      color: "hover:text-gray-300",
-      bgColor: "hover:bg-gray-700",
-      name: "GitHub",
+      href: PORTFOLIO_INFO.socials.github,
+      label: "GitHub",
+      color: "hover:text-white hover:border-purple-400",
     },
     {
       icon: FaLinkedin,
-      href: "https://www.linkedin.com/in/md-maharab-hosen-679a70253/",
-      color: "hover:text-blue-400",
-      bgColor: "hover:bg-blue-500/20",
-      name: "LinkedIn",
+      href: PORTFOLIO_INFO.socials.linkedin,
+      label: "LinkedIn",
+      color: "hover:text-cyan-300 hover:border-cyan-400",
     },
     {
       icon: FaTwitter,
-      href: "https://x.com/Mahar22234",
-      color: "hover:text-blue-300",
-      bgColor: "hover:bg-blue-400/20",
-      name: "Twitter",
+      href: PORTFOLIO_INFO.socials.twitter,
+      label: "Twitter / X",
+      color: "hover:text-sky-300 hover:border-sky-400",
+    },
+    {
+      icon: FaEnvelope,
+      href: `mailto:${PORTFOLIO_INFO.email}`,
+      label: "Email",
+      color: "hover:text-pink-300 hover:border-pink-400",
     },
   ];
 
-  const quickLinks = [
-    "Home",
-    "About",
-    "Education",
-    "Skills",
-    "Projects",
-    "Contact",
+  const quickNav = [
+    { label: "Home", href: "#home" },
+    { label: "About", href: "#about" },
+    { label: "Education", href: "#education" },
+    { label: "Certificates", href: "#certificates" },
+    { label: "Skills", href: "#skills" },
+    { label: "Projects", href: "#projects" },
+    { label: "Contact", href: "#contact" },
   ];
 
-  const handleLocationClick = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        const payload = {
-          lat: latitude,
-          lon: longitude,
-          timestamp: Date.now(),
-        };
-        try {
-          localStorage.setItem("maharab_location", JSON.stringify(payload));
-        } catch (e) {
-          // ignore storage errors
-        }
-
-        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-        window.open(mapsUrl, "_blank", "noopener,noreferrer");
-      },
-      (err) => {
-        if (err.code === err.PERMISSION_DENIED) {
-          alert(
-            "Permission denied. Please allow location access to view your location.",
-          );
-        } else {
-          alert("Unable to retrieve your location.");
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
-  };
-
-  const handlePhoneClick = (hrefOrNumber: string) => {
-    const tel = hrefOrNumber.startsWith("tel:")
-      ? hrefOrNumber
-      : `tel:${hrefOrNumber}`;
-
-    try {
-      // Try navigating to the tel: link which opens the dialer on mobile
-      window.location.href = tel;
-    } catch (e) {
-      // Fallback: open in new tab
-      window.open(tel, "_self");
-    }
-  };
-
   return (
-    <footer className="relative py-12 overflow-hidden bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#0f172a] sm:py-16">
-      {/* Background Elements */}
-      <div className="absolute inset-0">
-        {/* Animated Gradient Orbs */}
-        <motion.div
-          className="absolute rounded-full -top-20 -left-20 w-72 h-72 bg-purple-500/10 blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-        />
-        <motion.div
-          className="absolute rounded-full -bottom-20 -right-20 w-72 h-72 bg-pink-500/10 blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.4, 0.6, 0.4],
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-        />
-
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:50px_50px]" />
+    <footer className="relative pt-16 pb-12 overflow-hidden border-t bg-[#030014] border-white/10">
+      {/* Background Subtle Ambience */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute -bottom-24 left-1/4 w-96 h-96 rounded-full bg-purple-600/20 blur-[130px]" />
+        <div className="absolute -top-24 right-1/4 w-96 h-96 rounded-full bg-cyan-600/15 blur-[130px]" />
       </div>
 
-      <div className="relative z-10 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-3 lg:gap-16">
-          {/* Brand & Social Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="space-y-6"
-          >
-            <motion.div
-              className="flex items-center space-x-3"
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500">
-                <span className="text-lg font-bold text-white">MH</span>
+      <div className="relative px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-12 lg:gap-12 pb-12 border-b border-white/5">
+          {/* Brand & Narrative */}
+          <div className="md:col-span-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="relative flex items-center justify-center w-10 h-10 overflow-hidden font-bold text-white rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 shadow-md shadow-purple-500/20 border border-white/20">
+                <img
+                  src={PORTFOLIO_INFO.profileImage}
+                  alt={PORTFOLIO_INFO.name}
+                  className="object-cover object-top w-full h-full"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+                <span className="absolute inset-0 flex items-center justify-center -z-10">
+                  MH
+                </span>
               </div>
-              <h3 className="text-xl font-bold text-white break-words sm:text-2xl">
-                Md. Maharab Hosen
-              </h3>
-            </motion.div>
-
-            <p className="text-sm leading-relaxed text-gray-300 sm:text-base">
-              Passionate full-stack developer crafting digital experiences with
-              cutting-edge technologies. Turning ideas into reality through code
-              and creativity.
+              <span className="text-xl font-bold tracking-tight text-white">
+                {PORTFOLIO_INFO.name}
+              </span>
+            </div>
+            <p className="text-sm leading-relaxed text-slate-400 max-w-sm">
+              Full-Stack Software Engineer &amp; Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.
             </p>
 
             {/* Social Links */}
-            <div className="flex space-x-4">
-              {socialLinks.map((social, index) => (
-                <motion.a
-                  key={social.name}
-                  href={social.href}
+            <div className="flex items-center gap-3 pt-2">
+              {socialLinks.map(({ icon: Icon, href, label, color }) => (
+                <a
+                  key={label}
+                  href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 transition-all duration-300 ${social.color} ${social.bgColor}`}
-                  whileHover={{
-                    scale: 1.1,
-                    y: -5,
-                    rotate: [0, -5, 5, 0],
-                  }}
-                  whileTap={{ scale: 0.9 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
+                  aria-label={label}
+                  className={`flex items-center justify-center w-10 h-10 text-slate-400 transition-all duration-200 border rounded-xl bg-white/[0.03] border-white/10 ${color} hover:scale-110 active:scale-95`}
                 >
-                  {social.icon({ size: 20 } as IconBaseProps)}
-                </motion.a>
+                  {renderIcon(Icon, { size: 16 })}
+                </a>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          {/* Quick Links */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="space-y-6"
-          >
-            <h3 className="text-xl font-semibold text-transparent text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">
+          {/* Quick Navigation Links */}
+          <div className="md:col-span-3 space-y-3">
+            <h4 className="text-xs font-semibold tracking-widest uppercase text-cyan-400">
               Quick Navigation
-            </h3>
-            <ul className="space-y-3">
-              {quickLinks.map((item, index) => (
-                <motion.li
-                  key={item}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <motion.a
-                    href={`#${item.toLowerCase()}`}
-                    className="flex items-center space-x-3 text-gray-300 transition-all duration-300 group hover:text-white"
-                    whileHover={{ x: 10 }}
+            </h4>
+            <ul className="space-y-2 text-sm">
+              {quickNav.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-slate-400 hover:text-white transition-colors duration-200"
                   >
-                    <motion.span
-                      className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400"
-                      whileHover={{ scale: 1.5 }}
-                    />
-                    <span className="group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text group-hover:text-transparent">
-                      {item}
-                    </span>
-                  </motion.a>
-                </motion.li>
+                    {link.label}
+                  </a>
+                </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
 
-          {/* Contact Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
-            className="space-y-6"
-          >
-            <h3 className="text-xl font-semibold text-transparent text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">
-              Get In Touch
-            </h3>
-            <ul className="space-y-4">
-              {[
-                {
-                  icon: FaEnvelope,
-                  content: "maharab442@gmail.com",
-                  href: "mailto:maharab442@gmail.com",
-                  color: "from-purple-400 to-pink-400",
-                },
-                {
-                  icon: FaPhone,
-                  content: "+880 15862 82609",
-                  href: "tel:+8801586282609",
-                  color: "from-green-400 to-blue-400",
-                  isPhone: true,
-                },
-                {
-                  icon: FaMapMarkerAlt,
-                  content: "Rupnagar R/A Mirpur - 02, Dhaka, Bangladesh",
-                  href: "#",
-                  color: "from-orange-400 to-red-400",
-                  isLocation: true,
-                },
-              ].map((contact, index) => (
-                <motion.li
-                  key={index}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="flex items-start space-x-4 group"
+          {/* Direct Contact Info */}
+          <div className="md:col-span-4 space-y-3">
+            <h4 className="text-xs font-semibold tracking-widest uppercase text-purple-400">
+              Direct Contact
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-center gap-2.5 text-slate-400">
+                {renderIcon(FaEnvelope, { size: 13, className: "text-purple-400 flex-shrink-0" })}
+                <a href={`mailto:${PORTFOLIO_INFO.email}`} className="hover:text-white transition-colors truncate">
+                  {PORTFOLIO_INFO.email}
+                </a>
+              </li>
+
+              <li className="flex items-center gap-2.5 text-slate-400">
+                {renderIcon(FaPhoneAlt, { size: 12, className: "text-cyan-400 flex-shrink-0" })}
+                <a href={`tel:${PORTFOLIO_INFO.phone.replace(/\s+/g, "")}`} className="hover:text-white transition-colors">
+                  {PORTFOLIO_INFO.phone}
+                </a>
+              </li>
+
+              <li className="flex items-center gap-2.5 text-slate-400">
+                {renderIcon(FaMapMarkerAlt, { size: 13, className: "text-pink-400 flex-shrink-0" })}
+                <a
+                  href={PORTFOLIO_INFO.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
                 >
-                  <motion.div
-                    className={`p-2 rounded-lg bg-gradient-to-r ${contact.color} mt-1`}
-                    whileHover={{ scale: 1.1, rotate: 360 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {contact.icon({
-                      size: 16,
-                      className: "text-white",
-                    } as IconBaseProps)}
-                  </motion.div>
-                  {contact.isLocation ? (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleLocationClick();
-                      }}
-                      className="text-sm text-left text-gray-300 break-words transition-all duration-300 group-hover:text-white group-hover:translate-x-2"
-                    >
-                      {contact.content}
-                    </button>
-                  ) : contact.isPhone ? (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePhoneClick(contact.href || contact.content);
-                      }}
-                      className="text-sm text-left text-gray-300 break-words transition-all duration-300 group-hover:text-white group-hover:translate-x-2"
-                    >
-                      {contact.content}
-                    </button>
-                  ) : (
-                    <a
-                      href={contact.href}
-                      className="text-sm text-gray-300 break-words transition-all duration-300 group-hover:text-white group-hover:translate-x-2"
-                    >
-                      {contact.content}
-                    </a>
-                  )}
-                </motion.li>
-              ))}
+                  {PORTFOLIO_INFO.location}
+                </a>
+              </li>
             </ul>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Copyright & Back to Top */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          viewport={{ once: true }}
-          className="pt-12 mt-12 text-center border-t border-white/10"
-        >
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <motion.p className="text-gray-400" whileHover={{ scale: 1.05 }}>
-              © {currentYear} Md. Maharab Hosen. Crafted with{" "}
-              <motion.span
-                className="inline-block text-red-500"
-                animate={{
-                  scale: [1, 1.3, 1],
-                  rotate: [0, 10, -10, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
-              >
-                {FaHeart({ size: 16 } as IconBaseProps)}
-              </motion.span>{" "}
-              and{" "}
-              <motion.span
-                className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500"
-                animate={{
-                  backgroundPosition: ["0%", "100%", "0%"],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                }}
-                style={{
-                  backgroundSize: "200% 100%",
-                }}
-              >
-                endless passion
-              </motion.span>
-            </motion.p>
+        {/* Bottom Copyright & Status */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 text-xs text-slate-500">
+          <p className="flex items-center gap-1.5">
+            <span>© {currentYear} {PORTFOLIO_INFO.name}. Built with</span>
+            {renderIcon(FaHeart, { size: 12, className: "text-rose-500 inline" })}
+            <span>React, TypeScript &amp; Tailwind CSS.</span>
+          </p>
 
-            {/* Back to Top Button */}
-            <motion.button
-              onClick={scrollToTop}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 ring-1 ring-white/20 hover:ring-white/30"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20">
-                {FaArrowUp({ size: 12 } as IconBaseProps)}
-              </span>
-              Back to top
-            </motion.button>
+          <div className="flex items-center gap-2 text-slate-400">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Available for new opportunities</span>
           </div>
-        </motion.div>
-      </div>
-
-      {/* Floating Particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-purple-400 rounded-full opacity-40"
-            animate={{
-              y: [0, -30, 0],
-              x: [0, (Math.random() - 0.5) * 20, 0],
-              opacity: [0.2, 0.8, 0.2],
-            }}
-            transition={{
-              duration: Math.random() * 3 + 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-          />
-        ))}
+        </div>
       </div>
     </footer>
   );

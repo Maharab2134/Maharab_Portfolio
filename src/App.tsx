@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -9,65 +9,120 @@ import Footer from "./components/Footer";
 import Education from "./components/Education";
 import Certificates from "./components/Certificates";
 import ProjectDetails from "./pages/ProjectDetails";
-import MyJourney from "./pages/My Journey";
+import MyJourney from "./pages/MyJourney";
 import Hire from "./pages/Hire";
+import Admin from "./pages/Admin";
+import { Project } from "./data/projectsData";
+
+type ActiveView = "home" | "hire" | "journey" | "project" | "admin";
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const searchParams = new URLSearchParams(window.location.search);
-  const projectParam = searchParams.get("project");
+  const [activeView, setActiveView] = useState<ActiveView>("home");
 
-  // showJourney and showHire state initialized from query param or hash
-  const [showJourney, setShowJourney] = useState(() => {
-    if (typeof window === "undefined") return false;
+  const syncViewFromLocation = useCallback(() => {
+    if (typeof window === "undefined") return;
+
     const params = new URLSearchParams(window.location.search);
-    return Boolean(
-      params.get("journey") ||
-      window.location.hash === "#journey" ||
-      window.location.pathname === "/journey",
-    );
-  });
+    const hash = window.location.hash.toLowerCase();
+    const path = window.location.pathname.toLowerCase();
 
-  const [showHire, setShowHire] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      window.location.hash === "#hire" || window.location.pathname === "/hire"
-    );
-  });
+    if (hash === "#admin" || path === "/admin" || params.get("admin") !== null) {
+      setActiveView("admin");
+      return;
+    }
 
-  // listen to hash changes so in-page navigation to #journey or #hire works
-  useEffect(() => {
-    const onHash = () => {
-      setShowJourney(
-        window.location.hash === "#journey" ||
-          window.location.pathname === "/journey",
-      );
-      setShowHire(
-        window.location.hash === "#hire" ||
-          window.location.pathname === "/hire",
-      );
-    };
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    if (params.get("project")) {
+      setActiveView("project");
+      return;
+    }
+
+    if (hash === "#hire" || path === "/hire" || params.get("hire")) {
+      setActiveView("hire");
+      return;
+    }
+
+    if (hash === "#journey" || path === "/journey" || params.get("journey")) {
+      setActiveView("journey");
+      return;
+    }
+
+    setActiveView("home");
   }, []);
 
-  if (projectParam) {
+  useEffect(() => {
+    syncViewFromLocation();
+
+    const handleHashAndPopState = () => {
+      syncViewFromLocation();
+    };
+
+    window.addEventListener("hashchange", handleHashAndPopState);
+    window.addEventListener("popstate", handleHashAndPopState);
+
+    return () => {
+      window.removeEventListener("hashchange", handleHashAndPopState);
+      window.removeEventListener("popstate", handleHashAndPopState);
+    };
+  }, [syncViewFromLocation]);
+
+  const handleNavigatePage = (page: "home" | "hire" | "journey") => {
+    if (page === "home") {
+      window.location.hash = "";
+      const url = new URL(window.location.href);
+      url.searchParams.delete("project");
+      window.history.pushState({}, "", url.pathname);
+      setActiveView("home");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (page === "hire") {
+      window.location.hash = "#hire";
+      setActiveView("hire");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (page === "journey") {
+      window.location.hash = "#journey";
+      setActiveView("journey");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleSelectProject = (project: Project) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("project", project.id);
+    window.history.pushState({}, "", url.toString());
+    setActiveView("project");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  if (activeView === "project") {
     return <ProjectDetails />;
   }
 
-  if (showJourney) return <MyJourney />;
-  if (showHire) return <Hire />;
+  if (activeView === "hire") {
+    return <Hire />;
+  }
+
+  if (activeView === "journey") {
+    return <MyJourney />;
+  }
+
+  if (activeView === "admin") {
+    return <Admin />;
+  }
 
   return (
-    <div className="min-h-screen bg-primary">
-      <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-      <main>
+    <div className="min-h-screen bg-[#030014] text-slate-100 flex flex-col selection:bg-purple-500/30 selection:text-white">
+      <Navbar
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+        onNavigatePage={handleNavigatePage}
+      />
+      <main className="flex-1">
         <Hero />
         <About />
         <Education />
         <Certificates />
         <Skills />
-        <Projects />
+        <Projects onSelectProject={handleSelectProject} />
         <Contact />
       </main>
       <Footer />

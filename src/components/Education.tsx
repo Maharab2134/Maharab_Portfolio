@@ -1,188 +1,109 @@
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaGraduationCap } from "react-icons/fa";
+import { FaGraduationCap, FaAward, FaCalendarAlt } from "react-icons/fa";
+import { EDUCATION_DATA, EducationItem } from "../data/portfolioData";
+import { getLiveEducation } from "../lib/portfolioService";
 
-const Education = () => {
-  const educationData = [
-    {
-      degree: "Bachelor of Science in Computer Science and Engineering",
-      institution: "Bangladesh University of Business and Technology (BUBT)",
-      year: "2022 - Present",
-      description:
-        "Specialized in Software Engineering and Web Development. Currently pursuing studies and participating in various coding competitions and hackathons.",
-      achievements: [
-        "IT Club General Member",
-        "Dean's List for Academic Excellence",
-        "Best Final Year Project Award",
-      ],
-    },
-    {
-      degree: "Higher Secondary Certificate (HSC)",
-      institution: "Bangla Bazar Fatema Khanam Degree College",
-      year: "2019 - 2021",
-      description: "Completed with excellent results in Science group.",
-      achievements: ["Active member of Science Club"],
-    },
-    {
-      degree: "Secondary School Certificate (SSC)",
-      institution: "Bhola Residential Cadet School & College",
-      year: "2017 - 2018",
-      description: "Completed with outstanding results.",
-      achievements: ["Active participant in Science Fairs"],
-    },
-  ];
+const renderIcon = (Icon: any, props: any = {}) => {
+  return <Icon {...props} />;
+};
+
+const Education: React.FC = () => {
+  const [educationList, setEducationList] = useState<EducationItem[]>(EDUCATION_DATA);
+
+  useEffect(() => {
+    getLiveEducation().then((data) => {
+      if (data && data.length > 0) {
+        setEducationList(data);
+      }
+    });
+  }, []);
 
   return (
     <section
       id="education"
-      className="py-20 bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a]"
+      className="relative py-12 sm:py-16 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
     >
-      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
+      <div className="relative px-4 mx-auto max-w-5xl sm:px-6 lg:px-8">
+        {/* Section Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
           viewport={{ once: true }}
-          className="mb-16 text-center"
+          transition={{ duration: 0.5 }}
+          className="mb-10 sm:mb-12 text-center"
         >
-          <h2 className="mb-4 text-3xl font-bold text-textPrimary">
+          <span className="text-xs font-semibold tracking-widest uppercase text-purple-400">
+            Academic Background
+          </span>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
             Education
           </h2>
-          <motion.div
-            className="w-20 h-1 mx-auto bg-secondary"
-            initial={{ width: 0 }}
-            whileInView={{ width: "5rem" }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          />
+          <div className="w-20 h-1 mx-auto mt-4 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
+          <p className="max-w-xl mx-auto mt-4 text-sm sm:text-base text-slate-400">
+            My formal engineering and academic milestones, laying the foundation for analytical problem solving.
+          </p>
         </motion.div>
 
-        <div className="space-y-12">
-          {educationData.map((edu, index) => (
+        {/* Timeline Container */}
+        <div className="relative pl-6 sm:pl-10 space-y-10 border-l border-white/10 ml-4 sm:ml-8">
+          {educationList.map((edu, index) => (
             <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -50, y: 20 }}
-              whileInView={{ opacity: 1, x: 0, y: 0 }}
-              transition={{
-                duration: 0.8,
-                delay: index * 0.2,
-                ease: "easeOut",
-              }}
+              key={edu.degree}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="relative"
+              transition={{ duration: 0.5, delay: index * 0.15 }}
+              className="relative group"
             >
-              {/* Timeline Line */}
-              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-secondary/30" />
+              {/* Timeline Icon Node */}
+              <div className="absolute -left-[37px] sm:-left-[53px] top-1.5 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-900 border border-purple-500/50 shadow-md shadow-purple-500/20 text-purple-400 group-hover:scale-110 group-hover:border-cyan-400 group-hover:text-cyan-400 transition-all duration-300">
+                {renderIcon(FaGraduationCap, { size: 16 })}
+              </div>
 
-              {/* Content Card */}
-              <div className="relative pl-8">
-                {/* Timeline Dot */}
-                <motion.div
-                  className="absolute left-0 w-4 h-4 rounded-full bg-secondary"
-                  initial={{ scale: 0, opacity: 0 }}
-                  whileInView={{ scale: 1, opacity: 1 }}
-                  transition={{
-                    duration: 0.4,
-                    delay: index * 0.2 + 0.1,
-                    ease: "easeOut",
-                  }}
-                  viewport={{ once: true }}
-                />
-
-                {/* Education Icon */}
-                <motion.div
-                  className="absolute top-0 flex items-center justify-center w-8 h-8 border rounded-full -left-2 bg-tertiary text-secondary border-secondary/50"
-                  initial={{ scale: 0.5, rotateY: -180, opacity: 0 }}
-                  whileInView={{ scale: 1, rotateY: 0, opacity: 1 }}
-                  transition={{
-                    duration: 0.6,
-                    delay: index * 0.2 + 0.3,
-                    ease: "backOut",
-                  }}
-                  viewport={{ once: true }}
-                >
-                  {FaGraduationCap({ size: 16 })}
-                </motion.div>
-
-                {/* Content */}
-                <div className="p-6 border rounded-lg bg-tertiary/50 backdrop-blur-sm border-secondary/20">
-                  <motion.h3
-                    className="mb-2 text-lg font-semibold leading-snug text-white break-words sm:text-xl"
-                    whileHover={{ x: 5 }}
-                    transition={{ duration: 0.2 }}
-                  >
+              {/* Education Card */}
+              <div className="p-6 sm:p-7 border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl hover:border-white/20 transition-all duration-300 shadow-xl shadow-black/20">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                  <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-purple-300 transition-colors">
                     {edu.degree}
-                  </motion.h3>
-                  <motion.p
-                    className="mb-2 text-base break-words text-secondary sm:text-lg"
-                    whileHover={{ x: 5 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {edu.institution}
-                  </motion.p>
-                  <motion.p
-                    className="mb-4 text-sm text-gray-400"
-                    whileHover={{ x: 5 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {edu.year}
-                  </motion.p>
-                  <p className="mb-4 text-gray-300">{edu.description}</p>
-                  {/* Restored Achievements list */}
-                  {edu.achievements.length > 0 && (
-                    <ul className="mt-4 space-y-2">
-                      {edu.achievements.map((achievement, idx) => (
-                        <motion.li
-                          key={idx}
-                          className="flex items-center space-x-2 text-gray-300"
-                          initial={{ opacity: 0, x: -10 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          transition={{
-                            duration: 0.4,
-                            delay: index * 0.2 + idx * 0.1,
-                            ease: "easeOut",
-                          }}
-                          viewport={{ once: true }}
-                        >
-                          <motion.span
-                            className="w-2 h-2 rounded-full bg-secondary"
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{
-                              duration: 1,
-                              repeat: Infinity,
-                              delay: index * 0.2 + idx * 0.1,
-                            }}
-                          />
-                          <span>{achievement}</span>
-                        </motion.li>
+                  </h3>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-white/5 border border-white/10 text-cyan-300 self-start sm:self-auto">
+                    {renderIcon(FaCalendarAlt, { size: 10 })}
+                    {edu.period}
+                  </span>
+                </div>
+
+                <p className="text-sm font-medium text-slate-300 mb-3">
+                  {edu.institution}
+                </p>
+
+                <p className="text-sm leading-relaxed text-slate-400 mb-4">
+                  {edu.description}
+                </p>
+
+                {/* Highlights / Achievements */}
+                {edu.highlights.length > 0 && (
+                  <div className="pt-3 border-t border-white/5">
+                    <ul className="space-y-1.5">
+                      {edu.highlights.map((item, i) => (
+                        <li key={i} className="flex items-center gap-2 text-xs sm:text-sm text-slate-300/90">
+                          {renderIcon(FaAward, { size: 12, className: "text-purple-400 flex-shrink-0" })}
+                          <span>{item}</span>
+                        </li>
                       ))}
                     </ul>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
         </div>
       </div>
-
-      {/* Background decoration */}
-      <motion.div
-        className="absolute inset-0 -z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      >
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-b from-tertiary/50 to-primary/50"
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%"],
-            opacity: [0.5, 0.7, 0.5],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-        />
-      </motion.div>
     </section>
   );
 };

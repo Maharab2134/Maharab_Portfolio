@@ -1,978 +1,330 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaMobile,
+  FaMobileAlt,
   FaGlobe,
   FaBrain,
-  FaGithub,
-  FaArrowDown,
-  FaExternalLinkAlt,
   FaMicrochip,
+  FaGithub,
+  FaExternalLinkAlt,
   FaLock,
+  FaStar,
+  FaArrowRight,
+  FaLayerGroup,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
-import { IconBaseProps } from "react-icons";
-import { useEffect, useState } from "react";
+import {
+  PROJECTS,
+  Project,
+  toProxyImageUrl,
+  createProjectSvgFallback,
+} from "../data/projectsData";
+import { getLiveProjects } from "../lib/portfolioService";
 
-// Small helper to render react-icons with correct typing for JSX
-const renderIcon = (
-  Icon: React.ComponentType<IconBaseProps>,
-  props: IconBaseProps = {},
-) => {
+const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
-const toProxyImageUrl = (url: string) => {
-  if (!url || typeof url !== "string") return url;
-
-  if (url.includes("images.weserv.nl/?url=")) {
-    return url;
-  }
-
-  const driveShareMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
-  if (driveShareMatch?.[1]) {
-    const fileId = driveShareMatch[1];
-    return `https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=${fileId}`;
-  }
-
-  const driveUcMatch = url.match(/drive\.google\.com\/uc\?[^\s]*id=([^&]+)/);
-  if (driveUcMatch?.[1]) {
-    const fileId = driveUcMatch[1];
-    return `https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=${fileId}`;
-  }
-
-  return url;
-};
-
-interface Project {
-  title: string;
-  description: string;
-  technologies: string[];
-  image: string;
-  projectNumber?: number;
-  link?: string;
-  github?: string;
-  sourceCodePrivate?: boolean;
-  featured?: boolean;
-  longDescription?: string;
+interface ProjectsProps {
+  onSelectProject?: (project: Project) => void;
 }
 
-interface ProjectCardProps {
+const ProjectCard: React.FC<{
   project: Project;
   index: number;
-  onProjectClick: (project: Project, projectNumber: number) => void;
-}
+  onSelectProject?: (project: Project) => void;
+}> = ({ project, index, onSelectProject }) => {
+  const [imgSrc, setImgSrc] = useState(toProxyImageUrl(project.image));
 
-const ProjectCard = ({ project, index, onProjectClick }: ProjectCardProps) => {
-  const [imgSrc, setImgSrc] = useState(() => toProxyImageUrl(project.image));
-  const isSourceCodePrivate = project.sourceCodePrivate === true;
-  const hasGithubLink = Boolean(project.github?.trim());
-  const hasLiveLink = Boolean(project.link?.trim());
+  const fallback = createProjectSvgFallback(
+    project.title,
+    project.categoryLabel,
+    project.technologies[0] || "Code"
+  );
 
-  useEffect(() => {
-    setImgSrc(toProxyImageUrl(project.image));
-  }, [project.image]);
+  const handleOpenDetails = () => {
+    if (onSelectProject) {
+      onSelectProject(project);
+    } else {
+      const url = `${window.location.pathname}?project=${project.id}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
-      whileHover={{ y: -5 }}
-      onClick={() => onProjectClick(project, index + 1)}
-      className={`bg-white/5 rounded-xl backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300 p-4 cursor-pointer group ${
-        project.featured ? "ring-2 ring-purple-500/50" : ""
-      } hover:shadow-lg hover:shadow-purple-500/10`}
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+      whileHover={{ y: -6 }}
+      onClick={handleOpenDetails}
+      className={`relative flex flex-col justify-between overflow-hidden border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl hover:border-purple-500/40 hover:bg-white/[0.05] transition-all duration-300 cursor-pointer group shadow-xl shadow-black/20 ${
+        project.featured ? "ring-1 ring-purple-500/30" : ""
+      }`}
     >
-      <div className="relative mb-3 overflow-hidden bg-gray-800 rounded-xl group aspect-video">
-        <motion.img
+      {/* Thumbnail Banner */}
+      <div className="relative overflow-hidden aspect-[16/9] bg-slate-950/80">
+        <img
           src={imgSrc}
           alt={project.title}
-          className="object-cover object-center w-full h-full transition-transform duration-300 group-hover:scale-105"
-          onError={() => setImgSrc("/images/placeholder.png")}
           loading="lazy"
+          onError={() => setImgSrc(fallback)}
+          className="object-cover object-top w-full h-full transition-transform duration-700 group-hover:scale-105"
         />
-        <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-t from-black/60 to-transparent group-hover:opacity-100" />
-        {project.featured && (
-          <motion.div
-            className="absolute top-2 right-2 bg-purple-500 text-white px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-sm"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
-            Featured
-          </motion.div>
-        )}
-        <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-          <motion.div
-            initial={{ scale: 0 }}
-            whileHover={{ scale: 1.1 }}
-            className="px-4 py-2 text-sm font-medium text-white rounded-full bg-white/20 backdrop-blur-sm"
-          >
-            Click for Details
-          </motion.div>
+
+        {/* Gradient Shadow Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/30 to-transparent" />
+
+        {/* Badges Top Row */}
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+          <span className="px-2.5 py-1 text-[11px] font-semibold tracking-wider uppercase rounded-full bg-slate-900/80 border border-white/15 text-cyan-300 backdrop-blur-md">
+            {project.categoryLabel}
+          </span>
+
+          {project.featured && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-purple-500/80 text-white backdrop-blur-md shadow-md">
+              {renderIcon(FaStar, { size: 10 })}
+              Featured
+            </span>
+          )}
+        </div>
+
+        {/* Hover Details Button Hint */}
+        <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 opacity-0 bg-black/40 backdrop-blur-[2px] group-hover:opacity-100">
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-full bg-purple-600/90 shadow-lg">
+            <span>Explore Case Study</span>
+            {renderIcon(FaArrowRight, { size: 11 })}
+          </span>
         </div>
       </div>
-      <motion.h3
-        className="mb-1 text-lg font-semibold text-white group-hover:text-purple-400"
-        whileHover={{ x: 5 }}
-        transition={{ duration: 0.2 }}
-      >
-        {project.title}
-      </motion.h3>
-      <p className="mb-3 text-sm text-gray-400 line-clamp-2">
-        {project.description}
-      </p>
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {project.technologies.slice(0, 3).map((tech, i) => (
-          <motion.span
-            key={i}
-            className="px-2 py-0.5 rounded-full text-white/80 hover:bg-white/20 transition-colors text-xs bg-white/10"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {tech}
-          </motion.span>
-        ))}
 
-        {project.technologies.length > 3 && (
-          <motion.span
-            className="px-2 py-0.5 rounded-full text-white/60 text-xs"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            +{project.technologies.length - 3}
-          </motion.span>
-        )}
-      </div>
-      <div className="flex items-center justify-between gap-3 pt-1">
-        {!isSourceCodePrivate && hasGithubLink && (
-          <motion.a
-            href={project.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center text-sm text-gray-400 transition-colors hover:text-white"
-            whileHover={{ x: 5 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <motion.span
-              className="mr-1.5"
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.5 }}
+      {/* Content Container */}
+      <div className="flex flex-col flex-1 p-5 sm:p-6">
+        <div className="flex-1">
+          <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-purple-300 transition-colors mb-2">
+            {project.title}
+          </h3>
+          <p className="text-xs sm:text-sm leading-relaxed text-slate-400 line-clamp-2 mb-4 font-normal">
+            {project.description}
+          </p>
+        </div>
+
+        {/* Technologies Pills */}
+        <div className="flex flex-wrap gap-1.5 mb-5">
+          {project.technologies.slice(0, 3).map((tech) => (
+            <span
+              key={tech}
+              className="px-2.5 py-0.5 text-[11px] font-medium rounded-md bg-white/5 border border-white/10 text-slate-300"
             >
-              {renderIcon(FaGithub as React.ComponentType<IconBaseProps>, {
-                size: 14,
-              })}
-            </motion.span>
-            Source Code
-          </motion.a>
-        )}
-
-        {isSourceCodePrivate && (
-          <div className="inline-flex items-center text-sm text-amber-300/90">
-            <span className="mr-1.5">
-              {renderIcon(FaLock as React.ComponentType<IconBaseProps>, {
-                size: 13,
-              })}
+              {tech}
             </span>
-            Source Code Private
-          </div>
-        )}
-
-        {hasLiveLink && (
-          <motion.a
-            href={project.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center text-sm transition-colors text-cyan-300 hover:text-cyan-200"
-            whileHover={{ x: -3 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            View Live
-            <span className="ml-1.5">
-              {renderIcon(
-                FaExternalLinkAlt as React.ComponentType<IconBaseProps>,
-                {
-                  size: 12,
-                },
-              )}
+          ))}
+          {project.technologies.length > 3 && (
+            <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-white/5 text-slate-400">
+              +{project.technologies.length - 3}
             </span>
-          </motion.a>
-        )}
+          )}
+        </div>
+
+        {/* Bottom Actions Row */}
+        <div
+          className="flex items-center justify-between pt-3 border-t border-white/5 text-xs"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Source Code Badge / Link */}
+          {project.sourceCodePrivate ? (
+            <span className="inline-flex items-center gap-1.5 text-amber-300/80 font-medium">
+              {renderIcon(FaLock, { size: 11 })}
+              Private Codebase
+            </span>
+          ) : project.github ? (
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors"
+            >
+              {renderIcon(FaGithub, { size: 13 })}
+              <span>GitHub</span>
+            </a>
+          ) : (
+            <span className="text-slate-500">Internal</span>
+          )}
+
+          {/* Live Link or Details */}
+          {project.link ? (
+            <a
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              <span>Live Demo</span>
+              {renderIcon(FaExternalLinkAlt, { size: 10 })}
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={handleOpenDetails}
+              className="inline-flex items-center gap-1 font-semibold text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              <span>Case Study</span>
+              {renderIcon(FaArrowRight, { size: 10 })}
+            </button>
+          )}
+        </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
 };
 
-const ProjectGrid = ({
-  projects,
-  showAll,
-  onProjectClick,
-}: {
-  projects: Project[];
-  showAll: boolean;
-  onProjectClick: (project: Project, projectNumber: number) => void;
-}) => (
-  <AnimatePresence mode="wait">
-    <motion.div
-      key={showAll ? "expanded" : "collapsed"}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className={`grid gap-6 ${
-        showAll
-          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-          : "grid-cols-1 sm:grid-cols-2"
-      }`}
-    >
-      {projects.slice(0, showAll ? undefined : 2).map((project, index) => (
-        <ProjectCard
-          key={project.title}
-          project={project}
-          index={index}
-          onProjectClick={onProjectClick}
-        />
-      ))}
-    </motion.div>
-  </AnimatePresence>
-);
+const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
+  const [projectsList, setProjectsList] = useState<Project[]>(PROJECTS);
+  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [showAllProjects, setShowAllProjects] = useState<boolean>(false);
+  const [columns, setColumns] = useState<number>(3);
 
-const Projects = () => {
-  const [showAllApps, setShowAllApps] = useState(false);
-  const [showAllWeb, setShowAllWeb] = useState(false);
-  const [showAllML, setShowAllML] = useState(false);
-  const [showAllIoT, setShowAllIoT] = useState(false);
+  useEffect(() => {
+    getLiveProjects().then((data) => {
+      if (data && data.length > 0) {
+        setProjectsList(data);
+      }
+    });
+  }, []);
 
-  const appProjects: Project[] = [
-    {
-      title: "NetBagZ Mobile App",
-      description:
-        "A full-featured e-commerce mobile application with real-time inventory management and secure payment integration.",
-      longDescription:
-        "NetBagZ is a comprehensive e-commerce solution built with React Native that provides users with a seamless shopping experience. The app includes features like real-time inventory tracking, secure payment processing with Stripe, AR product visualization, user authentication, order management, and push notifications. The backend is built with Node.js and MongoDB, ensuring scalability and reliability.",
-      technologies: [
-        "React Native",
-        "Node.js",
-        "MongoDB",
-        "Redux",
-        "Stripe",
-        "AR Kit",
-        "Firebase",
-        "Express.js",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1N_z7JZcts-Le2hgJPR9qSytTxMoTzgv2",
-      link: "https://ecommerce-app.com",
-      github: "https://github.com/Maharab2134/NetBagZ",
-      featured: true,
-    },
-    {
-      title: "BachLife Mobile App",
-      description:
-        "Flutter-based personal finance management app for tracking income, expenses, and savings.",
-      longDescription:
-        "BachLife helps users take control of their finances through intuitive budgeting tools and insightful analytics. The app features expense categorization, savings goals tracking, financial reports, bill reminders, and investment tracking. Built with Flutter and Firebase, it offers cross-platform compatibility with a beautiful Material Design interface.",
-      technologies: [
-        "Flutter",
-        "Firebase",
-        "Dart",
-        "Provider",
-        "HTTP/Dio",
-        "Shared Preferences",
-        "Chart.js",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1uTZCWKh6PftTikrXZOde-l4spvCPWBEM",
-      link: "",
-      github: "https://github.com/Maharab2134/BachLife-app",
-    },
-    {
-      title: "Social Media App",
-      description:
-        "A social networking app with real-time chat, story features, and content sharing capabilities.",
-      longDescription:
-        "This social media platform enables users to connect, share content, and communicate in real-time. Features include user profiles, post creation with images/videos, real-time messaging with Socket.io, story sharing, likes/comments, push notifications, and content moderation. The app uses AWS for scalable cloud infrastructure and GraphQL for efficient data fetching.",
-      technologies: [
-        "React Native",
-        "Socket.io",
-        "AWS",
-        "GraphQL",
-        "Node.js",
-        "MongoDB",
-        "Redis",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1Kq8wcbRws98TnO3lqmRSNYx04NlR1oXk",
-      link: "",
-      github: "https://github.com/Maharab2134/Social_Media_App",
-    },
-    {
-      title: "Food Delivery App",
-      description:
-        "On-demand food delivery platform with real-time order tracking and restaurant management.",
-      longDescription:
-        "A comprehensive food delivery solution connecting customers with local restaurants. The app includes features like real-time order tracking, restaurant listings with menus, secure payments, delivery person tracking, ratings and reviews, and admin dashboard for restaurant management. Integrated with Google Maps API for accurate delivery tracking.",
-      technologies: [
-        "Flutter",
-        "Node.js",
-        "MongoDB",
-        "Google Maps API",
-        "Stripe",
-        "Firebase",
-        "Express.js",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1ayPzSd5py__Qx1tssMfoCvckFkKrEBOZ",
-      link: "",
-      github: "https://github.com/Maharab2134/food-delivery",
-    },
-    {
-      title: "Smart IoT",
-      description:
-        "Flutter-based smart device controller with Bluetooth, WiFi, and cloud connectivity for real-time IoT/car control and sensor monitoring.",
-      longDescription:
-        "A cross-platform mobile app for controlling smart cars and IoT systems via multiple transports—Bluetooth, direct WiFi, and Blynk cloud. Features device discovery, real-time control interfaces, sensor dashboards, and smooth animations. Built with Flutter for robust performance on iOS and Android.",
-      technologies: [
-        "Flutter",
-        "Dart",
-        "Bluetooth",
-        "WiFi TCP Socket",
-        "Blynk",
-        "SharedPreferences",
-      ],
-      image: "/images/",
-      link: "",
-      github: "https://github.com/Maharab2134/food-delivery",
-    },
-  ];
+  useEffect(() => {
+    const updateCols = () => {
+      if (typeof window === "undefined") return;
+      if (window.innerWidth >= 1024) setColumns(3);
+      else if (window.innerWidth >= 640) setColumns(2);
+      else setColumns(1);
+    };
 
-  const webProjects: Project[] = [
-    {
-      title: "PurchifyShop – E-commerce Web Application",
-      description:
-        "A modern e-commerce platform with responsive UI, product browsing, and smooth user experience.",
-      longDescription:
-        "Designed and developed a scalable e-commerce system focusing on usability, performance, and clean UI. Ensured seamless navigation, product management, and enhanced user engagement through optimized frontend design.",
-      technologies: [
-        "React",
-        "Tailwind CSS",
-        "Framer Motion",
-        "Laravel",
-        "Vite",
-        "ESLint",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1Yi9rhaY5ROKTlV_aIaGql7emshK640Dc",
-      link: "https://purchifyshop.com/",
-      github: "https://github.com/Maharab2134/Maharab_Portfolio",
-      featured: true,
-      sourceCodePrivate: true,
-    },
-    {
-      title: "Amin WebTech – Business Website",
-      description:
-        "A professional business website designed to showcase services with a clean and responsive interface.",
-      longDescription:
-        "Developed a visually appealing website with structured layout and optimized performance for better client engagement. Focused on responsive design and user experience to enhance brand presence and credibility.",
-      technologies: [
-        "React",
-        "Tailwind CSS",
-        "Framer Motion",
-        "Node.js",
-        "Vite",
-        "ESLint",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1gey8dyGWWP3PkATaZyOo5izsiqoEuNL0",
-      link: "https://aminwebtech.com/",
-      github: "https://github.com/Maharab2134/Maharab_Portfolio",
-      featured: true,
-      sourceCodePrivate: true,
-    },
-    {
-      title: "Portfolio Website",
-      description:
-        "Modern portfolio website with smooth animations, dark mode, and responsive design.",
-      longDescription:
-        "A cutting-edge portfolio website showcasing modern web development practices. Features include smooth page transitions with Framer Motion, dark/light mode toggle, responsive design that works perfectly on all devices, optimized performance with lazy loading, and SEO optimization. Built with React and TypeScript for type safety and maintainability.",
-      technologies: [
-        "React",
-        "Tailwind CSS",
-        "Framer Motion",
-        "TypeScript",
-        "Vite",
-        "ESLint",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1hnUPDafxEWl6xPWkNisXKu6WSG3eQu3p",
-      link: "https://portfolio.com",
-      github: "https://github.com/Maharab2134/Maharab_Portfolio",
-      featured: true,
-    },
-    {
-      title: "Smart Working Habits",
-      description:
-        "Full-stack web application for project and task management with real-time updates.",
-      longDescription:
-        "Smart Working Habits is a productivity platform designed to help teams and individuals manage projects efficiently. It includes task management, team collaboration, time tracking, progress analytics, real-time notifications, and file sharing. The application uses WebSockets for real-time updates and features a clean, intuitive interface built with modern React patterns.",
-      technologies: [
-        "React",
-        "Node.js",
-        "Express",
-        "PostgreSQL",
-        "Socket.io",
-        "JWT",
-        "Chart.js",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=12D1PINGBSmaXEH2bOdVD7zQ-ayGvtJao",
-      link: "",
-      github: "https://github.com/Maharab2134/task-manager",
-    },
-    {
-      title: "E-Learning Platform",
-      description:
-        "Interactive learning platform with video courses, quizzes, and progress tracking.",
-      longDescription:
-        "A comprehensive e-learning platform that provides interactive courses with video lessons, quizzes, assignments, and certification. Features include user progress tracking, course recommendations, discussion forums, instructor dashboards, payment integration, and mobile-responsive design. Built with Next.js for optimal SEO and performance.",
-      technologies: [
-        "Next.js",
-        "Django",
-        "PostgreSQL",
-        "AWS S3",
-        "Stripe",
-        "Redis",
-        "Docker",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1H6jas_QgY48qzTZS_K_ANrxz8Chb5L_E",
-      link: "",
-      github: "https://github.com/Maharab2134/elearning",
-    },
-    {
-      title: "deshiShop E-commerce",
-      description:
-        "A scalable e-commerce platform with product management and payment gateway integration.",
-      longDescription:
-        "deshiShop is a full-featured e-commerce platform supporting multiple vendors and product categories. It includes advanced product filtering, shopping cart, wishlist, user reviews and ratings, order management, inventory tracking, and admin dashboard. The platform is built with scalability in mind and can handle high traffic with optimized database queries and caching.",
-      technologies: [
-        "React",
-        "Node.js",
-        "MongoDB",
-        "Stripe",
-        "Redux",
-        "Express.js",
-        "JWT",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1hrg0W_SWuACCeCDxzxp2N4zSO6HzJsvr",
-      link: "",
-      github: "https://github.com/Maharab2134/deshiShop",
-    },
-    {
-      title: "Student Projects Platform",
-      description:
-        "A collaborative platform for students to showcase and manage academic projects.",
-      longDescription:
-        "This platform enables students to showcase their academic projects, collaborate with peers, and receive feedback. Features include project submission, peer reviews, rating system, project categorization, search and filtering, user profiles, and admin moderation. Built with a focus on educational institutions and student communities.",
-      technologies: [
-        "React",
-        "Node.js",
-        "Express.js",
-        "MongoDB",
-        "Stripe",
-        "JWT",
-        "Multer",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=11QTjup6nMFBZPFJfcZvU9onSz9zc5tqm",
-      link: "https://student-projects-platform.vercel.app/",
-      github: "https://github.com/Maharab2134/student-projects-platform",
-    },
-    {
-      title: "FoodShare",
-      description:
-        "Platform connecting food donors with volunteers to reduce food waste and fight hunger.",
-      longDescription:
-        "FoodShare addresses food waste and hunger by creating a network of food donors, volunteers, and recipients. The platform features real-time food donation listings, volunteer coordination, route optimization for deliveries, donor recognition system, and impact tracking. Integrated with Google Maps API for efficient delivery routing and real-time tracking.",
-      technologies: [
-        "React",
-        "Node.js",
-        "MongoDB",
-        "Stripe",
-        "Socket.io",
-        "Google Maps API",
-        "Express.js",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1oGgvwPBWbmULSUlN6DFac668_CuyVD-i",
-      link: "",
-      github: "https://github.com/Maharab2134/FoodShare_Web",
-    },
-    {
-      title: "PathPilot",
-      description:
-        "Intelligent career assessment platform helping users discover ideal career paths.",
-      longDescription:
-        "PathPilot uses advanced assessment algorithms to help users discover suitable career paths based on their skills, interests, and personality. The platform includes interactive quizzes, personalized recommendations, career roadmaps, skill gap analysis, progress tracking, and comprehensive admin tools for content management and analytics.",
-      technologies: [
-        "React",
-        "Node.js",
-        "Express",
-        "TypeScript",
-        "MongoDB",
-        "Socket.io",
-        "Chart.js",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1Mue_kK8G70L_hojQijfp5jVlX8yJYHV-",
-      link: "",
-      github: "https://github.com/Maharab2134/PathPilot",
-    },
-    {
-      title: "Real Estate Marketplace",
-      description:
-        "Property listing platform with advanced search, virtual tours, and mortgage calculator.",
-      longDescription:
-        "A modern real estate platform that connects buyers, sellers, and agents. Features include advanced property search with filters, virtual property tours using Three.js, mortgage calculator, property comparisons, saved searches, agent profiles, and secure messaging. The platform provides a comprehensive solution for property discovery and transaction management.",
-      technologies: [
-        "React",
-        "Node.js",
-        "MongoDB",
-        "Three.js",
-        "Stripe",
-        "Express.js",
-        "JWT",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1nV3zKlPlP0YJFf_KYOaiOAuugrd0Zrhy",
-      link: "",
-      github: "https://github.com/Maharab2134/real-estate",
-    },
+    updateCols();
+    window.addEventListener("resize", updateCols);
+    return () => window.removeEventListener("resize", updateCols);
+  }, []);
 
-    {
-      title: "Midtown Aabashon Ltd – Corporate Website",
-      description:
-        "Modern real estate corporate website with responsive design and structured property showcase.",
-      longDescription:
-        "A fully responsive corporate website developed for Midtown Aabashon Ltd to establish a strong online presence. The platform presents company information, property listings, and contact features through a clean and structured UI. Built with performance optimization and SEO-friendly architecture in mind, the website ensures fast loading speed, cross-device compatibility, and enhanced user engagement.",
-      technologies: [
-        "React",
-        "HTML5",
-        "CSS3",
-        "Tailwind CSS",
-        "Node.js",
-        "Responsive Design",
-        "SEO Optimization",
-      ],
-      image:
-        "https://drive.google.com/file/d/1XR0TijAWiGsUX67Y0zCBNyJwTnZiojP4/view?usp=drive_link",
-      link: "https://midtownaabashonltd.com/",
-      github: "https://github.com/Maharab2134/land-project-umar",
-      sourceCodePrivate: true,
-    },
-    {
-      title: "AuthNova – Full-Stack Authentication Platform",
-      description:
-        "Production-grade authentication system with JWT, 2FA, and advanced security protections.",
-      longDescription:
-        "AuthNova is a full-stack authentication platform built with React, Node.js, Express, and MongoDB. It implements secure JWT-based access and refresh token flow, password hashing with bcrypt, two-factor authentication, account lockout, login history tracking, suspicious login alerts, and advanced security protections including rate limiting, CSRF protection, and Helmet hardening. The backend follows an MVC architecture, while the frontend is structured with reusable UI components to ensure scalability, maintainability, and a modern user experience.",
-      technologies: [
-        "React",
-        "Tailwind CSS",
-        "Node.js",
-        "Express.js",
-        "MongoDB",
-        "Mongoose",
-        "JWT",
-        "REST API",
-        "MVC Architecture",
-        "Security Best Practices",
-      ],
-      image:
-        "https://drive.google.com/file/d/1OSRuklnOpq9D5LDy8SWsJwjEqc_gz_Uw/view?usp=drive_link",
-      link: "",
-      github: "https://github.com/Maharab2134/secur-auth-system",
-      sourceCodePrivate: true,
-    },
-    
-    {
-      title: "TripFly BD – Travel & Tour Booking Platform",
-      description:
-        "A comprehensive travel and tour booking platform with seamless user experience and robust backend infrastructure.",
-      longDescription:
-        "TripFly BD is a full-stack travel booking platform designed to provide users with an intuitive interface for exploring destinations, comparing prices, and making reservations. The system features a modern UI built with React, a scalable backend using Node.js and Express, and a robust database powered by MongoDB. Additional functionalities include user authentication, payment processing, real-time availability checks, and detailed itinerary management.",
-      technologies: [
-        "React",
-        "Tailwind CSS",
-        "Node.js",
-        "PostgreSQL",
-        "JWT",
-        "REST API",
-      ],
-      image:
-        "https://drive.google.com/file/d/1npkGAUsEzqOWNhpJzGhsV7umYPbCcFEf/view?usp=drive_link",
-      link: "https://www.tripflybd.com/",
-      github: "https://github.com/Maharab2134/secur-auth-system",
-      sourceCodePrivate: true,
-    },
-  ];
-
-  const mlProjects: Project[] = [
-    {
-      title: "Image Classification Model",
-      description:
-        "Deep learning model for image classification using transfer learning with 95% accuracy.",
-      longDescription:
-        "This computer vision project implements a sophisticated image classification system using transfer learning with pre-trained models. The model achieves 95% accuracy on custom datasets and can classify images across multiple categories. The system includes data preprocessing, model training, evaluation metrics, and a Flask API for integration with web applications. Perfect for applications requiring visual recognition capabilities.",
-      technologies: [
-        "TensorFlow",
-        "Python",
-        "OpenCV",
-        "NumPy",
-        "Flask",
-        "Keras",
-        "Pandas",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1u94a_6dY2HjrRldtcVg2YaHaaifNI42t",
-      link: "",
-      github: "https://github.com/Maharab2134/image-classifier",
-      featured: true,
-      sourceCodePrivate: true,
-    },
-    {
-      title: "Sentiment Analysis Tool",
-      description:
-        "NLP-based sentiment analysis for social media content with multi-language support.",
-      longDescription:
-        "A natural language processing tool that analyzes sentiment in text data from various sources including social media, reviews, and customer feedback. The system uses BERT and other transformer models for accurate sentiment classification across multiple languages. Features include real-time analysis, batch processing, sentiment trends visualization, and API integration for developers.",
-      technologies: [
-        "PyTorch",
-        "NLTK",
-        "BERT",
-        "Python",
-        "FastAPI",
-        "Transformers",
-        "Scikit-learn",
-      ],
-      image:
-        "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1rpRFs4UedKCCcHdYL_v0wGPfdOZ0qg9E",
-      link: "",
-      github: "https://github.com/Maharab2134/sentiment-analyzer",
-      sourceCodePrivate: true,
-    },
-    {
-      title: "Recommendation System",
-      description:
-        "Personalized content recommendation engine using collaborative filtering.",
-      longDescription:
-        "An advanced recommendation system that provides personalized content suggestions using collaborative filtering and content-based approaches. The system analyzes user behavior and preferences to deliver accurate recommendations. Features include real-time recommendation generation, A/B testing framework, user preference learning, and integration with various content types including products, articles, and media.",
-      technologies: [
-        "Scikit-learn",
-        "Pandas",
-        "NumPy",
-        "Flask",
-        "Redis",
-        "Surprise",
-        "Matplotlib",
-      ],
-      image: "/images/recommender.jpg",
-      link: "",
-      github: "https://github.com/Maharab2134/recommender",
-      sourceCodePrivate: true,
-    },
-    {
-      title: "Time Series Forecasting",
-      description:
-        "Advanced time series forecasting model for financial data prediction and analysis.",
-      longDescription:
-        "A comprehensive time series forecasting solution designed for financial markets and business analytics. The system uses advanced algorithms including LSTM networks, Prophet, and ARIMA models to predict future trends based on historical data. Features include multi-variate analysis, confidence intervals, anomaly detection, and interactive visualization of predictions and historical data.",
-      technologies: [
-        "TensorFlow",
-        "Prophet",
-        "Pandas",
-        "Plotly",
-        "FastAPI",
-        "LSTM",
-        "Statsmodels",
-      ],
-      image:
-        "https://drive.google.com/file/d/1uL9IaOAvIIUeMriPFY9gB5dZDh3KImrE/view?usp=drive_link",
-      link: "",
-      github: "https://github.com/Maharab2134/forecasting",
-      sourceCodePrivate: true,
-    },
-  ];
-
-  const iotProjects: Project[] = [
-    {
-      title: "Smart Home Automation System",
-      description:
-        "IoT-based smart home system with remote control, energy monitoring, and automation.",
-      longDescription:
-        "A comprehensive smart home automation system that enables users to control their home appliances remotely via a mobile app. The system includes features like real-time energy consumption monitoring, automated scheduling, voice control integration, security alerts, and environmental monitoring. Built with ESP32 microcontrollers and cloud integration for seamless remote access.",
-      technologies: [
-        "ESP32",
-        "Arduino",
-        "MQTT",
-        "Node.js",
-        "React Native",
-        "Firebase",
-        "Python",
-      ],
-      image:
-        "https://drive.google.com/file/d/1-n_olWQeEIS10Ng2-xCdVTGiBdmbwOJA/view?usp=drive_link",
-      link: "",
-      github: "https://github.com/Maharab2134/smart-home-iot",
-      featured: true,
-      sourceCodePrivate: true,
-    },
-    {
-      title: "Agricultural Monitoring System",
-      description:
-        "IoT solution for precision agriculture with soil monitoring and automated irrigation.",
-      longDescription:
-        "An intelligent agricultural monitoring system that helps farmers optimize crop production. The system uses various sensors to monitor soil moisture, temperature, humidity, and nutrient levels. It features automated irrigation control, crop health monitoring, weather prediction integration, and a dashboard for real-time data visualization and alerts.",
-      technologies: [
-        "Raspberry Pi",
-        "Arduino",
-        "Python",
-        "MQTT",
-        "React",
-        "MongoDB",
-        "Django",
-      ],
-      image:
-        "https://drive.google.com/file/d/1bTt2507LWcYpotpPHVEwLg5zu4G8s2-z/view?usp=drive_link",
-      link: "",
-      github: "https://github.com/Maharab2134/agriculture-iot",
-    },
-    {
-      title: "Industrial Asset Tracking",
-      description:
-        "Real-time asset tracking and monitoring system for industrial applications.",
-      longDescription:
-        "An industrial-grade IoT solution for tracking and monitoring valuable assets in real-time. The system uses GPS, RFID, and various sensors to provide location tracking, environmental condition monitoring, predictive maintenance alerts, and asset utilization analytics. Features include geofencing, tamper detection, and comprehensive reporting dashboards.",
-      technologies: [
-        "LoRaWAN",
-        "GPS",
-        "RFID",
-        "Node.js",
-        "React",
-        "PostgreSQL",
-        "AWS IoT",
-      ],
-      image: "/images/asset-tracking.jpg",
-      link: "",
-      github: "https://github.com/Maharab2134/industrial-iot",
-    },
-    {
-      title: "Health Monitoring Wearable",
-      description:
-        "IoT wearable device for continuous health monitoring and emergency alerts.",
-      longDescription:
-        "A smart wearable device that continuously monitors vital signs including heart rate, blood oxygen levels, body temperature, and physical activity. The system features real-time health analytics, emergency alert notifications to caregivers, medication reminders, and integration with healthcare provider systems. Designed with focus on elderly care and chronic disease management.",
-      technologies: [
-        "ESP32",
-        "Bluetooth",
-        "Python",
-        "React Native",
-        "Firebase",
-        "TensorFlow Lite",
-        "MQTT",
-      ],
-      image: "/images/health-wearable.jpg",
-      link: "",
-      github: "https://github.com/Maharab2134/health-monitoring-iot",
-    },
-  ];
-
-  // Different colors for each section
-  const sectionConfigs = [
-    {
-      icon: FaMobile,
-      title: "App Development",
-      projects: appProjects,
-      showAll: showAllApps,
-      setShowAll: setShowAllApps,
-      color: "text-blue-400",
-      hoverColor: "hover:text-blue-300",
-      buttonColor: "bg-blue-500/20 hover:bg-blue-500/30 text-blue-400",
-    },
-    {
-      icon: FaGlobe,
-      title: "Web Development",
-      projects: webProjects,
-      showAll: showAllWeb,
-      setShowAll: setShowAllWeb,
-      color: "text-green-400",
-      hoverColor: "hover:text-green-300",
-      buttonColor: "bg-green-500/20 hover:bg-green-500/30 text-green-400",
-    },
-    {
-      icon: FaBrain,
-      title: "Machine Learning",
-      projects: mlProjects,
-      showAll: showAllML,
-      setShowAll: setShowAllML,
-      color: "text-orange-400",
-      hoverColor: "hover:text-orange-300",
-      buttonColor: "bg-orange-500/20 hover:bg-orange-500/30 text-orange-400",
-    },
-    {
-      icon: FaMicrochip,
-      title: "IoT Projects",
-      projects: iotProjects,
-      showAll: showAllIoT,
-      setShowAll: setShowAllIoT,
-      color: "text-purple-400",
-      hoverColor: "hover:text-purple-300",
-      buttonColor: "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400",
-    },
-  ];
-
-  const handleProjectClick = (project: Project, projectNumber: number) => {
-    const projectUrl = `${window.location.pathname}?project=${encodeURIComponent(
-      JSON.stringify({
-        ...project,
-        projectNumber,
-      }),
-    )}`;
-
-    window.open(projectUrl, "_blank", "noopener,noreferrer");
+  const handleFilterChange = (filterId: string) => {
+    setActiveFilter(filterId);
+    setShowAllProjects(false);
   };
+
+  const filterTabs = [
+    { id: "all", label: "All Projects", icon: FaLayerGroup },
+    { id: "featured", label: "Featured", icon: FaStar },
+    { id: "web", label: "Web Applications", icon: FaGlobe },
+    { id: "mobile", label: "Mobile Apps", icon: FaMobileAlt },
+    { id: "ml", label: "AI & Machine Learning", icon: FaBrain },
+    { id: "iot", label: "IoT & Hardware", icon: FaMicrochip },
+  ];
+
+  const filteredProjects = projectsList.filter((p) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "featured") return p.featured;
+    return p.category === activeFilter;
+  });
+
+  const rowLimit = columns * 4; // Exactly 4 rows based on current active grid columns
+  const visibleProjects = !showAllProjects
+    ? filteredProjects.slice(0, rowLimit)
+    : filteredProjects;
 
   return (
     <section
       id="projects"
-      className="py-20 bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] relative overflow-hidden"
+      className="relative py-12 sm:py-16 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
     >
-      <div className="relative z-10 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
+      <div className="relative px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        {/* Section Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="mb-16 text-center"
+          transition={{ duration: 0.5 }}
+          className="mb-10 sm:mb-12 text-center"
         >
-          <h2 className="mb-4 text-3xl font-bold text-textPrimary">
-            My Projects
+          <span className="text-xs font-semibold tracking-widest uppercase text-cyan-400">
+            Portfolio Showcase
+          </span>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
+            Featured Projects &amp; Case Studies
           </h2>
-          <div className="w-20 h-1 mx-auto bg-secondary" />
-          <p className="max-w-2xl mx-auto mt-3 text-lg text-gray-400">
-            Explore my work across different domains of development, from mobile
-            apps to IoT solutions
+          <div className="w-20 h-1 mx-auto mt-4 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
+          <p className="max-w-2xl mx-auto mt-4 text-sm sm:text-base text-slate-400">
+            Explore software systems engineered with modern architecture, practical problem solving, and proven business utility.
           </p>
         </motion.div>
 
-        {sectionConfigs.map((section, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="mb-20"
-          >
-            <div className="flex items-center gap-4 mb-8">
-              <span
-                className={`text-3xl ${section.color} ${section.hoverColor} transition-colors`}
+        {/* Filter Tabs */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-12">
+          {filterTabs.map((tab) => {
+            const isActive = activeFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleFilterChange(tab.id)}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 ${
+                  isActive
+                    ? "bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-lg shadow-purple-500/20 scale-105"
+                    : "bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/10"
+                }`}
               >
-                {renderIcon(
-                  section.icon as React.ComponentType<IconBaseProps>,
-                  { size: 28 },
-                )}
-              </span>
-              <h3 className="text-2xl font-semibold text-white">
-                {section.title}
-              </h3>
-            </div>
-            <ProjectGrid
-              projects={section.projects}
-              showAll={section.showAll}
-              onProjectClick={handleProjectClick}
-            />
-            {section.projects.length > 2 && (
-              <div className="mt-8 text-center">
-                <motion.button
-                  onClick={() => section.setShowAll(!section.showAll)}
-                  className={`relative px-8 py-3 overflow-hidden transition-all duration-300 rounded-full group ${section.buttonColor}`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <motion.span
-                    className="relative z-10 flex items-center gap-2"
-                    animate={{ y: section.showAll ? 0 : [0, 5, 0] }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: section.showAll ? 0 : Infinity,
-                    }}
-                  >
-                    {section.showAll ? "Show Less" : "Show More"}
-                    <motion.span
-                      animate={{ rotate: section.showAll ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      {renderIcon(
-                        FaArrowDown as React.ComponentType<IconBaseProps>,
-                        {},
-                      )}
-                    </motion.span>
-                  </motion.span>
-                </motion.button>
-              </div>
-            )}
-          </motion.div>
-        ))}
-      </div>
+                {renderIcon(tab.icon, { size: 12 })}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Background decoration */}
-      <motion.div
-        className="absolute inset-0 -z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      >
+        {/* Projects Grid */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-b from-tertiary/50 to-primary/50"
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%"],
-            opacity: [0.5, 0.7, 0.5],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-        />
-
-        {/* Subtle Floating Particles */}
-        <motion.div className="absolute inset-0">
-          {[...Array(12)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1.5 h-1.5 bg-secondary rounded-full opacity-40 blur-[0.5px]"
-              animate={{
-                x: [0, (Math.random() - 0.5) * 80, 0],
-                y: [0, (Math.random() - 0.5) * 80, 0],
-                opacity: [0.2, 0.5, 0.2],
-                scale: [0.7, 1.1, 0.7],
-              }}
-              transition={{
-                duration: Math.random() * 6 + 6,
-                repeat: Infinity,
-                repeatType: "mirror",
-                delay: i * 0.4,
-              }}
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-            />
-          ))}
+          layout
+          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          <AnimatePresence>
+            {visibleProjects.map((project, index) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                index={index}
+                onSelectProject={onSelectProject}
+              />
+            ))}
+          </AnimatePresence>
         </motion.div>
-      </motion.div>
+
+        {/* View All / Show Less Toggle Button */}
+        {filteredProjects.length > rowLimit && (
+          <div className="flex justify-center mt-12">
+            <button
+              type="button"
+              onClick={() => {
+                setShowAllProjects((prev) => !prev);
+              }}
+              className="inline-flex items-center gap-2.5 px-7 py-3 text-xs sm:text-sm font-semibold text-white transition-all duration-300 rounded-full border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-400 hover:scale-105 shadow-lg shadow-purple-500/10 active:scale-95 group"
+            >
+              <span>
+                {showAllProjects
+                  ? "Show Less"
+                  : `View All Projects (${filteredProjects.length})`}
+              </span>
+              {renderIcon(showAllProjects ? FaChevronUp : FaChevronDown, {
+                size: 13,
+                className: "transition-transform text-cyan-300",
+              })}
+            </button>
+          </div>
+        )}
+      </div>
     </section>
   );
 };

@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaBars,
-  FaChevronDown,
   FaTimes,
   FaHome,
   FaUser,
@@ -10,461 +9,251 @@ import {
   FaCode,
   FaProjectDiagram,
   FaEnvelope,
-  FaUserCircle,
-  FaStickyNote,
+  FaRocket,
 } from "react-icons/fa";
-import { IconBaseProps } from "react-icons";
+import { PORTFOLIO_INFO } from "../data/portfolioData";
 
 interface NavbarProps {
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
+  onNavigatePage?: (page: "home" | "hire" | "journey") => void;
 }
 
-const Navbar = ({ isMenuOpen, setIsMenuOpen }: NavbarProps) => {
+const renderIcon = (Icon: any, props: any = {}) => {
+  return <Icon {...props} />;
+};
+
+const navLinks = [
+  { name: "Home", href: "#home", id: "home", icon: FaHome },
+  { name: "About", href: "#about", id: "about", icon: FaUser },
+  { name: "Education", href: "#education", id: "education", icon: FaGraduationCap },
+  { name: "Skills", href: "#skills", id: "skills", icon: FaCode },
+  { name: "Projects", href: "#projects", id: "projects", icon: FaProjectDiagram },
+  { name: "Contact", href: "#contact", id: "contact", icon: FaEnvelope },
+];
+
+const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePage }) => {
   const [scrolled, setScrolled] = useState(false);
-  const [activeLink, setActiveLink] = useState("");
-  const [isMobileEducationOpen, setIsMobileEducationOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("home");
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-
-      const sections = [
-        "home",
-        "about",
-        "education",
-        "certificates",
-        "skills",
-        "projects",
-        "contact",
-      ];
-      const currentSection = sections.find((section) => {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          return rect.top <= 100 && rect.bottom >= 100;
-        }
-        return false;
-      });
-
-      if (currentSection) {
-        setActiveLink(currentSection);
-      }
+      setScrolled(window.scrollY > 30);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: "Home", href: "#home", icon: FaHome },
-    { name: "About", href: "#about", icon: FaUser },
-    { name: "Education", href: "#education", icon: FaGraduationCap },
-    { name: "Skills", href: "#skills", icon: FaCode },
-    { name: "Projects", href: "#projects", icon: FaProjectDiagram },
-    { name: "Contact", href: "#contact", icon: FaEnvelope },
-  ];
-
-  const isEducationActive =
-    activeLink === "education" || activeLink === "certificates";
-
   useEffect(() => {
-    if (isMenuOpen && isEducationActive) {
-      setIsMobileEducationOpen(true);
+    if (typeof window === "undefined") return;
+
+    const sections = ["home", "about", "education", "certificates", "skills", "projects", "contact"];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: "-20% 0px -60% 0px",
+        threshold: 0,
+      }
+    );
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
-  }, [isMenuOpen, isEducationActive]);
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMenuOpen]);
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith("#")) {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+      setIsMenuOpen(false);
+    }
+  };
 
   return (
-    <motion.nav
-      initial={{ y: -80 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-[#0f172a]/90 backdrop-blur-md shadow-lg"
+    <motion.header
+      initial={{ y: -80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+          ? "bg-[#030014]/85 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/30"
           : "bg-transparent"
-      }`}
+        }`}
     >
-      <div className="px-4 mx-auto max-w-7xl sm:px-6">
-        <div className="flex items-center justify-between w-full h-16">
-          {/* Left: Brand with Person Icon */}
-          <motion.div
-            className="flex items-center gap-3"
-            whileHover={{ scale: 1.05 }}
+      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20">
+          {/* Brand Logo */}
+          <a
+            href="#home"
+            onClick={(e) => handleLinkClick(e, "#home")}
+            aria-label="Md. Maharab Hosen Home"
+            className="flex items-center gap-3 group"
           >
-            {/* Animated Person Icon */}
-            <motion.div
-              className="relative"
-              whileHover={{
-                scale: 1.2,
-                rotate: [0, -10, 10, 0],
-              }}
-              transition={{
-                duration: 0.6,
-                rotate: { duration: 0.5 },
-              }}
-            >
-              <motion.div
-                className="p-2 border rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm border-purple-500/30"
-                animate={{
-                  boxShadow: [
-                    "0 0 0px rgba(168, 85, 247, 0.4)",
-                    "0 0 10px rgba(168, 85, 247, 0.6)",
-                    "0 0 0px rgba(168, 85, 247, 0.4)",
-                  ],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
-              >
-                <motion.div
-                  animate={{
-                    scale: [1, 1.1, 1],
-                    opacity: [0.8, 1, 0.8],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatType: "reverse",
-                  }}
-                >
-                  {FaUserCircle({
-                    size: 20,
-                    className: "text-purple-400",
-                  } as IconBaseProps)}
-                </motion.div>
-              </motion.div>
-
-              {/* Floating particles around icon */}
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-1 h-1 bg-pink-400 rounded-full"
-                  animate={{
-                    scale: [0, 1, 0],
-                    opacity: [0, 1, 0],
-                    x: [0, (i - 1) * 8, 0],
-                    y: [0, (i - 1) * 8, 0],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    delay: i * 0.3,
-                    ease: "easeInOut",
-                  }}
-                  style={{
-                    left: "50%",
-                    top: "50%",
-                  }}
-                />
-              ))}
-            </motion.div>
-
-            {/* MH Text */}
-            <motion.a
-              href="#home"
-              className="flex items-center gap-2 text-2xl font-bold"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.span
-                className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500"
-                animate={{
-                  backgroundPosition: ["0%", "100%", "0%"],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
-                style={{
-                  backgroundSize: "200% 100%",
-                }}
-              >
-                MH
-              </motion.span>
-
-              {/* Pulsing dot */}
-              <motion.div
-                className="w-1 h-1 bg-green-400 rounded-full"
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.7, 1, 0.7],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "reverse",
+            <div className="relative flex items-center justify-center w-10 h-10 overflow-hidden font-bold text-white transition-transform duration-300 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 group-hover:scale-105 shadow-md shadow-purple-500/20 border border-white/20">
+              <img
+                src={PORTFOLIO_INFO.profileImage}
+                alt={PORTFOLIO_INFO.name}
+                className="object-cover object-top w-full h-full"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
                 }}
               />
-            </motion.a>
-          </motion.div>
+              <span className="absolute inset-0 flex items-center justify-center text-base tracking-wider -z-10">
+                MH
+              </span>
+              <div className="absolute inset-0 transition-opacity opacity-0 bg-white/20 group-hover:opacity-100" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-purple-300">
+                Md. Maharab
+              </span>
+              <span className="text-[11px] font-medium tracking-wide text-cyan-400/80">
+                Software Developer
+              </span>
+            </div>
+          </a>
 
-          {/* Right: Navigation Links */}
-          <div className="items-center hidden space-x-8 md:flex">
-            {navLinks.map((link, index) => {
-              const IconComponent = link.icon;
-              const isActive =
-                link.name === "Education"
-                  ? isEducationActive
-                  : activeLink === link.href.substring(1);
-
-              if (link.name === "Education") {
-                return (
-                  <motion.div
-                    key={link.name}
-                    className="relative group"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <motion.a
-                      href={link.href}
-                      className={`flex items-center gap-2 relative ${
-                        isActive
-                          ? "text-white"
-                          : "text-gray-300 hover:text-white"
-                      }`}
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <motion.span
-                        className="relative"
-                        whileHover={{ rotate: 360 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        {IconComponent({ size: 16 } as IconBaseProps)}
-                        {isActive && (
-                          <motion.span
-                            className="absolute w-2 h-2 rounded-full -top-1 -right-1 bg-gradient-to-r from-purple-400 to-pink-500"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ duration: 0.3 }}
-                          />
-                        )}
-                      </motion.span>
-                      <span>{link.name}</span>
-                      {FaChevronDown({ size: 10 } as IconBaseProps)}
-
-                      <motion.span
-                        className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 transition-all duration-300 ${
-                          isActive ? "w-full" : "w-0 group-hover:w-full"
-                        }`}
-                        initial={{ width: 0 }}
-                        whileHover={{ width: "100%" }}
-                      />
-                    </motion.a>
-
-                    <div className="absolute left-0 z-20 pt-3 transition-all duration-200 opacity-0 pointer-events-none top-full group-hover:opacity-100 group-hover:pointer-events-auto">
-                      <a
-                        href="#certificates"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md whitespace-nowrap border border-white/10 backdrop-blur-sm ${
-                          activeLink === "certificates"
-                            ? "bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white"
-                            : "bg-[#0f172a]/95 text-gray-300 hover:text-white hover:bg-white/10"
-                        }`}
-                      >
-                        {FaStickyNote({ size: 14 } as IconBaseProps)}
-                        <span className="text-sm font-medium">
-                          Certificates
-                        </span>
-                      </a>
-                    </div>
-                  </motion.div>
-                );
-              }
-
+          {/* Desktop Nav Links */}
+          <nav className="items-center hidden space-x-1 lg:space-x-2 md:flex" aria-label="Main Navigation">
+            {navLinks.map((link) => {
+              const isActive = activeSection === link.id;
               return (
-                <motion.a
+                <a
                   key={link.name}
                   href={link.href}
-                  className={`flex items-center gap-2 relative group ${
-                    isActive ? "text-white" : "text-gray-300 hover:text-white"
-                  }`}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <motion.span
-                    className="relative"
-                    whileHover={{ rotate: 360 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {IconComponent({ size: 16 } as IconBaseProps)}
-                    {isActive && (
-                      <motion.span
-                        className="absolute w-2 h-2 rounded-full -top-1 -right-1 bg-gradient-to-r from-purple-400 to-pink-500"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    )}
-                  </motion.span>
-                  <span>{link.name}</span>
-
-                  <motion.span
-                    className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 transition-all duration-300 ${
-                      isActive ? "w-full" : "w-0 group-hover:w-full"
+                  onClick={(e) => handleLinkClick(e, link.href)}
+                  className={`relative px-3.5 py-2 text-sm font-medium transition-all duration-200 rounded-lg group ${isActive ? "text-white" : "text-slate-300 hover:text-white"
                     }`}
-                    initial={{ width: 0 }}
-                    whileHover={{ width: "100%" }}
-                  />
-                </motion.a>
+                >
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {renderIcon(link.icon, { size: 13, className: isActive ? "text-cyan-400" : "text-slate-400 group-hover:text-cyan-300 transition-colors" })}
+                    {link.name}
+                  </span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeNavIndicator"
+                      className="absolute inset-0 rounded-lg bg-white/10 border border-white/10 backdrop-blur-md -z-0"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </a>
               );
             })}
-          </div>
+
+            {/* Hire Me CTA Button */}
+            <a
+              href="#hire"
+              onClick={() => {
+                if (onNavigatePage) onNavigatePage("hire");
+                else window.location.hash = "#hire";
+              }}
+              className="relative inline-flex items-center gap-2 px-5 py-2 ml-3 text-sm font-semibold text-white transition-all duration-300 rounded-full group bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-105 active:scale-95"
+            >
+              <span>Hire Me</span>
+              {renderIcon(FaRocket, { size: 12, className: "transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" })}
+            </a>
+          </nav>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <motion.button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="relative p-2 text-gray-300 transition-all duration-300 rounded-lg hover:text-white focus:outline-none hover:bg-white/5"
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
+          <div className="flex items-center gap-2 md:hidden">
+            <a
+              href="#hire"
+              onClick={() => {
+                if (onNavigatePage) onNavigatePage("hire");
+                else window.location.hash = "#hire";
+              }}
+              className="px-3 py-1.5 text-xs font-semibold text-white rounded-full bg-gradient-to-r from-purple-600 to-pink-600"
             >
-              {isMenuOpen
-                ? FaTimes({ size: 20 } as IconBaseProps)
-                : FaBars({ size: 20 } as IconBaseProps)}
-            </motion.button>
+              Hire Me
+            </a>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2.5 text-slate-300 transition-colors rounded-xl bg-white/5 border border-white/10 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              aria-label={isMenuOpen ? "Close menu" : "Open navigation menu"}
+              aria-expanded={isMenuOpen}
+            >
+              {isMenuOpen ? renderIcon(FaTimes, { size: 20 }) : renderIcon(FaBars, { size: 20 })}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation Menu */}
-      {isMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="md:hidden bg-[#0f172a]/95 backdrop-blur-md border-t border-white/10 max-h-[calc(100vh-4rem)] overflow-y-auto"
-        >
-          <div className="px-4 pt-4 pb-3 space-y-2">
-            {navLinks.map((link, index) => {
-              const IconComponent = link.icon;
-              const isActive =
-                link.name === "Education"
-                  ? isEducationActive
-                  : activeLink === link.href.substring(1);
-
-              if (link.name === "Education") {
+      {/* Mobile Drawer Menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="md:hidden bg-[#030014]/95 backdrop-blur-2xl border-b border-white/10 overflow-hidden"
+          >
+            <div className="px-4 pt-3 pb-6 space-y-1">
+              {navLinks.map((link) => {
+                const isActive = activeSection === link.id;
                 return (
-                  <div key={link.name}>
-                    <motion.button
-                      type="button"
-                      className={`flex items-center gap-3 px-3 py-3 rounded-md transition-all duration-300 relative group ${
-                        isActive
-                          ? "text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20"
-                          : "text-gray-300 hover:text-white hover:bg-white/5"
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    onClick={(e) => handleLinkClick(e, link.href)}
+                    className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${isActive
+                        ? "text-white bg-white/10 border border-white/10"
+                        : "text-slate-300 hover:text-white hover:bg-white/5"
                       }`}
-                      whileHover={{ scale: 1.02, x: 5 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setIsMobileEducationOpen((prev) => !prev)}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <motion.span
-                        className={`p-2 rounded-lg ${
-                          isActive
-                            ? "bg-gradient-to-r from-purple-400 to-pink-500 text-white"
-                            : "bg-white/5 text-gray-300 group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-500 group-hover:text-white"
-                        }`}
-                        whileHover={{ rotate: 360, scale: 1.1 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        {IconComponent({ size: 16 } as IconBaseProps)}
-                      </motion.span>
-
-                      <span className="font-medium">{link.name}</span>
-
-                      <motion.span
-                        animate={{ rotate: isMobileEducationOpen ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="ml-auto"
-                      >
-                        {FaChevronDown({ size: 10 } as IconBaseProps)}
-                      </motion.span>
-                    </motion.button>
-
-                    {isMobileEducationOpen && (
-                      <div className="mt-1 ml-12 space-y-1">
-                        <motion.a
-                          href="#education"
-                          className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-300 ${
-                            activeLink === "education"
-                              ? "text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20"
-                              : "text-gray-400 hover:text-white hover:bg-white/5"
-                          }`}
-                          whileHover={{ scale: 1.02, x: 5 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          {FaGraduationCap({ size: 14 } as IconBaseProps)}
-                          <span className="text-sm font-medium">Education</span>
-                        </motion.a>
-
-                        <motion.a
-                          href="#certificates"
-                          className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-300 ${
-                            activeLink === "certificates"
-                              ? "text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20"
-                              : "text-gray-400 hover:text-white hover:bg-white/5"
-                          }`}
-                          whileHover={{ scale: 1.02, x: 5 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          {FaStickyNote({ size: 14 } as IconBaseProps)}
-                          <span className="text-sm font-medium">
-                            Certificates
-                          </span>
-                        </motion.a>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              return (
-                <motion.a
-                  key={link.name}
-                  href={link.href}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-md transition-all duration-300 relative group ${
-                    isActive
-                      ? "text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20"
-                      : "text-gray-300 hover:text-white hover:bg-white/5"
-                  }`}
-                  whileHover={{ scale: 1.02, x: 5 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsMenuOpen(false)}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <motion.span
-                    className={`p-2 rounded-lg ${
-                      isActive
-                        ? "bg-gradient-to-r from-purple-400 to-pink-500 text-white"
-                        : "bg-white/5 text-gray-300 group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-500 group-hover:text-white"
-                    }`}
-                    whileHover={{ rotate: 360, scale: 1.1 }}
-                    transition={{ duration: 0.5 }}
                   >
-                    {IconComponent({ size: 16 } as IconBaseProps)}
-                  </motion.span>
+                    <span className="p-2 rounded-lg bg-white/5 text-cyan-400">
+                      {renderIcon(link.icon, { size: 16 })}
+                    </span>
+                    <span>{link.name}</span>
+                  </a>
+                );
+              })}
 
-                  <span className="font-medium">{link.name}</span>
-                </motion.a>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
-    </motion.nav>
+              <div className="pt-3 my-2 border-t border-white/10">
+                <a
+                  href="#hire"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    if (onNavigatePage) onNavigatePage("hire");
+                    else window.location.hash = "#hire";
+                  }}
+                  className="flex items-center justify-center gap-2 w-full px-5 py-3 text-base font-semibold text-white rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 shadow-lg shadow-purple-500/20"
+                >
+                  <span>Hire Me / Work Together</span>
+                  {renderIcon(FaRocket, { size: 14 })}
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
   );
 };
 
