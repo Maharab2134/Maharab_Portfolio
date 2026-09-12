@@ -31,6 +31,37 @@ const Hero: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeTab, setActiveTab] = useState<"spec" | "capabilities">("spec");
 
+  // Dynamic Animated Typewriter Configuration from Admin
+  const typewriterPrefix =
+    (profile as any).typewriterPrefix ??
+    (profile as any).typewriter_prefix ??
+    "I engineer";
+
+  const typewriterPhrases = useMemo(() => {
+    const raw =
+      (profile as any).typewriterPhrases ??
+      (profile as any).typewriter_phrases;
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    if (typeof raw === "string" && raw.trim()) {
+      const items = raw.split("\n").map((s: string) => s.trim()).filter(Boolean);
+      if (items.length > 0) return items;
+    }
+    return [
+      "Scalable Full-Stack Web Apps",
+      "Cross-Platform Mobile Experiences",
+      "High-Throughput REST & GraphQL APIs",
+      "Secure Microservices Architecture",
+    ];
+  }, [profile]);
+
+  const typewriterSequence = useMemo(() => {
+    const seq: (string | number)[] = [];
+    typewriterPhrases.forEach((phrase: string) => {
+      seq.push(phrase, 2400);
+    });
+    return seq.length > 0 ? seq : ["Scalable Full-Stack Web Apps", 2400];
+  }, [typewriterPhrases]);
+
   const socialLinks = useMemo(
     () => [
       {
@@ -197,19 +228,11 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex flex-wrap items-center gap-2 text-lg sm:text-2xl font-medium text-slate-400"
             >
-              <span>I engineer</span>
+              {typewriterPrefix && <span>{typewriterPrefix}</span>}
               <div className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
                 <TypeAnimation
-                  sequence={[
-                    "Scalable Full-Stack Web Apps",
-                    2400,
-                    "Cross-Platform Mobile Experiences",
-                    2400,
-                    "High-Throughput REST & GraphQL APIs",
-                    2400,
-                    "Secure Microservices Architecture",
-                    2400,
-                  ]}
+                  key={typewriterPhrases.join("|")}
+                  sequence={typewriterSequence}
                   wrapper="span"
                   speed={45}
                   repeat={Infinity}
@@ -217,17 +240,15 @@ const Hero: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Subtitle Bio / Tagline (100% Dynamic from Admin Panel) */}
-            {(profile.tagline || profile.bio) && (
-              <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="max-w-xl text-base sm:text-lg leading-relaxed text-slate-300/90 font-light"
-              >
-                {profile.tagline || profile.bio}
-              </motion.p>
-            )}
+            {/* Subtitle Bio */}
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="max-w-xl text-base sm:text-lg leading-relaxed text-slate-300/90 font-light"
+            >
+              {profile.tagline || profile.bio || "Software Engineering student at BUBT. I bridge architectural discipline with human-centered product design to build scalable digital systems."}
+            </motion.p>
 
             {/* Stats Metric Strip */}
             <motion.div

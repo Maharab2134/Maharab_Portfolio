@@ -350,6 +350,28 @@ export const deleteLiveProject = async (id: string): Promise<boolean> => {
   return true;
 };
 
+// Smart Typewriter Phrases parser
+export const parseTypewriterPhrases = (val: any): string[] => {
+  if (Array.isArray(val)) {
+    const filtered = val.map((s) => String(s).trim()).filter(Boolean);
+    if (filtered.length > 0) return filtered;
+  } else if (typeof val === "string") {
+    const items = val.includes("\n")
+      ? val.split("\n")
+      : val.includes(",")
+      ? val.split(",")
+      : [val];
+    const filtered = items.map((s) => s.trim()).filter(Boolean);
+    if (filtered.length > 0) return filtered;
+  }
+  return [
+    "Scalable Full-Stack Web Apps",
+    "Cross-Platform Mobile Experiences",
+    "High-Throughput REST & GraphQL APIs",
+    "Secure Microservices Architecture",
+  ];
+};
+
 // Profile Info Service
 export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
   try {
@@ -363,6 +385,17 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
           name: parsed.name || PORTFOLIO_INFO.name,
           shortName: parsed.short_name || parsed.shortName || PORTFOLIO_INFO.shortName,
           title: parsed.title || PORTFOLIO_INFO.title,
+          typewriterPrefix:
+            parsed.typewriter_prefix !== undefined
+              ? parsed.typewriter_prefix
+              : parsed.typewriterPrefix !== undefined
+              ? parsed.typewriterPrefix
+              : PORTFOLIO_INFO.typewriterPrefix,
+          typewriterPhrases: parseTypewriterPhrases(
+            parsed.typewriter_phrases !== undefined
+              ? parsed.typewriter_phrases
+              : parsed.typewriterPhrases
+          ),
           bio: parsed.bio || PORTFOLIO_INFO.bio,
           email: parsed.email || PORTFOLIO_INFO.email,
           phone: parsed.phone || PORTFOLIO_INFO.phone,
@@ -400,6 +433,17 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
           shortName: row.short_name || PORTFOLIO_INFO.shortName,
           title: row.title || PORTFOLIO_INFO.title,
           tagline: row.tagline || PORTFOLIO_INFO.tagline,
+          typewriterPrefix:
+            row.typewriter_prefix !== undefined
+              ? row.typewriter_prefix
+              : row.typewriterPrefix !== undefined
+              ? row.typewriterPrefix
+              : PORTFOLIO_INFO.typewriterPrefix,
+          typewriterPhrases: parseTypewriterPhrases(
+            row.typewriter_phrases !== undefined
+              ? row.typewriter_phrases
+              : row.typewriterPhrases
+          ),
           bio: row.bio || PORTFOLIO_INFO.bio,
           email: row.email || PORTFOLIO_INFO.email,
           phone: row.phone || PORTFOLIO_INFO.phone,
@@ -478,6 +522,19 @@ export const saveLiveProfile = async (
       ? profileData.introVideoUrl
       : profileData.introVideoId || PORTFOLIO_INFO.introVideoUrl;
 
+  const typewriterPrefix =
+    profileData.typewriter_prefix !== undefined
+      ? profileData.typewriter_prefix
+      : profileData.typewriterPrefix !== undefined
+      ? profileData.typewriterPrefix
+      : PORTFOLIO_INFO.typewriterPrefix;
+
+  const typewriterPhrases = parseTypewriterPhrases(
+    profileData.typewriter_phrases !== undefined
+      ? profileData.typewriter_phrases
+      : profileData.typewriterPhrases
+  );
+
   // Normalize and cache
   const toCache = {
     ...profileData,
@@ -487,6 +544,10 @@ export const saveLiveProfile = async (
     showIntroVideo: showIntroVideo,
     intro_video_url: introVideoUrl,
     introVideoUrl: introVideoUrl,
+    typewriter_prefix: typewriterPrefix,
+    typewriterPrefix: typewriterPrefix,
+    typewriter_phrases: typewriterPhrases,
+    typewriterPhrases: typewriterPhrases,
   };
 
   try {
@@ -508,6 +569,8 @@ export const saveLiveProfile = async (
         short_name: profileData.short_name || profileData.shortName,
         title: profileData.title,
         tagline: profileData.tagline,
+        typewriter_prefix: typewriterPrefix,
+        typewriter_phrases: typewriterPhrases,
         bio: profileData.bio,
         email: profileData.email,
         phone: profileData.phone,
@@ -540,7 +603,8 @@ export const saveLiveProfile = async (
           const safeDb = { ...dbProfile };
           delete safeDb.show_intro_video;
           delete safeDb.intro_video_url;
-          delete safeDb.tagline;
+          delete safeDb.typewriter_prefix;
+          delete safeDb.typewriter_phrases;
           await supabase.from("profile_info").update(safeDb).eq("id", existing[0].id);
         }
       } else {
@@ -549,7 +613,8 @@ export const saveLiveProfile = async (
           const safeDb = { ...dbProfile };
           delete safeDb.show_intro_video;
           delete safeDb.intro_video_url;
-          delete safeDb.tagline;
+          delete safeDb.typewriter_prefix;
+          delete safeDb.typewriter_phrases;
           await supabase.from("profile_info").insert([safeDb]);
         }
       }
@@ -585,6 +650,17 @@ export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
             shortName: parsed.short_name || parsed.shortName || PORTFOLIO_INFO.shortName,
             title: parsed.title || PORTFOLIO_INFO.title,
             tagline: parsed.tagline || PORTFOLIO_INFO.tagline,
+            typewriterPrefix:
+              parsed.typewriter_prefix !== undefined
+                ? parsed.typewriter_prefix
+                : parsed.typewriterPrefix !== undefined
+                ? parsed.typewriterPrefix
+                : PORTFOLIO_INFO.typewriterPrefix,
+            typewriterPhrases: parseTypewriterPhrases(
+              parsed.typewriter_phrases !== undefined
+                ? parsed.typewriter_phrases
+                : parsed.typewriterPhrases
+            ),
             bio: parsed.bio || PORTFOLIO_INFO.bio,
             email: parsed.email || PORTFOLIO_INFO.email,
             phone: parsed.phone || PORTFOLIO_INFO.phone,

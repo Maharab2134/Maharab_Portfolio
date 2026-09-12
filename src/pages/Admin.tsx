@@ -47,6 +47,7 @@ import {
   FaEyeSlash,
   FaBars,
 } from "react-icons/fa";
+import { TypeAnimation } from "react-type-animation";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
 import {
   PORTFOLIO_INFO,
@@ -320,7 +321,7 @@ const Admin: React.FC = () => {
     name: PORTFOLIO_INFO.name,
     short_name: PORTFOLIO_INFO.shortName,
     title: PORTFOLIO_INFO.title,
-    tagline: (PORTFOLIO_INFO as any).tagline || "",
+    tagline: PORTFOLIO_INFO.tagline,
     bio: PORTFOLIO_INFO.bio,
     phone: PORTFOLIO_INFO.phone,
     email: PORTFOLIO_INFO.email,
@@ -329,6 +330,10 @@ const Admin: React.FC = () => {
     profile_image: PORTFOLIO_INFO.profileImage,
     show_intro_video: (PORTFOLIO_INFO as any).showIntroVideo ?? true,
     intro_video_url: (PORTFOLIO_INFO as any).introVideoUrl || PORTFOLIO_INFO.introVideoId || "",
+    typewriter_prefix: (PORTFOLIO_INFO as any).typewriterPrefix || "I engineer",
+    typewriter_phrases: Array.isArray((PORTFOLIO_INFO as any).typewriterPhrases)
+      ? (PORTFOLIO_INFO as any).typewriterPhrases.join("\n")
+      : "Scalable Full-Stack Web Apps\nCross-Platform Mobile Experiences\nHigh-Throughput REST & GraphQL APIs\nSecure Microservices Architecture",
     available_for_hire: true,
     years_experience: PORTFOLIO_INFO.stats.yearsExperience,
     projects_completed: PORTFOLIO_INFO.stats.projectsCompleted,
@@ -445,7 +450,7 @@ const Admin: React.FC = () => {
         name: liveProfile.name || PORTFOLIO_INFO.name,
         short_name: liveProfile.shortName || PORTFOLIO_INFO.shortName,
         title: liveProfile.title || PORTFOLIO_INFO.title,
-        tagline: (liveProfile as any).tagline || (PORTFOLIO_INFO as any).tagline || "",
+        tagline: liveProfile.tagline || PORTFOLIO_INFO.tagline,
         bio: liveProfile.bio || PORTFOLIO_INFO.bio,
         phone: liveProfile.phone || PORTFOLIO_INFO.phone,
         email: liveProfile.email || PORTFOLIO_INFO.email,
@@ -464,6 +469,17 @@ const Admin: React.FC = () => {
           (liveProfile as any).introVideoId ||
           (PORTFOLIO_INFO as any).introVideoUrl ||
           "",
+        typewriter_prefix:
+          (liveProfile as any).typewriter_prefix ??
+          (liveProfile as any).typewriterPrefix ??
+          PORTFOLIO_INFO.typewriterPrefix,
+        typewriter_phrases: Array.isArray((liveProfile as any).typewriterPhrases)
+          ? (liveProfile as any).typewriterPhrases.join("\n")
+          : Array.isArray((liveProfile as any).typewriter_phrases)
+          ? (liveProfile as any).typewriter_phrases.join("\n")
+          : typeof (liveProfile as any).typewriter_phrases === "string"
+          ? (liveProfile as any).typewriter_phrases
+          : PORTFOLIO_INFO.typewriterPhrases.join("\n"),
         available_for_hire: true,
         years_experience: liveProfile.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
         projects_completed: liveProfile.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
@@ -3246,6 +3262,144 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       <p className="text-[11px] text-slate-400 leading-relaxed">
                         Supports <span className="text-cyan-300">Google Drive share links</span>, <span className="text-cyan-300">YouTube URLs</span> (watch or shorts), <span className="text-cyan-300">Loom videos</span>, direct MP4 video URLs, or Google Drive File IDs.
                       </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hero Animated Headline & Typewriter Studio */}
+                <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 space-y-4 shadow-xl">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-white">Hero Typewriter Headline Studio</h3>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                          {renderIcon(FaCode, { size: 9 })}
+                          100% Dynamic
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Customize the animated typing headline rendered on your Hero section. No static text — control the intro prefix and all cycling phrases.
+                      </p>
+                    </div>
+
+                    {/* Reset to Default Headlines Button */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setProfileForm((prev) => ({
+                          ...prev,
+                          typewriter_prefix: PORTFOLIO_INFO.typewriterPrefix,
+                          typewriter_phrases: PORTFOLIO_INFO.typewriterPhrases.join("\n"),
+                        }))
+                      }
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all cursor-pointer"
+                      title="Reset headline and phrases to default"
+                    >
+                      {renderIcon(FaUndo, { size: 10 })}
+                      <span>Reset Defaults</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Left Column: Prefix and Phrases Input */}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">
+                          Headline Prefix (Intro Word / Phrase)
+                        </label>
+                        <input
+                          type="text"
+                          value={profileForm.typewriter_prefix}
+                          onChange={(e) => setProfileForm({ ...profileForm, typewriter_prefix: e.target.value })}
+                          placeholder="e.g. I engineer, I build, Specialist in"
+                          className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 placeholder:text-slate-600 font-medium"
+                        />
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          Appears static right before the animated typewriter text.
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
+                            Animated Roles / Phrases
+                          </label>
+                          <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
+                            {
+                              profileForm.typewriter_phrases
+                                .split("\n")
+                                .map((s: string) => s.trim())
+                                .filter(Boolean).length
+                            }{" "}
+                            Phrases Active
+                          </span>
+                        </div>
+                        <textarea
+                          rows={5}
+                          value={profileForm.typewriter_phrases}
+                          onChange={(e) => setProfileForm({ ...profileForm, typewriter_phrases: e.target.value })}
+                          placeholder="1 phrase per line...&#10;Scalable Full-Stack Web Apps&#10;Cross-Platform Mobile Experiences&#10;High-Throughput REST & GraphQL APIs"
+                          className="w-full px-3.5 py-2.5 text-xs font-mono text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 placeholder:text-slate-600 leading-relaxed resize-y"
+                        />
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          Enter 1 phrase per line. Each will type smoothly, pause for 2.4s, and loop continuously.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Real-time Live Animation Preview */}
+                    <div className="flex flex-col">
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">
+                        Live Animation Preview (Real-Time)
+                      </label>
+                      <div className="flex-1 min-h-[160px] p-4 rounded-xl border border-white/10 bg-[#090d16] flex flex-col justify-center relative overflow-hidden group">
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[10px] text-slate-400 font-mono">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span>Interactive Preview</span>
+                        </div>
+
+                        <div className="space-y-1.5 text-left">
+                          <p className="font-mono text-[11px] text-slate-400 tracking-wider">
+                            &lt;Hero Headline /&gt;
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 text-base sm:text-lg font-medium text-slate-400">
+                            {profileForm.typewriter_prefix && (
+                              <span className="text-white/80 font-normal">
+                                {profileForm.typewriter_prefix}
+                              </span>
+                            )}
+                            <div className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+                              {(() => {
+                                const phrases = profileForm.typewriter_phrases
+                                  .split("\n")
+                                  .map((s: string) => s.trim())
+                                  .filter(Boolean);
+                                if (phrases.length === 0) {
+                                  return <span className="text-slate-600 italic">No phrases specified</span>;
+                                }
+                                const seq: (string | number)[] = [];
+                                phrases.forEach((p: string) => {
+                                  seq.push(p, 2000);
+                                });
+                                return (
+                                  <TypeAnimation
+                                    key={phrases.join("|")}
+                                    sequence={seq}
+                                    wrapper="span"
+                                    speed={50}
+                                    repeat={Infinity}
+                                  />
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-white/[0.06] flex flex-wrap items-center justify-between text-[11px] text-slate-400">
+                          <span>Typing Speed: ~45ms</span>
+                          <span>Cycle Delay: 2.4s</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS public.profile_info (
   profile_image TEXT,
   show_intro_video BOOLEAN DEFAULT true,
   intro_video_url TEXT,
+  typewriter_prefix TEXT DEFAULT 'I engineer',
+  typewriter_phrases TEXT[] DEFAULT ARRAY['Scalable Full-Stack Web Apps', 'Cross-Platform Mobile Experiences', 'High-Throughput REST & GraphQL APIs', 'Secure Microservices Architecture'],
   available_for_hire BOOLEAN DEFAULT true,
   years_experience TEXT DEFAULT '2+',
   projects_completed TEXT DEFAULT '50+',
@@ -47,9 +49,10 @@ CREATE TABLE IF NOT EXISTS public.profile_info (
 );
 
 -- In case profile_info already exists, safe column additions:
-ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS tagline TEXT;
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS show_intro_video BOOLEAN DEFAULT true;
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS intro_video_url TEXT;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS typewriter_prefix TEXT DEFAULT 'I engineer';
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS typewriter_phrases TEXT[] DEFAULT ARRAY['Scalable Full-Stack Web Apps', 'Cross-Platform Mobile Experiences', 'High-Throughput REST & GraphQL APIs', 'Secure Microservices Architecture'];
 
 -- 3. Create Contact Messages Table (stores form submissions)
 CREATE TABLE IF NOT EXISTS public.contact_messages (
