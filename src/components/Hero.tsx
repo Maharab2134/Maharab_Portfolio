@@ -11,7 +11,6 @@ import {
   FaLinkedin,
   FaTwitter,
   FaEnvelope,
-  FaFileDownload,
   FaArrowDown,
   FaRocket,
   FaTerminal,
@@ -272,17 +271,6 @@ const Hero: React.FC = () => {
               >
                 <span>Explore Featured Work</span>
                 {renderIcon(FaArrowDown, { size: 11, className: "animate-bounce" })}
-              </a>
-
-              <a
-                href={profile.resumeUrl}
-                target="_blank"
-                rel="noreferrer"
-                download
-                className="inline-flex items-center gap-2 px-5 py-3.5 text-sm font-semibold text-slate-200 transition-all duration-300 border rounded-full bg-white/5 border-white/15 hover:bg-white/10 hover:text-white hover:border-cyan-500/40 backdrop-blur-sm active:scale-95 cursor-pointer"
-              >
-                {renderIcon(FaFileDownload, { size: 12, className: "text-cyan-400" })}
-                <span>Download CV</span>
               </a>
 
               <a
