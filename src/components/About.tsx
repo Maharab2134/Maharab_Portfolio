@@ -4,14 +4,11 @@ import {
   FaDownload,
   FaPlay,
   FaTimes,
-  FaGraduationCap,
-  FaMapMarkerAlt,
-  FaRocket,
   FaEnvelope,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
 import { toProxyImageUrl } from "../data/projectsData";
-import { useLiveProfile } from "../lib/portfolioService";
+import { useLiveProfile, getVideoEmbedUrl } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -37,30 +34,22 @@ const About: React.FC = () => {
     }
   }, [profile.profileImage]);
 
-  const introVideoId = profile.introVideoId || PORTFOLIO_INFO.introVideoId;
-  const introDrivePreview = `https://drive.google.com/file/d/${introVideoId}/preview?autoplay=1`;
+  const rawVideoUrl =
+    (profile as any).intro_video_url ||
+    (profile as any).introVideoUrl ||
+    profile.introVideoId ||
+    (PORTFOLIO_INFO as any).introVideoUrl ||
+    PORTFOLIO_INFO.introVideoId;
+  const introDrivePreview = getVideoEmbedUrl(rawVideoUrl);
+  const isVideoVisible =
+    Boolean(
+      (profile as any).show_intro_video !== undefined
+        ? (profile as any).show_intro_video
+        : (profile as any).showIntroVideo !== undefined
+        ? (profile as any).showIntroVideo
+        : (PORTFOLIO_INFO as any).showIntroVideo
+    ) && Boolean(introDrivePreview);
   const resumeUrl = profile.resumeUrl || PORTFOLIO_INFO.resumeUrl;
-
-  const highlights = [
-    {
-      icon: FaGraduationCap,
-      label: "Education",
-      value: "B.Sc. in CSE, BUBT (2022 - Present)",
-      color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-    },
-    {
-      icon: FaMapMarkerAlt,
-      label: "Location",
-      value: profile.location || "Mirpur, Dhaka, Bangladesh",
-      color: "text-pink-400 bg-pink-500/10 border-pink-500/20",
-    },
-    {
-      icon: FaRocket,
-      label: "Experience",
-      value: `${profile.stats?.yearsExperience ?? PORTFOLIO_INFO.stats.yearsExperience} Years • ${profile.stats?.projectsCompleted ?? PORTFOLIO_INFO.stats.projectsCompleted} Projects Built`,
-      color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
-    },
-  ];
 
   return (
     <section
@@ -140,47 +129,29 @@ const About: React.FC = () => {
               </p>
             </div>
 
-            {/* Quick Highlights (Clean matching cards) */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-              {highlights.map((item) => (
-                <div
-                  key={item.label}
-                  className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-sm"
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className={`p-1.5 rounded-lg border text-xs ${item.color}`}>
-                      {renderIcon(item.icon, { size: 12 })}
-                    </span>
-                    <span className="text-xs font-medium text-slate-400">{item.label}</span>
-                  </div>
-                  <p className="text-xs font-semibold text-slate-200 leading-snug">
-                    {item.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-
             {/* Action Buttons (Matches Hero and Rest of Site) */}
-            <div className="flex flex-wrap items-center gap-3 pt-3">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
                 href={resumeUrl}
                 target="_blank"
                 rel="noreferrer"
                 download
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all duration-300 rounded-xl shadow-lg bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:shadow-purple-500/30 hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all duration-300 rounded-xl shadow-lg bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:shadow-purple-500/30 hover:scale-105 active:scale-95 cursor-pointer"
               >
                 {renderIcon(FaDownload, { size: 12 })}
                 <span>Download Resume</span>
               </a>
 
-              <button
-                type="button"
-                onClick={() => setIsVideoOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold text-slate-200 transition-all duration-300 border rounded-xl bg-white/[0.04] border-white/10 hover:bg-white/[0.08] hover:text-white hover:border-white/20 active:scale-95"
-              >
-                {renderIcon(FaPlay, { size: 10, className: "text-purple-400" })}
-                <span>Watch Intro</span>
-              </button>
+              {isVideoVisible && (
+                <button
+                  type="button"
+                  onClick={() => setIsVideoOpen(true)}
+                  className="inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold text-slate-200 transition-all duration-300 border rounded-xl bg-white/[0.04] border-white/10 hover:bg-white/[0.08] hover:text-white hover:border-white/20 active:scale-95 cursor-pointer"
+                >
+                  {renderIcon(FaPlay, { size: 10, className: "text-purple-400" })}
+                  <span>Watch Intro</span>
+                </button>
+              )}
 
               <a
                 href="#contact"

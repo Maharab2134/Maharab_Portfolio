@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaLock,
   FaSignOutAlt,
@@ -38,6 +38,14 @@ import {
   FaListUl,
   FaExclamationTriangle,
   FaShieldAlt,
+  FaCamera,
+  FaUpload,
+  FaUndo,
+  FaVideo,
+  FaPlay,
+  FaEye,
+  FaEyeSlash,
+  FaBars,
 } from "react-icons/fa";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
 import {
@@ -45,7 +53,7 @@ import {
   EDUCATION_DATA,
   CERTIFICATES_DATA,
 } from "../data/portfolioData";
-import { PROJECTS } from "../data/projectsData";
+import { PROJECTS, toProxyImageUrl } from "../data/projectsData";
 import {
   getLiveProjects,
   saveLiveProject,
@@ -57,6 +65,7 @@ import {
   saveLiveEducation,
   getLiveCertificates,
   saveLiveCertificates,
+  getVideoEmbedUrl,
 } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
@@ -270,6 +279,7 @@ const Admin: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<AdminNavTab>("overview");
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // Login form state
   const [email, setEmail] = useState("");
@@ -315,6 +325,9 @@ const Admin: React.FC = () => {
     email: PORTFOLIO_INFO.email,
     location: PORTFOLIO_INFO.location,
     resume_url: PORTFOLIO_INFO.resumeUrl,
+    profile_image: PORTFOLIO_INFO.profileImage,
+    show_intro_video: (PORTFOLIO_INFO as any).showIntroVideo ?? true,
+    intro_video_url: (PORTFOLIO_INFO as any).introVideoUrl || PORTFOLIO_INFO.introVideoId || "",
     available_for_hire: true,
     years_experience: PORTFOLIO_INFO.stats.yearsExperience,
     projects_completed: PORTFOLIO_INFO.stats.projectsCompleted,
@@ -325,6 +338,8 @@ const Admin: React.FC = () => {
   });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
+  const [profileImageUploading, setProfileImageUploading] = useState(false);
+  const [adminVideoPreviewOpen, setAdminVideoPreviewOpen] = useState(false);
 
   // Education & Certificates State
   const [educationList, setEducationList] = useState<any[]>(EDUCATION_DATA);
@@ -434,6 +449,19 @@ const Admin: React.FC = () => {
         email: liveProfile.email || PORTFOLIO_INFO.email,
         location: liveProfile.location || PORTFOLIO_INFO.location,
         resume_url: liveProfile.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+        profile_image: (liveProfile as any).profile_image || liveProfile.profileImage || PORTFOLIO_INFO.profileImage,
+        show_intro_video:
+          (liveProfile as any).show_intro_video !== undefined
+            ? Boolean((liveProfile as any).show_intro_video)
+            : (liveProfile as any).showIntroVideo !== undefined
+            ? Boolean((liveProfile as any).showIntroVideo)
+            : true,
+        intro_video_url:
+          (liveProfile as any).intro_video_url ||
+          (liveProfile as any).introVideoUrl ||
+          (liveProfile as any).introVideoId ||
+          (PORTFOLIO_INFO as any).introVideoUrl ||
+          "",
         available_for_hire: true,
         years_experience: liveProfile.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
         projects_completed: liveProfile.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
@@ -713,23 +741,59 @@ const Admin: React.FC = () => {
   // Upload Asset (Image or PDF)
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    destination: "project" | "resume"
+    destination: "project" | "resume" | "profile"
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (destination === "profile") {
+      setProfileImageUploading(true);
+    }
+
     if (!supabase) {
+      if ((destination === "project" || destination === "profile") && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const base64Url = event.target?.result as string;
+          if (base64Url) {
+            if (destination === "profile") {
+              const updatedProfile = {
+                ...profileForm,
+                profile_image: base64Url,
+                profileImage: base64Url,
+              };
+              setProfileForm(updatedProfile);
+              await saveLiveProfile(updatedProfile);
+              setUploadStatus("Profile image updated locally!");
+              setProfileImageUploading(false);
+            } else {
+              setProjectForm((prev) => ({ ...prev, image_url: base64Url }));
+              setUploadStatus("Project image updated locally!");
+            }
+            setTimeout(() => setUploadStatus(""), 5000);
+          }
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+      if (destination === "profile") setProfileImageUploading(false);
       setUploadStatus("Please connect Supabase in .env to upload files directly to cloud storage.");
       setTimeout(() => setUploadStatus(""), 5000);
       return;
     }
 
-    setUploadStatus("Uploading file to Supabase Storage...");
+    setUploadStatus(
+      destination === "profile"
+        ? "Uploading profile photo to Supabase Storage..."
+        : destination === "resume"
+        ? "Uploading resume to Supabase Storage..."
+        : "Uploading project image to Supabase Storage..."
+    );
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const filePath = `${destination === "resume" ? "resumes" : "projects"}/${fileName}`;
+    const filePath = `${destination === "resume" ? "resumes" : destination === "profile" ? "profile" : "projects"}/${fileName}`;
 
-    // If uploading a new resume, delete previous CV files from storage so old ones are automatically removed
+    // If uploading a new resume or profile photo, delete previous files in that folder
     if (destination === "resume") {
       try {
         const { data: existingFiles } = await supabase.storage
@@ -742,6 +806,19 @@ const Admin: React.FC = () => {
         }
       } catch (cleanupErr) {
         console.warn("Storage cleanup note:", cleanupErr);
+      }
+    } else if (destination === "profile") {
+      try {
+        const { data: existingFiles } = await supabase.storage
+          .from("portfolio-assets")
+          .list("profile");
+
+        if (existingFiles && existingFiles.length > 0) {
+          const filesToRemove = existingFiles.map((f) => `profile/${f.name}`);
+          await supabase.storage.from("portfolio-assets").remove(filesToRemove);
+        }
+      } catch (cleanupErr) {
+        console.warn("Storage profile cleanup note:", cleanupErr);
       }
     }
 
@@ -759,13 +836,23 @@ const Admin: React.FC = () => {
         setStorageRlsError(uploadError.message);
       }
 
-      // If it's an image for a project, load it as local base64 preview so user's work isn't blocked!
-      if (destination === "project" && file.type.startsWith("image/")) {
+      // If it's an image for a project or profile, load it as local base64 preview so user's work isn't blocked!
+      if ((destination === "project" || destination === "profile") && file.type.startsWith("image/")) {
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
           const base64Url = event.target?.result as string;
           if (base64Url) {
-            setProjectForm((prev) => ({ ...prev, image_url: base64Url }));
+            if (destination === "project") {
+              setProjectForm((prev) => ({ ...prev, image_url: base64Url }));
+            } else {
+              const updatedProfile = {
+                ...profileForm,
+                profile_image: base64Url,
+                profileImage: base64Url,
+              };
+              setProfileForm(updatedProfile);
+              await saveLiveProfile(updatedProfile);
+            }
           }
         };
         reader.readAsDataURL(file);
@@ -784,6 +871,7 @@ const Admin: React.FC = () => {
           `Upload failed: ${uploadError.message}. Make sure 'portfolio-assets' bucket and RLS policies are created.`
         );
       }
+      if (destination === "profile") setProfileImageUploading(false);
       setTimeout(() => setUploadStatus(""), 8000);
       return;
     }
@@ -797,6 +885,17 @@ const Admin: React.FC = () => {
     if (destination === "project") {
       setProjectForm((prev) => ({ ...prev, image_url: publicData.publicUrl }));
       setUploadStatus("Image uploaded successfully to Supabase Storage!");
+    } else if (destination === "profile") {
+      const newImageUrl = publicData.publicUrl;
+      const updatedProfile = {
+        ...profileForm,
+        profile_image: newImageUrl,
+        profileImage: newImageUrl,
+      };
+      setProfileForm(updatedProfile);
+      setUploadStatus("Profile image uploaded and activated in Supabase!");
+      await saveLiveProfile(updatedProfile);
+      setProfileImageUploading(false);
     } else {
       const newResumeUrl = publicData.publicUrl;
       const updatedProfile = {
@@ -1130,35 +1229,36 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
   // If Not Authenticated -> Show Full-Page Login Screen
   if (!session) {
     return (
-      <div className="flex items-center justify-center min-h-screen px-4 bg-[#030014] text-slate-200">
+      <div className="relative min-h-screen px-4 bg-[#090d16] text-slate-200 flex items-center justify-center overflow-hidden">
+        {/* Subtle Ambient Radial Glows */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
+
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md p-8 border rounded-3xl bg-slate-900/90 border-white/10 backdrop-blur-2xl shadow-2xl"
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-md p-7 sm:p-8 rounded-3xl bg-[#111726]/85 border border-white/[0.08] backdrop-blur-2xl shadow-2xl relative z-10"
         >
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 mb-4 shadow-lg shadow-purple-500/25">
-              {renderIcon(FaLock, { size: 22, className: "text-white" })}
+          <div className="text-center mb-7">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 mb-4 shadow-lg shadow-indigo-500/20 text-white">
+              {renderIcon(FaLock, { size: 20 })}
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-white">Maharab Admin Console</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Maharab Admin Console</h1>
             <p className="mt-1 text-xs text-slate-400">
-              Sign in with your Supabase Admin Credentials
+              Sign in with your verified Supabase administrator credentials
             </p>
           </div>
 
           {/* Supabase Connection Status */}
-          <div className="mb-6 p-3 rounded-xl border text-xs flex items-center gap-2.5 bg-white/[0.03] border-white/10">
-            {isSupabaseConfigured ? (
-              <>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-emerald-400 font-medium">Supabase API Keys Configured (.env)</span>
-              </>
-            ) : (
-              <>
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                <span className="text-amber-300 font-medium">Supabase Pending in .env</span>
-              </>
-            )}
+          <div className="mb-5 p-3 rounded-xl border text-xs flex items-center justify-between bg-white/[0.02] border-white/[0.08]">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${isSupabaseConfigured ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+              <span className={`font-medium ${isSupabaseConfigured ? "text-emerald-400" : "text-amber-300"}`}>
+                {isSupabaseConfigured ? "Supabase Live Connected" : "Local Development Mode"}
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-slate-500">v1.0.0</span>
           </div>
 
           {authError && (
@@ -1169,7 +1269,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
           <form onSubmit={handleLogin} className="space-y-4 text-xs">
             <div>
-              <label className="block font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">
                 Admin Email
               </label>
               <input
@@ -1178,12 +1278,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@maharab.dev"
-                className="w-full px-4 py-3 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 transition-colors"
+                className="w-full px-4 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 transition-all font-medium"
               />
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">
                 Password
               </label>
               <input
@@ -1192,14 +1292,14 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full px-4 py-3 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 transition-colors"
+                className="w-full px-4 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 transition-all font-medium"
               />
             </div>
 
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full py-3.5 mt-2 text-sm font-semibold text-white transition-all duration-200 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3 mt-2 text-xs sm:text-sm font-semibold text-white transition-all rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 shadow-lg shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {authLoading ? "Authenticating..." : "Sign In to Admin Console"}
             </button>
@@ -1207,13 +1307,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
             <button
               type="button"
               onClick={() => setSession({ user: { email: "admin@maharab.dev" } })}
-              className="w-full py-2.5 text-xs font-semibold text-slate-300 hover:text-white transition-all rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer"
+              className="w-full py-2.5 text-xs font-semibold text-slate-300 hover:text-white transition-all rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] cursor-pointer"
             >
               ⚡ Instant Developer Access (Bypass Login)
             </button>
           </form>
 
-          <div className="mt-8 pt-4 border-t border-white/10 text-center">
+          <div className="mt-7 pt-4 border-t border-white/[0.08] text-center">
             <a
               href="/"
               onClick={(e) => {
@@ -1243,28 +1343,143 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
     return matchesCategory && matchesSearch;
   });
 
+  const getTabInfo = (tab: AdminNavTab) => {
+    switch (tab) {
+      case "overview":
+        return { title: "Dashboard Overview", section: "WORKSPACE" };
+      case "projects":
+        return { title: "Project Catalog & Studio", section: "CONTENT" };
+      case "profile":
+        return { title: "Profile & Biography", section: "CONTENT" };
+      case "education":
+        return { title: "Education & Credentials", section: "CONTENT" };
+      case "resume":
+        return { title: "Resume & Cloud Storage", section: "ASSETS" };
+      case "messages":
+        return { title: "Contact Inquiries", section: "INBOX" };
+      case "setup":
+        return { title: "Supabase & Database SQL", section: "SYSTEM" };
+      default:
+        return { title: "Console", section: "WORKSPACE" };
+    }
+  };
+
+  const navCategories = [
+    {
+      title: "WORKSPACE",
+      items: [
+        {
+          id: "overview" as AdminNavTab,
+          label: "Dashboard Overview",
+          icon: FaChartBar,
+          activeColor: "text-indigo-400",
+        },
+      ],
+    },
+    {
+      title: "CONTENT STUDIO",
+      items: [
+        {
+          id: "projects" as AdminNavTab,
+          label: "Project Catalog",
+          icon: FaFolder,
+          badge: projectsList.length,
+          badgeColor: "bg-indigo-500/10 text-indigo-300 border-indigo-500/20",
+          activeColor: "text-indigo-400",
+        },
+        {
+          id: "profile" as AdminNavTab,
+          label: "Profile & Bio Settings",
+          icon: FaUser,
+          activeColor: "text-cyan-400",
+        },
+        {
+          id: "education" as AdminNavTab,
+          label: "Education & Credentials",
+          icon: FaGraduationCap,
+          badge: educationList.length + certsList.length,
+          badgeColor: "bg-cyan-500/10 text-cyan-300 border-cyan-500/20",
+          activeColor: "text-cyan-400",
+        },
+      ],
+    },
+    {
+      title: "ASSETS & COMMS",
+      items: [
+        {
+          id: "resume" as AdminNavTab,
+          label: "Resume & Cloud Storage",
+          icon: FaFilePdf,
+          activeColor: "text-pink-400",
+        },
+        {
+          id: "messages" as AdminNavTab,
+          label: "Contact Inquiries",
+          icon: FaEnvelope,
+          badge: messagesList.length > 0 ? messagesList.length : undefined,
+          badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+          activeColor: "text-emerald-400",
+        },
+      ],
+    },
+    {
+      title: "INFRASTRUCTURE",
+      items: [
+        {
+          id: "setup" as AdminNavTab,
+          label: "Supabase & Live SQL",
+          icon: FaDatabase,
+          activeColor: "text-amber-400",
+        },
+      ],
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#030014] text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col antialiased selection:bg-indigo-500/30 selection:text-white">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b bg-[#030014]/95 backdrop-blur-xl border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 font-bold text-white shadow-lg shadow-purple-500/20">
+      <header className="sticky top-0 z-40 border-b bg-[#090d16]/90 backdrop-blur-xl border-white/[0.08] px-4 sm:px-8 py-3 flex items-center justify-between transition-all">
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Mobile hamburger menu toggle */}
+          <button
+            type="button"
+            onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white bg-white/[0.04] border border-white/[0.08] transition-colors cursor-pointer"
+            title="Toggle Menu"
+          >
+            {renderIcon(isMobileNavOpen ? FaTimes : FaBars, { size: 14 })}
+          </button>
+
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 font-bold text-xs text-white shadow-md shadow-indigo-500/20 shrink-0">
             MH
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-white">Maharab Admin Console</h1>
-              <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                Live Database
+              <span className="text-xs font-semibold text-slate-400 font-mono hidden sm:inline-block">
+                Console /
+              </span>
+              <h1 className="text-xs sm:text-sm font-bold text-white tracking-tight">
+                {getTabInfo(activeTab).title}
+              </h1>
+              {activeTab === "projects" && projectViewMode === "editor" && (
+                <span className="px-2 py-0.5 text-[9px] font-mono font-bold rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
+                  {editingProjectId ? "EDIT" : "NEW"}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{isSupabaseConfigured ? "Supabase Live" : "Local Reactivity"}</span>
+              </span>
+              <span className="text-[10px] text-slate-500 font-mono hidden md:inline-block">
+                {session.user?.email || "admin@maharab.dev"}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 font-mono">
-              {session.user?.email || "Super Administrator"}
-            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <a
             href="/"
             onClick={(e) => {
@@ -1272,148 +1487,167 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
               window.location.hash = "";
               window.location.reload();
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-300 hover:text-white border border-white/10 rounded-xl hover:bg-white/5 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.06] rounded-xl transition-all cursor-pointer"
           >
-            {renderIcon(FaExternalLinkAlt, { size: 10 })}
-            <span>View Live Site</span>
+            {renderIcon(FaExternalLinkAlt, { size: 10, className: "text-slate-400" })}
+            <span className="hidden sm:inline">View Live Site</span>
+            <span className="sm:hidden">Site</span>
           </a>
 
           <button
             onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/10 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-rose-400 hover:text-rose-300 border border-rose-500/20 hover:border-rose-500/40 bg-rose-500/5 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
           >
-            {renderIcon(FaSignOutAlt, { size: 12 })}
-            <span>Sign Out</span>
+            {renderIcon(FaSignOutAlt, { size: 11 })}
+            <span className="hidden sm:inline">Sign Out</span>
           </button>
         </div>
       </header>
 
-      {/* Main Layout: Sidebar + In-Page Content (Full Width Edge-to-Edge, Zero Empty Gutters) */}
-      <div className="flex-1 flex flex-col md:flex-row w-full px-4 sm:px-6 lg:px-8 py-6 gap-8">
+      {/* Main Layout: Sidebar + In-Page Content */}
+      <div className="flex-1 flex flex-col md:flex-row w-full px-4 sm:px-6 lg:px-8 py-6 gap-6 lg:gap-8 max-w-[1700px] mx-auto">
         
-        {/* Left Navigation Sidebar */}
-        <aside className="w-full md:w-64 lg:w-72 flex-shrink-0 space-y-1.5">
-          <div className="p-3 mb-2 rounded-2xl bg-white/[0.02] border border-white/5 text-xs text-slate-400">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Navigation</span>
+        {/* Left Navigation Sidebar (Desktop) */}
+        <aside className="hidden md:flex w-64 lg:w-72 flex-shrink-0 flex-col justify-between self-start sticky top-20 rounded-2xl bg-[#111726]/75 border border-white/[0.08] p-3.5 shadow-xl backdrop-blur-xl space-y-6">
+          <div className="space-y-5">
+            {navCategories.map((group) => (
+              <div key={group.title} className="space-y-1">
+                <div className="px-3 py-1">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 font-mono">
+                    {group.title}
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveTab(item.id);
+                          setProjectViewMode("list");
+                        }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all group relative cursor-pointer ${
+                          isActive
+                            ? "bg-indigo-500/10 text-white border border-indigo-500/25 shadow-sm font-semibold"
+                            : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent"
+                        }`}
+                      >
+                        {isActive && (
+                          <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r bg-gradient-to-b from-indigo-500 to-cyan-400" />
+                        )}
+                        <span className="flex items-center gap-2.5">
+                          {renderIcon(item.icon, {
+                            size: 14,
+                            className: isActive ? item.activeColor : "text-slate-500 group-hover:text-slate-300 transition-colors",
+                          })}
+                          <span>{item.label}</span>
+                        </span>
+                        {item.badge !== undefined && (
+                          <span
+                            className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-full border ${
+                              item.badgeColor || "bg-white/10 text-slate-300 border-white/10"
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
 
-          <button
-            onClick={() => {
-              setActiveTab("overview");
-              setProjectViewMode("list");
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
-              activeTab === "overview"
-                ? "bg-gradient-to-r from-purple-600/30 to-cyan-500/20 text-white border border-cyan-500/30 shadow-md"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            {renderIcon(FaChartBar, { size: 14, className: activeTab === "overview" ? "text-cyan-400" : "" })}
-            <span>Dashboard Overview</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("projects");
-              setProjectViewMode("list");
-            }}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
-              activeTab === "projects"
-                ? "bg-gradient-to-r from-purple-600/30 to-cyan-500/20 text-white border border-cyan-500/30 shadow-md"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              {renderIcon(FaFolder, { size: 14, className: activeTab === "projects" ? "text-cyan-400" : "" })}
-              <span>Projects Manager</span>
-            </span>
-            <span className="px-2 py-0.5 text-[10px] rounded-full bg-white/10 text-slate-300">
-              {projectsList.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("profile");
-              setProjectViewMode("list");
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
-              activeTab === "profile"
-                ? "bg-gradient-to-r from-purple-600/30 to-cyan-500/20 text-white border border-cyan-500/30 shadow-md"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            {renderIcon(FaUser, { size: 14, className: activeTab === "profile" ? "text-purple-400" : "" })}
-            <span>Profile &amp; Bio Settings</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("education");
-              setProjectViewMode("list");
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
-              activeTab === "education"
-                ? "bg-gradient-to-r from-purple-600/30 to-cyan-500/20 text-white border border-cyan-500/30 shadow-md"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            {renderIcon(FaGraduationCap, { size: 14, className: activeTab === "education" ? "text-cyan-400" : "" })}
-            <span>Education &amp; Certs</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("resume");
-              setProjectViewMode("list");
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
-              activeTab === "resume"
-                ? "bg-gradient-to-r from-purple-600/30 to-cyan-500/20 text-white border border-cyan-500/30 shadow-md"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            {renderIcon(FaFilePdf, { size: 14, className: activeTab === "resume" ? "text-pink-400" : "" })}
-            <span>Resume &amp; Storage</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("messages");
-              setProjectViewMode("list");
-            }}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
-              activeTab === "messages"
-                ? "bg-gradient-to-r from-purple-600/30 to-cyan-500/20 text-white border border-cyan-500/30 shadow-md"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              {renderIcon(FaEnvelope, { size: 14, className: activeTab === "messages" ? "text-emerald-400" : "" })}
-              <span>Contact Messages</span>
-            </span>
-            {messagesList.length > 0 && (
-              <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/20 text-emerald-300 font-bold">
-                {messagesList.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("setup");
-              setProjectViewMode("list");
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
-              activeTab === "setup"
-                ? "bg-gradient-to-r from-purple-600/30 to-cyan-500/20 text-white border border-cyan-500/30 shadow-md"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            {renderIcon(FaDatabase, { size: 14, className: activeTab === "setup" ? "text-amber-400" : "" })}
-            <span>Supabase SQL Setup</span>
-          </button>
+          {/* User Profile Mini Footer */}
+          <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between gap-3 p-2 rounded-xl bg-white/[0.02]">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shrink-0 bg-slate-900">
+                <img
+                  src={toProxyImageUrl(profileForm.profile_image || PORTFOLIO_INFO.profileImage)}
+                  alt="Admin"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/images/img.jpg";
+                  }}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-white truncate leading-tight">
+                  {profileForm.short_name || profileForm.name}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] text-emerald-400 font-mono">Super Admin</span>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+              title="Sign Out"
+            >
+              {renderIcon(FaSignOutAlt, { size: 12 })}
+            </button>
+          </div>
         </aside>
+
+        {/* Mobile Navigation Drawer Dropdown */}
+        <AnimatePresence>
+          {isMobileNavOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden w-full overflow-hidden rounded-2xl bg-[#111726] border border-white/[0.08] p-4 mb-4 shadow-2xl space-y-4"
+            >
+              {navCategories.map((group) => (
+                <div key={group.title} className="space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 font-mono">
+                    {group.title}
+                  </span>
+                  <div className="grid grid-cols-1 gap-1 pt-1">
+                    {group.items.map((item) => {
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setProjectViewMode("list");
+                            setIsMobileNavOpen(false);
+                          }}
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                            isActive
+                              ? "bg-indigo-500/15 text-white border border-indigo-500/30 font-semibold"
+                              : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2.5">
+                            {renderIcon(item.icon, {
+                              size: 14,
+                              className: isActive ? item.activeColor : "text-slate-500",
+                            })}
+                            <span>{item.label}</span>
+                          </span>
+                          {item.badge !== undefined && (
+                            <span className="px-2 py-0.5 text-[10px] font-mono rounded-full bg-white/10 text-slate-300">
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Right Main Page Content Area (Full in-page views, no dialog boxes) */}
         <main className="flex-1 min-w-0">
@@ -1423,93 +1657,251 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
           {/* ============================================================== */}
           {activeTab === "overview" && (
             <div className="space-y-6">
-              {/* Welcome Banner */}
-              <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-purple-950/40 via-slate-900/60 to-cyan-950/30 border border-white/10 relative overflow-hidden">
-                <div className="relative z-10 space-y-2">
-                  <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-medium">
-                    Online &amp; Connected
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-                    Welcome back, {PORTFOLIO_INFO.shortName}!
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-light leading-relaxed">
-                    Everything you see here is synchronized with your Supabase database. You can add new projects, update your bio, upload a new resume PDF, and inspect visitor messages in real-time.
-                  </p>
+              {/* Executive Welcome Hero Banner */}
+              <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#111726] via-[#141c30] to-[#0c1220] border border-white/[0.08] relative overflow-hidden shadow-xl">
+                {/* Subtle Ambient Radial Glow */}
+                <div className="absolute -top-10 -right-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <div className="space-y-3 max-w-2xl">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-mono font-medium flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Supabase Live Synchronized</span>
+                      </span>
+                      <span className="px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-slate-400 text-[11px] font-mono">
+                        Session: {session.user?.email || "admin@maharab.dev"}
+                      </span>
+                    </div>
+
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                      Welcome back, {profileForm.short_name || PORTFOLIO_INFO.shortName}!
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed">
+                      Your full-stack portfolio database is connected and reactive. You can update project case studies, customize your hero biography, publish new resume PDFs, and review incoming recruiter submissions in real time.
+                    </p>
+
+                    {/* Instant Action Chips */}
+                    <div className="flex flex-wrap items-center gap-2.5 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("projects");
+                          handleOpenCreateProject();
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-cyan-500 hover:opacity-95 shadow-md shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+                      >
+                        {renderIcon(FaPlus, { size: 10 })}
+                        <span>New Project</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("profile")}
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
+                      >
+                        {renderIcon(FaUser, { size: 11, className: "text-cyan-400" })}
+                        <span>Edit Bio &amp; Photo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("messages")}
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
+                      >
+                        {renderIcon(FaEnvelope, { size: 11, className: "text-emerald-400" })}
+                        <span>View Inquiries ({messagesList.length})</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Avatar Card */}
+                  <div className="shrink-0 flex items-center gap-4 p-3.5 rounded-2xl bg-black/25 border border-white/[0.08] backdrop-blur-md self-start lg:self-auto">
+                    <div className="w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-br from-indigo-500 to-cyan-400 overflow-hidden shrink-0 shadow-lg shadow-indigo-500/20">
+                      <img
+                        src={toProxyImageUrl(profileForm.profile_image || PORTFOLIO_INFO.profileImage)}
+                        alt={profileForm.name}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/images/img.jpg";
+                        }}
+                        className="w-full h-full object-cover rounded-[14px]"
+                      />
+                    </div>
+                    <div className="pr-1 space-y-1">
+                      <p className="text-xs font-bold text-white leading-tight">
+                        {profileForm.name}
+                      </p>
+                      <p className="text-[11px] text-cyan-400 truncate max-w-[150px]">
+                        {profileForm.title}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("profile")}
+                        className="inline-flex items-center gap-1 text-[11px] text-indigo-300 hover:text-indigo-200 font-semibold cursor-pointer transition-colors"
+                      >
+                        <span>Change Avatar</span>
+                        {renderIcon(FaEdit, { size: 9 })}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* 4 Stat Cards */}
+              {/* 4 Metric KPI Stat Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02]">
-                  <p className="text-xs text-slate-400">Total Projects</p>
-                  <p className="text-2xl font-black text-white mt-1">{projectsList.length}</p>
-                  <p className="text-[11px] text-cyan-400 mt-1">Live in catalog</p>
-                </div>
-                <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02]">
-                  <p className="text-xs text-slate-400">Contact Inquiries</p>
-                  <p className="text-2xl font-black text-white mt-1">{messagesList.length}</p>
-                  <p className="text-[11px] text-emerald-400 mt-1">Direct submissions</p>
-                </div>
-                <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02]">
-                  <p className="text-xs text-slate-400">Years Experience</p>
-                  <p className="text-2xl font-black text-white mt-1">{profileForm.years_experience}</p>
-                  <p className="text-[11px] text-purple-400 mt-1">Production track</p>
-                </div>
-                <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02]">
-                  <p className="text-xs text-slate-400">Work Status</p>
-                  <p className="text-sm font-bold text-emerald-400 mt-2 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    Available for Hire
+                <div className="p-5 rounded-2xl border border-white/[0.08] bg-[#111726]/60 hover:border-white/[0.15] transition-all shadow-sm group">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-400">Total Projects</span>
+                    <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:scale-105 transition-transform">
+                      {renderIcon(FaFolder, { size: 14 })}
+                    </div>
+                  </div>
+                  <p className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-2">{projectsList.length}</p>
+                  <p className="text-[11px] text-indigo-400 font-mono mt-1 flex items-center gap-1">
+                    <span>Live in catalog</span>
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-1">Home banner active</p>
+                </div>
+
+                <div className="p-5 rounded-2xl border border-white/[0.08] bg-[#111726]/60 hover:border-white/[0.15] transition-all shadow-sm group">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-400">Contact Inquiries</span>
+                    <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:scale-105 transition-transform">
+                      {renderIcon(FaEnvelope, { size: 14 })}
+                    </div>
+                  </div>
+                  <p className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-2">{messagesList.length}</p>
+                  <p className="text-[11px] text-emerald-400 font-mono mt-1 flex items-center gap-1">
+                    <span>Direct form submissions</span>
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-2xl border border-white/[0.08] bg-[#111726]/60 hover:border-white/[0.15] transition-all shadow-sm group">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-400">Experience</span>
+                    <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 group-hover:scale-105 transition-transform">
+                      {renderIcon(FaChartBar, { size: 14 })}
+                    </div>
+                  </div>
+                  <p className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-2">{profileForm.years_experience}</p>
+                  <p className="text-[11px] text-cyan-400 font-mono mt-1 flex items-center gap-1">
+                    <span>{profileForm.satisfaction_rate} Satisfaction</span>
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-2xl border border-white/[0.08] bg-[#111726]/60 hover:border-white/[0.15] transition-all shadow-sm group">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-400">Work Status</span>
+                    <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 group-hover:scale-105 transition-transform">
+                      {renderIcon(FaCheckCircle, { size: 14 })}
+                    </div>
+                  </div>
+                  <p className="text-sm sm:text-base font-bold text-emerald-400 mt-3 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Available for Hire</span>
+                  </p>
+                  <p className="text-[11px] text-slate-500 font-mono mt-1">
+                    Homepage badge active
+                  </p>
                 </div>
               </div>
 
-              {/* Quick Action Tiles */}
-              <div>
-                <h3 className="text-sm font-bold text-white mb-3">Quick In-Page Actions</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <button
-                    onClick={() => {
-                      setActiveTab("projects");
-                      handleOpenCreateProject();
-                    }}
-                    className="p-4 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] text-left transition-all group"
-                  >
-                    <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-400 w-fit mb-2 group-hover:scale-110 transition-transform">
-                      {renderIcon(FaPlus, { size: 14 })}
+              {/* Lower 2-Column Section: Recent Messages & Cloud Infrastructure Status */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Recent Inquiries (7 cols) */}
+                <div className="lg:col-span-7 p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/60 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                        {renderIcon(FaEnvelope, { size: 14 })}
+                      </div>
+                      <h3 className="text-sm font-bold text-white">Recent Contact Submissions</h3>
                     </div>
-                    <h4 className="text-sm font-bold text-white">Add New Project</h4>
-                    <p className="text-xs text-slate-400 mt-0.5 font-light">
-                      Create a project in the in-page editor
-                    </p>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("messages")}
+                      className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer"
+                    >
+                      View All ({messagesList.length}) ➔
+                    </button>
+                  </div>
 
-                  <button
-                    onClick={() => setActiveTab("profile")}
-                    className="p-4 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] text-left transition-all group"
-                  >
-                    <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-400 w-fit mb-2 group-hover:scale-110 transition-transform">
-                      {renderIcon(FaUser, { size: 14 })}
+                  {messagesList.length === 0 ? (
+                    <div className="p-8 text-center rounded-xl bg-white/[0.02] border border-white/[0.05] text-slate-400 text-xs">
+                      No incoming messages recorded yet. Client submissions from the website contact section will appear here.
                     </div>
-                    <h4 className="text-sm font-bold text-white">Update Bio &amp; Info</h4>
-                    <p className="text-xs text-slate-400 mt-0.5 font-light">
-                      Edit title, about narrative, and socials
-                    </p>
-                  </button>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {messagesList.slice(0, 3).map((msg) => (
+                        <div
+                          key={msg.id}
+                          onClick={() => {
+                            setSelectedMessage(msg);
+                            setActiveTab("messages");
+                          }}
+                          className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/15 transition-all cursor-pointer flex items-start justify-between gap-3"
+                        >
+                          <div className="min-w-0 space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-bold text-white truncate">{msg.name}</p>
+                              <span className="text-[10px] text-slate-500 font-mono truncate">{msg.email}</span>
+                            </div>
+                            <p className="text-xs text-slate-300 font-medium truncate">{msg.subject || "(No Subject)"}</p>
+                            <p className="text-[11px] text-slate-400 line-clamp-1">{msg.message}</p>
+                          </div>
+                          <span className="text-[10px] text-slate-500 font-mono shrink-0">
+                            {new Date(msg.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                  <button
-                    onClick={() => setActiveTab("resume")}
-                    className="p-4 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] text-left transition-all group"
-                  >
-                    <div className="p-2.5 rounded-xl bg-pink-500/20 text-pink-400 w-fit mb-2 group-hover:scale-110 transition-transform">
-                      {renderIcon(FaFilePdf, { size: 14 })}
+                {/* Cloud Infrastructure & Quick Sync (5 cols) */}
+                <div className="lg:col-span-5 p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/60 space-y-4 shadow-sm">
+                  <div className="flex items-center gap-2.5 pb-3 border-b border-white/[0.08]">
+                    <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+                      {renderIcon(FaDatabase, { size: 14 })}
                     </div>
-                    <h4 className="text-sm font-bold text-white">Upload New Resume</h4>
-                    <p className="text-xs text-slate-400 mt-0.5 font-light">
-                      Store updated PDF in Supabase Cloud
-                    </p>
-                  </button>
+                    <h3 className="text-sm font-bold text-white">Cloud Infrastructure Status</h3>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between">
+                      <span className="text-slate-400">Supabase DB</span>
+                      <span className="text-emerald-400 font-mono font-medium flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        {isSupabaseConfigured ? "Connected" : "Pending Keys"}
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between">
+                      <span className="text-slate-400">Storage Bucket</span>
+                      <span className="text-cyan-400 font-mono font-medium">portfolio-assets</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between">
+                      <span className="text-slate-400">Active Profile Sync</span>
+                      <span className="text-indigo-300 font-mono font-medium">2-Way Reactive</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSyncAllProjectsToSupabase}
+                      className="w-full py-2.5 px-3 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    >
+                      {renderIcon(FaDatabase, { size: 11, className: "text-amber-400" })}
+                      <span>Sync Project Catalog to Supabase</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("setup")}
+                      className="w-full py-2 px-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer text-center"
+                    >
+                      Inspect SQL Schema &amp; Storage Policies ➔
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1523,11 +1915,11 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
               {/* MODE A: PROJECT LIST VIEW */}
               {projectViewMode === "list" ? (
                 <div className="space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
                     <div>
-                      <h2 className="text-xl font-bold text-white">Project Catalog</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Project Catalog</h2>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Manage your live portfolio projects in real time
+                        Manage, publish, and showcase your live portfolio applications and case studies
                       </p>
                     </div>
 
@@ -1535,7 +1927,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       <button
                         type="button"
                         onClick={handleSyncAllProjectsToSupabase}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold text-slate-300 hover:text-white border border-white/10 rounded-xl hover:bg-white/5 transition-all"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.06] rounded-xl transition-all cursor-pointer"
                         title="Seed all initial projects into your Supabase database"
                       >
                         {renderIcon(FaDatabase, { size: 11, className: "text-amber-400" })}
@@ -1544,133 +1936,203 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
                       <button
                         onClick={handleOpenCreateProject}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95 transition-all"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 shadow-md shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
                       >
                         {renderIcon(FaPlus, { size: 11 })}
-                        <span>Add New Project (In-Page)</span>
+                        <span>Add New Project</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Search and Filters */}
-                  <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                    <div className="relative w-full sm:w-72">
-                      {renderIcon(FaSearch, { size: 12, className: "absolute left-3.5 top-3.5 text-slate-500" })}
+                  {/* Search and Category Filters Toolbar */}
+                  <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+                    <div className="relative w-full sm:w-80">
+                      <span className="absolute left-3.5 top-3 text-slate-500">
+                        {renderIcon(FaSearch, { size: 12 })}
+                      </span>
                       <input
                         type="text"
                         value={projectSearch}
                         onChange={(e) => setProjectSearch(e.target.value)}
-                        placeholder="Search projects..."
-                        className="w-full pl-9 pr-3 py-2 text-xs text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        placeholder="Search projects by title, tech or summary..."
+                        className="w-full pl-9 pr-8 py-2 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 transition-all placeholder:text-slate-500"
                       />
+                      {projectSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setProjectSearch("")}
+                          className="absolute right-2.5 top-2.5 text-slate-400 hover:text-white"
+                        >
+                          {renderIcon(FaTimes, { size: 12 })}
+                        </button>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
-                      {["all", "web", "mobile", "ml", "iot"].map((cat) => (
+                    {/* Category Filter Pills with Item Counts */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                      {[
+                        { id: "all", label: "All", count: projectsList.length },
+                        { id: "web", label: "Web", count: projectsList.filter((p) => (p.category || "").toLowerCase() === "web").length },
+                        { id: "mobile", label: "Mobile", count: projectsList.filter((p) => (p.category || "").toLowerCase() === "mobile").length },
+                        { id: "ml", label: "AI & ML", count: projectsList.filter((p) => (p.category || "").toLowerCase() === "ml").length },
+                        { id: "iot", label: "IoT", count: projectsList.filter((p) => (p.category || "").toLowerCase() === "iot").length },
+                      ].map((cat) => (
                         <button
-                          key={cat}
-                          onClick={() => setProjectCategoryFilter(cat)}
-                          className={`px-3 py-1.5 rounded-xl text-xs capitalize transition-all ${
-                            projectCategoryFilter === cat
-                              ? "bg-white/10 text-white font-semibold border border-white/20"
-                              : "text-slate-400 hover:text-white"
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setProjectCategoryFilter(cat.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                            projectCategoryFilter === cat.id
+                              ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-semibold shadow-sm"
+                              : "text-slate-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06]"
                           }`}
                         >
-                          {cat === "all" ? "All" : cat.toUpperCase()}
+                          <span>{cat.label}</span>
+                          <span className="text-[10px] font-mono opacity-70">({cat.count})</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Projects Table / In-Page Cards (Full Screen Grid) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-                    {filteredProjects.map((project) => (
-                      <div
-                        key={project.id || project.project_id}
-                        className="p-4 rounded-2xl border border-white/10 bg-white/[0.02] flex flex-col justify-between hover:border-white/20 transition-all space-y-4"
-                      >
-                        <div className="flex gap-4 items-start">
-                          <div className="w-24 h-20 rounded-xl overflow-hidden bg-slate-900 flex-shrink-0 border border-white/10">
-                            <img
-                              src={project.image_url || project.image}
-                              alt={project.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = "https://placehold.co/600x400/0f172a/cbd5e1?text=Preview";
-                              }}
-                            />
-                          </div>
-
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-white/5 border border-white/10 text-cyan-300">
-                                {project.category}
-                              </span>
-                              {project.featured && (
-                                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-500/20 text-purple-300">
-                                  ★ Featured
+                  {/* Empty state when no projects match */}
+                  {filteredProjects.length === 0 ? (
+                    <div className="p-12 text-center rounded-2xl border border-white/[0.08] bg-[#111726]/60 space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-white/[0.04] text-slate-400 flex items-center justify-center mx-auto">
+                        {renderIcon(FaFolder, { size: 20 })}
+                      </div>
+                      <h3 className="text-sm font-bold text-white">No projects found</h3>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                        {projectSearch || projectCategoryFilter !== "all"
+                          ? "No projects matched your search filters. Try adjusting your query or category filter."
+                          : "Your catalog currently has no projects. Click 'Add New Project' or 'Sync All to Supabase' to get started."}
+                      </p>
+                      {(projectSearch || projectCategoryFilter !== "all") && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProjectSearch("");
+                            setProjectCategoryFilter("all");
+                          }}
+                          className="px-4 py-2 text-xs font-semibold text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-xl transition-colors cursor-pointer"
+                        >
+                          Reset Filters
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    /* Projects Table / In-Page Cards (Full Screen Grid) */
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                      {filteredProjects.map((project) => (
+                        <div
+                          key={project.id || project.project_id}
+                          className="p-4 rounded-2xl border border-white/[0.08] bg-[#111726]/70 hover:border-indigo-500/30 flex flex-col justify-between hover:shadow-xl hover:shadow-indigo-500/5 transition-all space-y-4 group"
+                        >
+                          <div className="space-y-3">
+                            <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-900 border border-white/10">
+                              <img
+                                src={project.image_url || project.image}
+                                alt={project.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                onError={(e) => {
+                                  e.currentTarget.src = "https://placehold.co/600x400/0f172a/cbd5e1?text=Preview";
+                                }}
+                              />
+                              <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                                {project.featured && (
+                                  <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-400 text-slate-950 shadow-md">
+                                    ★ FEATURED
+                                  </span>
+                                )}
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-950/80 backdrop-blur-md border border-white/10 text-cyan-300 capitalize">
+                                  {project.category}
                                 </span>
-                              )}
+                              </div>
                             </div>
-                            <h3 className="text-sm font-bold text-white truncate">{project.title}</h3>
-                            <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                              {project.short_desc || project.shortDescription || project.description}
-                            </p>
-                          </div>
-                        </div>
 
-                        <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs">
+                            <div className="space-y-1">
+                              <h3 className="text-sm font-bold text-white truncate group-hover:text-indigo-300 transition-colors">
+                                {project.title}
+                              </h3>
+                              <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                                {project.short_desc || project.shortDescription || project.description}
+                              </p>
+                            </div>
+
+                            {/* Tech stack tags */}
+                            {project.technologies && (
+                              <div className="flex flex-wrap gap-1 pt-1">
+                                {getSelectedTechs(project.technologies).slice(0, 3).map((tech, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-white/[0.04] border border-white/[0.06] text-slate-300"
+                                  >
+                                    {tech}
+                                  </span>
+                                ))}
+                                {getSelectedTechs(project.technologies).length > 3 && (
+                                  <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono text-slate-500">
+                                    +{getSelectedTechs(project.technologies).length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
                             <button
+                              type="button"
                               onClick={() => handleToggleFeatured(project)}
-                              className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
+                              className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
                                 project.featured
-                                  ? "border-purple-500/40 text-purple-300 bg-purple-500/10"
-                                  : "border-white/10 text-slate-400 hover:text-white"
+                                  ? "border-amber-400/40 text-amber-300 bg-amber-400/10 font-medium"
+                                  : "border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
                               }`}
                             >
-                              {project.featured ? "Featured on Home" : "Set as Featured"}
+                              {project.featured ? "★ Featured" : "Set Featured"}
                             </button>
-                          </div>
 
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleOpenEditProject(project)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 rounded-lg transition-colors"
-                            >
-                              {renderIcon(FaEdit, { size: 11 })}
-                              <span>Edit In-Page</span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProject(project.id || project.project_id)}
-                              className="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors"
-                            >
-                              {renderIcon(FaTrash, { size: 12 })}
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditProject(project)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-lg transition-colors cursor-pointer"
+                              >
+                                {renderIcon(FaEdit, { size: 11 })}
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteProject(project.id || project.project_id)}
+                                className="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                title="Delete Project"
+                              >
+                                {renderIcon(FaTrash, { size: 11 })}
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* MODE B: FULL IN-PAGE PROJECT STUDIO (BEAUTIFIED & WITH TECH SUGGESTIONS) */
                 <div className="space-y-6">
                   {/* Editor Header Bar */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/[0.08]">
                     <div className="flex items-center gap-3.5">
                       <button
                         type="button"
                         onClick={() => setProjectViewMode("list")}
-                        className="p-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-slate-300 hover:text-white transition-colors"
-                        title="Back to Projects List"
+                        className="p-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.06] text-slate-300 hover:text-white transition-all"
+                        title="Back to Projects Catalog"
                       >
                         {renderIcon(FaArrowLeft, { size: 14 })}
                       </button>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-cyan-300">
-                            {editingProjectId ? "PROJECT STUDIO • EDIT MODE" : "PROJECT STUDIO • NEW DRAFT"}
+                          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-semibold uppercase tracking-wider bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
+                            {editingProjectId ? "STUDIO • EDIT MODE" : "STUDIO • NEW DRAFT"}
                           </span>
                           {editingProjectId && (
                             <span className="text-[11px] font-mono text-slate-500">
@@ -1678,11 +2140,11 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             </span>
                           )}
                         </div>
-                        <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                           {editingProjectId ? (projectForm.title || "Edit Project Details") : "Create New Project"}
                         </h2>
                         <p className="text-xs text-slate-400 mt-0.5">
-                          Fine-tune project identity, technologies, narrative, and deliverables with live preview.
+                          Fine-tune project identity, technologies, narrative, and deliverables with real-time preview.
                         </p>
                       </div>
                     </div>
@@ -1691,7 +2153,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       <button
                         type="button"
                         onClick={() => setProjectViewMode("list")}
-                        className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+                        className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all"
                       >
                         Cancel
                       </button>
@@ -1699,7 +2161,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         type="button"
                         disabled={projectSaving}
                         onClick={() => handleSaveProject()}
-                        className="inline-flex items-center gap-2 px-6 py-2 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:opacity-95 shadow-lg shadow-purple-500/25 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
                       >
                         {projectSaving ? renderIcon(FaSpinner, { className: "animate-spin", size: 13 }) : renderIcon(FaSave, { size: 13 })}
                         <span>{projectSaving ? "Saving to Cloud..." : "Save to Database"}</span>
@@ -1724,9 +2186,9 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   )}
 
                   {uploadStatus && (
-                    <div className="p-3 text-xs text-cyan-300 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center gap-2">
-                      {renderIcon(FaSpinner, { className: "animate-spin", size: 12 })}
-                      <span>{uploadStatus}</span>
+                    <div className="p-3.5 text-xs text-cyan-300 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center gap-2.5">
+                      {renderIcon(FaSpinner, { className: "animate-spin shrink-0", size: 13 })}
+                      <span className="font-medium">{uploadStatus}</span>
                     </div>
                   )}
 
@@ -1739,22 +2201,22 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     <form onSubmit={handleSaveProject} className="lg:col-span-7 space-y-6 text-xs">
                       
                       {/* CARD 1: Core Identity & Category */}
-                      <div className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-5 shadow-xl">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-5 shadow-xl">
+                        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
                           <div className="flex items-center gap-2.5">
-                            <span className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs">
+                            <span className="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs font-mono">
                               1
                             </span>
-                            <h3 className="text-sm font-bold text-white tracking-wide uppercase font-mono">
+                            <h3 className="text-xs font-bold text-white tracking-wider uppercase font-mono">
                               Project Identity &amp; Category
                             </h3>
                           </div>
-                          <span className="text-[11px] text-slate-500">Core Metadata</span>
+                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Core Metadata</span>
                         </div>
 
                         {/* Title */}
                         <div>
-                          <label className="block font-semibold text-slate-200 mb-1.5">
+                          <label className="block font-semibold text-slate-200 mb-1.5 text-xs">
                             Project Title <span className="text-rose-400">*</span>
                           </label>
                           <input
@@ -1763,13 +2225,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             value={projectForm.title}
                             onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
                             placeholder="e.g. AI Financial Forecaster & Risk Analysis SaaS"
-                            className="w-full px-4 py-2.5 text-sm text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all font-medium"
+                            className="w-full px-4 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all font-medium placeholder:text-slate-500"
                           />
                         </div>
 
                         {/* Visual Category Selector */}
                         <div>
-                          <label className="block font-semibold text-slate-200 mb-2">
+                          <label className="block font-semibold text-slate-200 mb-2 text-xs">
                             Select Category <span className="text-rose-400">*</span>
                           </label>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1782,8 +2244,8 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                   onClick={() => setProjectForm({ ...projectForm, category: cat.id })}
                                   className={`p-3.5 rounded-xl border text-left transition-all relative cursor-pointer ${
                                     isSelected
-                                      ? cat.borderActive + " shadow-md"
-                                      : "border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20"
+                                      ? "border-indigo-500/60 bg-indigo-500/10 shadow-sm ring-1 ring-indigo-500/30"
+                                      : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.12]"
                                   }`}
                                 >
                                   <div className="flex items-start justify-between">
@@ -1809,7 +2271,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         </div>
 
                         {/* Featured Project Switch */}
-                        <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-colors flex items-center justify-between cursor-pointer" onClick={() => setProjectForm({ ...projectForm, featured: !projectForm.featured })}>
+                        <div className="p-3.5 rounded-xl border border-white/[0.08] bg-[#0c101d]/60 hover:bg-[#0c101d] transition-colors flex items-center justify-between cursor-pointer" onClick={() => setProjectForm({ ...projectForm, featured: !projectForm.featured })}>
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-lg ${projectForm.featured ? "bg-amber-400/20 text-amber-300 border border-amber-400/30" : "bg-white/5 text-slate-400"}`}>
                               {renderIcon(FaStar, { size: 14 })}
@@ -1818,13 +2280,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                               <div className="font-bold text-white text-xs flex items-center gap-2">
                                 <span>Feature on Portfolio Showcase</span>
                                 {projectForm.featured && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                                  <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
                                     FEATURED
                                   </span>
                                 )}
                               </div>
                               <p className="text-[11px] text-slate-400 mt-0.5">
-                                Displays prominently with a glowing badge on the homepage hero and top of the projects list.
+                                Displays prominently with a highlighted badge on the homepage hero and top of the showcase.
                               </p>
                             </div>
                           </div>
@@ -1833,26 +2295,26 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             checked={projectForm.featured}
                             onChange={(e) => setProjectForm({ ...projectForm, featured: e.target.checked })}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 rounded text-purple-600 bg-white/10 border-white/20 focus:ring-0 cursor-pointer"
+                            className="w-4 h-4 rounded text-indigo-600 bg-white/10 border-white/20 focus:ring-0 cursor-pointer"
                           />
                         </div>
                       </div>
 
-                      {/* CARD 2: Technology Stack Studio (THE KEY FEATURE) */}
-                      <div className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-5 shadow-xl">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      {/* CARD 2: Technology Stack Studio */}
+                      <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-5 shadow-xl">
+                        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
                           <div className="flex items-center gap-2.5">
-                            <span className="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">
+                            <span className="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs font-mono">
                               2
                             </span>
                             <div className="flex items-center gap-2">
-                              {renderIcon(FaTags, { className: "text-purple-400", size: 13 })}
-                              <h3 className="text-sm font-bold text-white tracking-wide uppercase font-mono">
+                              {renderIcon(FaTags, { className: "text-indigo-400", size: 13 })}
+                              <h3 className="text-xs font-bold text-white tracking-wider uppercase font-mono">
                                 Technology Stack Studio
                               </h3>
                             </div>
                           </div>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
+                          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
                             {getSelectedTechs(projectForm.technologies).length} Selected
                           </span>
                         </div>
@@ -1874,7 +2336,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             )}
                           </div>
 
-                          <div className="min-h-[52px] p-3 rounded-xl border border-white/15 bg-slate-950/80 flex flex-wrap items-center gap-2">
+                          <div className="min-h-[52px] p-3 rounded-xl border border-white/[0.08] bg-[#0c101d] flex flex-wrap items-center gap-2">
                             {getSelectedTechs(projectForm.technologies).length === 0 ? (
                               <p className="text-xs text-slate-500 italic flex items-center gap-2">
                                 {renderIcon(FaLightbulb, { size: 12 })}
@@ -1884,13 +2346,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                               getSelectedTechs(projectForm.technologies).map((tag) => (
                                 <span
                                   key={tag}
-                                  className="group inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 shadow-sm shadow-cyan-500/10 hover:border-cyan-400 transition-all"
+                                  className="group inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-indigo-500/15 border border-indigo-500/40 text-indigo-200 shadow-sm transition-all"
                                 >
                                   <span>{tag}</span>
                                   <button
                                     type="button"
                                     onClick={() => removeTechTag(tag)}
-                                    className="p-0.5 rounded hover:bg-rose-500/20 text-cyan-400 hover:text-rose-400 transition-colors"
+                                    className="p-0.5 rounded hover:bg-rose-500/20 text-indigo-300 hover:text-rose-400 transition-colors"
                                     title={`Remove ${tag}`}
                                   >
                                     {renderIcon(FaTimes, { size: 10 })}
@@ -1903,7 +2365,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
                         {/* Custom Technology Input with Enter or Button */}
                         <div className="space-y-1.5">
-                          <label className="block font-semibold text-slate-200">
+                          <label className="block font-semibold text-slate-200 text-xs">
                             Add Custom Technology Tag:
                           </label>
                           <div className="flex gap-2">
@@ -1913,8 +2375,8 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                 value={customTechInput}
                                 onChange={(e) => setCustomTechInput(e.target.value)}
                                 onKeyDown={handleCustomTechKeyDown}
-                                placeholder="Type any technology and press Enter or comma (e.g. GraphQL, Tailwind, Redis, FastAPI)..."
-                                className="w-full pl-9 pr-3.5 py-2 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 transition-all"
+                                placeholder="Type any technology and press Enter (e.g. GraphQL, Tailwind, Redis, FastAPI)..."
+                                className="w-full pl-9 pr-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all placeholder:text-slate-500"
                               />
                               <span className="absolute left-3 top-2.5 text-slate-500">
                                 {renderIcon(FaCode, { size: 12 })}
@@ -1928,7 +2390,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                   setCustomTechInput("");
                                 }
                               }}
-                              className="px-4 py-2 text-xs font-bold text-white rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all active:scale-95"
+                              className="px-4 py-2 text-xs font-semibold text-white rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] transition-all active:scale-95"
                             >
                               + Add Tag
                             </button>
@@ -1936,8 +2398,8 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         </div>
 
                         {/* 1-Click Popular Stack Presets */}
-                        <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02] space-y-2.5">
-                          <div className="flex items-center gap-2 text-xs font-semibold text-purple-300">
+                        <div className="p-3.5 rounded-xl border border-white/[0.06] bg-[#0c101d]/60 space-y-2.5">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-300">
                             {renderIcon(FaMagic, { size: 12 })}
                             <span>1-Click Popular Stack Presets (Click to append):</span>
                           </div>
@@ -1959,7 +2421,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         </div>
 
                         {/* Technology Suggestions Matrix */}
-                        <div className="space-y-3 pt-2 border-t border-white/10">
+                        <div className="space-y-3 pt-2 border-t border-white/[0.06]">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div className="flex items-center gap-2 font-semibold text-slate-200 text-xs">
                               {renderIcon(FaLightbulb, { className: "text-amber-400", size: 12 })}
@@ -1973,7 +2435,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                 value={techSearchQuery}
                                 onChange={(e) => setTechSearchQuery(e.target.value)}
                                 placeholder="Filter suggestions..."
-                                className="w-full pl-7 pr-3 py-1 text-[11px] text-white bg-slate-950/70 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400"
+                                className="w-full pl-7 pr-3 py-1 text-[11px] text-white bg-[#0c101d] border border-white/[0.08] rounded-lg focus:outline-none focus:border-indigo-500/60 placeholder:text-slate-500"
                               />
                               <span className="absolute left-2.5 top-1.5 text-slate-500">
                                 {renderIcon(FaSearch, { size: 10 })}
@@ -2007,8 +2469,8 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                 onClick={() => setTechCategoryFilter(f.id)}
                                 className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all cursor-pointer ${
                                   techCategoryFilter === f.id
-                                    ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-semibold"
-                                    : "bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-slate-200"
+                                    ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40 font-semibold"
+                                    : "bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/[0.08] hover:text-slate-200"
                                 }`}
                               >
                                 {f.label}
@@ -2033,13 +2495,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                   onClick={() => toggleTechTag(item.name)}
                                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer active:scale-95 ${
                                     isAlreadySelected
-                                      ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/50 shadow-sm shadow-cyan-500/25 ring-1 ring-cyan-400/30"
-                                      : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/15 hover:border-cyan-500/30 hover:text-white"
+                                      ? "bg-indigo-500/20 text-indigo-200 border-indigo-400/50 shadow-sm shadow-indigo-500/20 ring-1 ring-indigo-400/30"
+                                      : "bg-white/[0.03] text-slate-300 border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] hover:text-white"
                                   }`}
                                   title={isAlreadySelected ? `Remove ${item.name}` : `Add ${item.name}`}
                                 >
                                   {isAlreadySelected ? (
-                                    renderIcon(FaCheck, { size: 10, className: "text-cyan-400" })
+                                    renderIcon(FaCheck, { size: 10, className: "text-indigo-400" })
                                   ) : (
                                     <span className="text-slate-500 text-xs font-bold">+</span>
                                   )}
@@ -2052,23 +2514,23 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       </div>
 
                       {/* CARD 3: Narrative & Case Study */}
-                      <div className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-5 shadow-xl">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-5 shadow-xl">
+                        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
                           <div className="flex items-center gap-2.5">
-                            <span className="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
+                            <span className="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs font-mono">
                               3
                             </span>
-                            <h3 className="text-sm font-bold text-white tracking-wide uppercase font-mono">
+                            <h3 className="text-xs font-bold text-white tracking-wider uppercase font-mono">
                               Project Narrative &amp; Breakdown
                             </h3>
                           </div>
-                          <span className="text-[11px] text-slate-500">Descriptions</span>
+                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Descriptions</span>
                         </div>
 
                         {/* Short Description */}
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="font-semibold text-slate-200">
+                            <label className="font-semibold text-slate-200 text-xs">
                               Short Description (Shown on Main Card) <span className="text-rose-400">*</span>
                             </label>
                             <span className="text-[10px] font-mono text-slate-400">
@@ -2081,14 +2543,14 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             value={projectForm.short_desc}
                             onChange={(e) => setProjectForm({ ...projectForm, short_desc: e.target.value })}
                             placeholder="Brief 1-2 sentence compelling hook of what this project does and who it helps"
-                            className="w-full px-4 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 transition-all"
+                            className="w-full px-4 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all placeholder:text-slate-500"
                           />
                         </div>
 
                         {/* Full Detailed Description */}
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="font-semibold text-slate-200">
+                            <label className="font-semibold text-slate-200 text-xs">
                               Full Case Study Description
                             </label>
                             <span className="text-[10px] font-mono text-slate-400">
@@ -2100,32 +2562,32 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             value={projectForm.full_desc}
                             onChange={(e) => setProjectForm({ ...projectForm, full_desc: e.target.value })}
                             placeholder="Comprehensive architectural overview: what problem this solves, architectural decisions, data flow, performance optimizations, and quantifiable impact."
-                            className="w-full px-4 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 transition-all font-sans leading-relaxed"
+                            className="w-full px-4 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all font-sans leading-relaxed placeholder:text-slate-500"
                           />
                         </div>
                       </div>
 
                       {/* CARD 4: Key Deliverables & Architecture Features */}
-                      <div className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-4 shadow-xl">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-4 shadow-xl">
+                        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
                           <div className="flex items-center gap-2.5">
-                            <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                            <span className="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs font-mono">
                               4
                             </span>
                             <div className="flex items-center gap-2">
                               {renderIcon(FaListUl, { className: "text-emerald-400", size: 12 })}
-                              <h3 className="text-sm font-bold text-white tracking-wide uppercase font-mono">
+                              <h3 className="text-xs font-bold text-white tracking-wider uppercase font-mono">
                                 Key Deliverables &amp; Features
                               </h3>
                             </div>
                           </div>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
                             {projectForm.features.split("\n").filter((f) => f.trim()).length} Features
                           </span>
                         </div>
 
                         <p className="text-[11px] text-slate-400">
-                          Enter one feature per line. These will render as bullet points with checkmark icons on the project detail modal.
+                          Enter one feature per line. These will render as structured bullet points with checkmark icons on the project detail modal.
                         </p>
 
                         <textarea
@@ -2133,27 +2595,27 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           value={projectForm.features}
                           onChange={(e) => setProjectForm({ ...projectForm, features: e.target.value })}
                           placeholder="JWT Authentication &amp; Role-based Permissions&#10;Stripe Payment Gateway Integration&#10;Real-time Telemetry WebSocket Stream&#10;Automated CI/CD Pipeline with Docker"
-                          className="w-full px-4 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 transition-all font-mono leading-relaxed"
+                          className="w-full px-4 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all font-mono leading-relaxed placeholder:text-slate-500"
                         />
                       </div>
 
                       {/* CARD 5: Media & Deployment URLs */}
-                      <div className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-5 shadow-xl">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-5 shadow-xl">
+                        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
                           <div className="flex items-center gap-2.5">
-                            <span className="w-6 h-6 rounded-lg bg-pink-500/20 text-pink-400 flex items-center justify-center font-bold text-xs">
+                            <span className="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs font-mono">
                               5
                             </span>
-                            <h3 className="text-sm font-bold text-white tracking-wide uppercase font-mono">
+                            <h3 className="text-xs font-bold text-white tracking-wider uppercase font-mono">
                               Media Assets &amp; Production Links
                             </h3>
                           </div>
-                          <span className="text-[11px] text-slate-500">Assets &amp; URLs</span>
+                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Assets &amp; URLs</span>
                         </div>
 
                         {/* Project Image */}
                         <div className="space-y-2.5">
-                          <label className="block font-semibold text-slate-200">
+                          <label className="block font-semibold text-slate-200 text-xs">
                             Project Cover Image URL
                           </label>
                           <input
@@ -2161,11 +2623,11 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             value={projectForm.image_url}
                             onChange={(e) => setProjectForm({ ...projectForm, image_url: e.target.value })}
                             placeholder="https://images.unsplash.com/... or pick preset below"
-                            className="w-full px-4 py-2 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 transition-all"
+                            className="w-full px-4 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all placeholder:text-slate-500"
                           />
 
                           {/* Quick 1-click Preset Cover Images */}
-                          <div className="p-3 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+                          <div className="p-3 rounded-xl border border-white/[0.06] bg-[#0c101d]/60 space-y-2">
                             <span className="text-[11px] font-semibold text-slate-400">
                               Quick Preset Cover Images (Click to apply):
                             </span>
@@ -2175,7 +2637,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                   key={cov.name}
                                   type="button"
                                   onClick={() => setProjectForm({ ...projectForm, image_url: cov.url })}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-400/40 text-slate-300 hover:text-cyan-300 transition-all cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-white/[0.04] hover:bg-indigo-500/20 border border-white/[0.08] hover:border-indigo-500/40 text-slate-300 hover:text-indigo-200 transition-all cursor-pointer"
                                 >
                                   <span>{cov.name}</span>
                                 </button>
@@ -2191,7 +2653,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => handleFileUpload(e, "project")}
-                                className="text-[11px] text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
+                                className="text-[11px] text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-white/[0.08] file:text-white hover:file:bg-white/[0.15] cursor-pointer"
                               />
                             </div>
                             {storageRlsError && (
@@ -2206,7 +2668,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         {/* GitHub & Live URL */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                           <div>
-                            <label className="block font-semibold text-slate-200 mb-1 flex items-center gap-1.5">
+                            <label className="block font-semibold text-slate-200 mb-1 flex items-center gap-1.5 text-xs">
                               {renderIcon(FaGithub, { size: 12 })}
                               <span>GitHub Repository URL</span>
                             </label>
@@ -2215,12 +2677,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                               value={projectForm.github_url}
                               onChange={(e) => setProjectForm({ ...projectForm, github_url: e.target.value })}
                               placeholder="https://github.com/your-username/repo"
-                              className="w-full px-3.5 py-2 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 transition-all"
+                              className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 transition-all placeholder:text-slate-500"
                             />
                           </div>
 
                           <div>
-                            <label className="block font-semibold text-slate-200 mb-1 flex items-center gap-1.5">
+                            <label className="block font-semibold text-slate-200 mb-1 flex items-center gap-1.5 text-xs">
                               {renderIcon(FaGlobe, { size: 12 })}
                               <span>Live Deployment / Demo URL</span>
                             </label>
@@ -2229,25 +2691,25 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                               value={projectForm.live_url}
                               onChange={(e) => setProjectForm({ ...projectForm, live_url: e.target.value })}
                               placeholder="https://my-app.vercel.app"
-                              className="w-full px-3.5 py-2 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 transition-all"
+                              className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 transition-all placeholder:text-slate-500"
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Bottom Save & Cancel Bar */}
-                      <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                      <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/[0.08]">
                         <button
                           type="button"
                           onClick={() => setProjectViewMode("list")}
-                          className="px-5 py-2.5 text-xs font-semibold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+                          className="px-5 py-2.5 text-xs font-semibold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
                           disabled={projectSaving}
-                          className="inline-flex items-center gap-2 px-7 py-2.5 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:opacity-95 shadow-lg shadow-purple-500/25 active:scale-95 transition-all cursor-pointer"
+                          className="inline-flex items-center gap-2 px-7 py-2.5 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
                         >
                           {projectSaving ? renderIcon(FaSpinner, { className: "animate-spin", size: 13 }) : renderIcon(FaSave, { size: 13 })}
                           <span>{projectSaving ? "Saving..." : "Save Project to Supabase"}</span>
@@ -2258,20 +2720,20 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     {/* Right: Live Interactive Card Preview (5 cols, sticky) */}
                     <div className="lg:col-span-5 sticky top-24 space-y-4">
                       {/* Preview Studio Header & View Switcher */}
-                      <div className="p-3.5 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-sm flex items-center justify-between shadow-xl">
+                      <div className="p-3.5 rounded-2xl border border-white/[0.08] bg-[#111726]/85 backdrop-blur-sm flex items-center justify-between shadow-xl">
                         <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+                          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                           <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
                             Live Studio Preview
                           </span>
                         </div>
-                        <div className="flex items-center p-0.5 rounded-xl bg-slate-950 border border-white/10 text-[11px]">
+                        <div className="flex items-center p-0.5 rounded-xl bg-[#0c101d] border border-white/[0.08] text-[11px]">
                           <button
                             type="button"
                             onClick={() => setStudioPreviewTab("card")}
                             className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
                               studioPreviewTab === "card"
-                                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                                ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
                                 : "text-slate-400 hover:text-white"
                             }`}
                           >
@@ -2282,7 +2744,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             onClick={() => setStudioPreviewTab("casestudy")}
                             className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
                               studioPreviewTab === "casestudy"
-                                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                                ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
                                 : "text-slate-400 hover:text-white"
                             }`}
                           >
@@ -2293,12 +2755,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
                       {/* PREVIEW TAB 1: Grid Card View (Portfolio Home Card) */}
                       {studioPreviewTab === "card" && (
-                        <div className="rounded-3xl border border-white/15 bg-gradient-to-b from-slate-900/95 to-slate-950 p-5 shadow-2xl space-y-4 relative overflow-hidden group">
+                        <div className="rounded-2xl border border-white/[0.08] bg-[#111726]/90 p-5 shadow-xl space-y-4 relative overflow-hidden group">
                           {/* Ambient Glow */}
-                          <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl -z-0 pointer-events-none" />
+                          <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -z-0 pointer-events-none" />
 
                           {/* Image preview */}
-                          <div className="aspect-video rounded-2xl overflow-hidden bg-slate-950 relative border border-white/10 shadow-inner">
+                          <div className="aspect-video rounded-xl overflow-hidden bg-[#0c101d] relative border border-white/[0.08] shadow-inner">
                             <img
                               src={projectForm.image_url || "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80"}
                               alt="Preview"
@@ -2315,7 +2777,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                   <span>Featured</span>
                                 </span>
                               )}
-                              <span className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-slate-950/80 backdrop-blur-md border border-white/15 text-cyan-300 capitalize">
+                              <span className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-[#090d16]/80 backdrop-blur-md border border-white/15 text-indigo-200 capitalize">
                                 {PROJECT_CATEGORIES.find((c) => c.id === projectForm.category)?.name || projectForm.category}
                               </span>
                             </div>
@@ -2323,7 +2785,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
                           {/* Title & Short Description */}
                           <div className="space-y-1.5">
-                            <h3 className="text-lg font-bold text-white tracking-tight">
+                            <h3 className="text-base font-bold text-white tracking-tight">
                               {projectForm.title || "Your Project Title Will Appear Here"}
                             </h3>
                             <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
@@ -2332,7 +2794,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           </div>
 
                           {/* Technologies preview chips */}
-                          <div className="pt-3 border-t border-white/10 space-y-1.5">
+                          <div className="pt-3 border-t border-white/[0.06] space-y-1.5">
                             <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
                               Tech Stack ({getSelectedTechs(projectForm.technologies).length})
                             </span>
@@ -2341,7 +2803,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                 getSelectedTechs(projectForm.technologies).slice(0, 6).map((tech, idx) => (
                                   <span
                                     key={idx}
-                                    className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-cyan-500/10 border border-cyan-500/30 text-cyan-300"
+                                    className="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-indigo-500/10 border border-indigo-500/30 text-indigo-300"
                                   >
                                     {tech}
                                   </span>
@@ -2352,7 +2814,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                 </span>
                               )}
                               {getSelectedTechs(projectForm.technologies).length > 6 && (
-                                <span className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-white/5 border border-white/10 text-slate-400">
+                                <span className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white/[0.04] border border-white/[0.08] text-slate-400">
                                   +{getSelectedTechs(projectForm.technologies).length - 6} more
                                 </span>
                               )}
@@ -2361,11 +2823,11 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
                           {/* Action links buttons */}
                           <div className="flex items-center gap-2 pt-2">
-                            <div className="flex-1 py-2 text-center text-xs font-semibold rounded-xl bg-white/10 border border-white/10 text-white flex items-center justify-center gap-2 opacity-90">
+                            <div className="flex-1 py-2 text-center text-xs font-semibold rounded-xl bg-white/[0.06] border border-white/[0.08] text-white flex items-center justify-center gap-2 opacity-90">
                               {renderIcon(FaExternalLinkAlt, { size: 10 })}
                               <span>Live Preview</span>
                             </div>
-                            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center opacity-90">
+                            <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-300 flex items-center justify-center opacity-90">
                               {renderIcon(FaGithub, { size: 14 })}
                             </div>
                           </div>
@@ -2374,22 +2836,22 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
                       {/* PREVIEW TAB 2: Full Case Study Modal Preview */}
                       {studioPreviewTab === "casestudy" && (
-                        <div className="rounded-3xl border border-white/15 bg-gradient-to-b from-slate-900 to-slate-950 p-5 shadow-2xl space-y-4 max-h-[580px] overflow-y-auto">
-                          <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                            <span className="text-[11px] font-mono text-cyan-400 font-bold uppercase">
+                        <div className="rounded-2xl border border-white/[0.08] bg-[#111726]/90 p-5 shadow-xl space-y-4 max-h-[580px] overflow-y-auto">
+                          <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+                            <span className="text-[11px] font-mono text-indigo-400 font-bold uppercase tracking-wider">
                               Case Study Detailed Preview
                             </span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-white/10 text-slate-300 capitalize">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-white/[0.06] text-slate-300 capitalize">
                               {projectForm.category}
                             </span>
                           </div>
 
-                          <h3 className="text-xl font-black text-white">
+                          <h3 className="text-lg font-bold text-white tracking-tight">
                             {projectForm.title || "Untitled Project"}
                           </h3>
 
                           {/* Case Study Image */}
-                          <div className="aspect-video rounded-xl overflow-hidden bg-slate-950 relative border border-white/10">
+                          <div className="aspect-video rounded-xl overflow-hidden bg-[#0c101d] relative border border-white/[0.08]">
                             <img
                               src={projectForm.image_url || "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80"}
                               alt="Case study"
@@ -2409,7 +2871,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
                           {/* Features list */}
                           {projectForm.features && (
-                            <div className="space-y-2 pt-2 border-t border-white/10">
+                            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
                               <h4 className="text-xs font-bold font-mono text-slate-300 uppercase tracking-wide">
                                 Key Deliverables
                               </h4>
@@ -2431,13 +2893,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           )}
 
                           {/* Tech stack full view */}
-                          <div className="space-y-2 pt-2 border-t border-white/10">
+                          <div className="space-y-2 pt-2 border-t border-white/[0.06]">
                             <h4 className="text-xs font-bold font-mono text-slate-300 uppercase tracking-wide">
                               Technologies &amp; Tools Used
                             </h4>
                             <div className="flex flex-wrap gap-1.5">
                               {getSelectedTechs(projectForm.technologies).map((t, i) => (
-                                <span key={i} className="px-2.5 py-1 rounded-lg text-xs font-medium bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
+                                <span key={i} className="px-2.5 py-0.5 rounded-lg text-xs font-medium bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
                                   {t}
                                 </span>
                               ))}
@@ -2447,8 +2909,8 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       )}
 
                       {/* Publication Health Checklist Card */}
-                      <div className="p-4 rounded-2xl border border-white/10 bg-slate-900/70 space-y-2.5 text-xs shadow-xl">
-                        <span className="font-mono uppercase font-bold text-slate-400 text-[11px]">
+                      <div className="p-4 rounded-2xl border border-white/[0.08] bg-[#111726]/75 space-y-2.5 text-xs shadow-xl">
+                        <span className="font-mono uppercase font-bold text-slate-400 text-[11px] tracking-wider">
                           Publication Quality Checklist
                         </span>
                         <div className="space-y-1.5">
@@ -2466,7 +2928,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-slate-300">Technology Tags</span>
-                            <span className={getSelectedTechs(projectForm.technologies).length > 0 ? "text-cyan-400 font-bold" : "text-slate-600"}>
+                            <span className={getSelectedTechs(projectForm.technologies).length > 0 ? "text-indigo-400 font-bold" : "text-slate-600"}>
                               {getSelectedTechs(projectForm.technologies).length} tags
                             </span>
                           </div>
@@ -2498,188 +2960,505 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
           {/* ============================================================== */}
           {activeTab === "profile" && (
             <div className="space-y-6">
-              <div className="pb-4 border-b border-white/10 flex items-center justify-between">
+              <div className="pb-4 border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white">Profile &amp; Biography Settings</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Profile &amp; Biography Settings</h2>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Customize your name, professional title, bio narrative, and contact channels
+                    Customize your avatar photo, professional headline, bio narrative, video controls, and contact channels
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleSaveProfile}
                   disabled={profileSaving}
-                  className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 shadow-md shadow-purple-500/25 active:scale-95 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {renderIcon(FaSave, { size: 12 })}
-                  <span>{profileSaving ? "Saving..." : "Save Profile"}</span>
+                  <span>{profileSaving ? "Saving..." : "Save Profile Settings"}</span>
                 </button>
               </div>
 
               {profileMessage && (
-                <div className="p-3 text-xs text-emerald-300 border rounded-xl bg-emerald-500/10 border-emerald-500/30 flex items-center gap-2">
-                  {renderIcon(FaCheckCircle, { size: 14 })}
-                  <span>{profileMessage}</span>
+                <div className="p-3.5 text-xs text-emerald-300 border rounded-2xl bg-emerald-500/10 border-emerald-500/30 flex items-center gap-2.5">
+                  {renderIcon(FaCheckCircle, { size: 15, className: "text-emerald-400 shrink-0" })}
+                  <span className="font-medium">{profileMessage}</span>
                 </div>
               )}
 
+              {uploadStatus && (
+                <div className="p-3.5 text-xs text-cyan-300 border rounded-2xl bg-cyan-500/10 border-cyan-500/30 flex items-center gap-2.5">
+                  {renderIcon(FaSpinner, { size: 14, className: "animate-spin shrink-0" })}
+                  <span className="font-medium">{uploadStatus}</span>
+                </div>
+              )}
+
+              {renderStorageRlsBanner()}
+
               <form onSubmit={handleSaveProfile} className="space-y-6 text-xs">
+                {/* Profile Photo & Avatar Upload Card */}
+                <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 space-y-5 shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/[0.06]">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        {renderIcon(FaCamera, { size: 14, className: "text-indigo-400" })}
+                        <span>Profile Photo &amp; Avatar Studio</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Upload or customize your official avatar image shown across the entire portfolio (Hero, About, Navigation, Footer).
+                      </p>
+                    </div>
+                    {/* Source Status Pill */}
+                    <span className="self-start sm:self-auto px-3 py-1 text-[10px] font-mono font-semibold rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                      <span>
+                        {profileForm.profile_image?.startsWith("data:")
+                          ? "Local Data URL"
+                          : profileForm.profile_image?.includes("supabase.co")
+                          ? "Supabase Cloud Stored"
+                          : profileForm.profile_image === PORTFOLIO_INFO.profileImage
+                          ? "Default Portfolio Photo"
+                          : "Custom Image URL"}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6 p-5 rounded-2xl bg-[#0c101d] border border-white/[0.06]">
+                    {/* Left: Avatar Display Card with Glowing Gradient Ring */}
+                    <div className="relative group shrink-0">
+                      <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl p-1 bg-gradient-to-tr from-indigo-500 via-indigo-600 to-cyan-400 shadow-xl shadow-indigo-500/15 relative overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                        <img
+                          src={toProxyImageUrl(profileForm.profile_image || PORTFOLIO_INFO.profileImage)}
+                          alt="Profile Avatar"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/images/img.jpg";
+                          }}
+                          className="w-full h-full object-cover rounded-xl bg-slate-900"
+                        />
+                        <label
+                          htmlFor="profile-photo-input"
+                          className="absolute inset-1 rounded-xl bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 text-white cursor-pointer transition-opacity duration-200 backdrop-blur-xs"
+                        >
+                          {renderIcon(FaCamera, { size: 20 })}
+                          <span className="text-[10px] font-semibold tracking-wide">Upload Photo</span>
+                        </label>
+                      </div>
+                      <span className="absolute -bottom-2 -right-2 px-2 py-0.5 text-[9px] font-bold rounded-md bg-indigo-600 text-white shadow-md border border-indigo-400/30">
+                        1:1 Square
+                      </span>
+                    </div>
+
+                    {/* Right: Upload controls & Direct URL */}
+                    <div className="flex-1 w-full space-y-3.5">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <label
+                          htmlFor="profile-photo-input"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 shadow-md shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+                        >
+                          {profileImageUploading ? (
+                            <>
+                              {renderIcon(FaSpinner, { className: "animate-spin", size: 12 })}
+                              <span>Uploading to Cloud...</span>
+                            </>
+                          ) : (
+                            <>
+                              {renderIcon(FaUpload, { size: 12 })}
+                              <span>Upload New Photo</span>
+                            </>
+                          )}
+                        </label>
+                        <input
+                          id="profile-photo-input"
+                          type="file"
+                          accept="image/*"
+                          disabled={profileImageUploading}
+                          onChange={(e) => handleFileUpload(e, "profile")}
+                          className="hidden"
+                        />
+
+                        {profileForm.profile_image !== PORTFOLIO_INFO.profileImage && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProfileForm((prev) => ({
+                                ...prev,
+                                profile_image: PORTFOLIO_INFO.profileImage,
+                              }));
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all cursor-pointer"
+                          >
+                            {renderIcon(FaUndo, { size: 11 })}
+                            <span>Reset to Default Photo</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Direct Image URL input */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-semibold text-slate-300">
+                          Or enter Direct Image URL:
+                        </label>
+                        <input
+                          type="text"
+                          value={profileForm.profile_image || ""}
+                          onChange={(e) =>
+                            setProfileForm({ ...profileForm, profile_image: e.target.value })
+                          }
+                          placeholder="https://images.unsplash.com/... or upload directly from file above"
+                          className="w-full px-3.5 py-2 text-xs text-white bg-[#090d16] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 font-mono transition-all"
+                        />
+                      </div>
+
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Supports PNG, JPG, JPEG, WEBP, or GIF. Uploads directly to Supabase Storage bucket (<code className="text-cyan-300 font-mono">portfolio-assets/profile/</code>) with instantaneous local fallback.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Introduction Video & "Watch Intro" Button Controls */}
+                <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 space-y-5 shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        {renderIcon(FaVideo, { size: 14, className: "text-cyan-400" })}
+                        <span>"Watch Intro" Video &amp; Visibility Controls</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Control whether the "Watch Intro" button appears in the About section, and provide your custom video link or ID.
+                      </p>
+                    </div>
+
+                    {/* Visibility Pill Badge */}
+                    <span
+                      className={`self-start sm:self-auto px-3 py-1 text-[10px] font-semibold rounded-full border flex items-center gap-1.5 transition-all ${
+                        profileForm.show_intro_video
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                          : "border-slate-600/30 bg-slate-800/40 text-slate-400"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          profileForm.show_intro_video
+                            ? "bg-emerald-400 animate-pulse"
+                            : "bg-slate-500"
+                        }`}
+                      />
+                      <span>
+                        {profileForm.show_intro_video
+                          ? "Visible on Website"
+                          : "Hidden from Website"}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-[#0c101d] border border-white/[0.06] space-y-5">
+                    {/* Toggle Control Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.08]">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          {renderIcon(profileForm.show_intro_video ? FaEye : FaEyeSlash, {
+                            size: 13,
+                            className: profileForm.show_intro_video ? "text-emerald-400" : "text-slate-400",
+                          })}
+                          <span className="text-xs font-bold text-white">
+                            Show "Watch Intro" Button on Website
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                          When turned <span className="text-emerald-400 font-semibold">ON</span>, visitors can click "Watch Intro" next to your resume in the About section. When turned <span className="text-rose-400 font-semibold">OFF</span>, it is completely hidden.
+                        </p>
+                      </div>
+
+                      {/* Interactive Toggle Switch */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setProfileForm((prev) => ({
+                            ...prev,
+                            show_intro_video: !prev.show_intro_video,
+                          }))
+                        }
+                        className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          profileForm.show_intro_video
+                            ? "bg-gradient-to-r from-indigo-600 to-cyan-500 shadow-md shadow-indigo-500/20"
+                            : "bg-slate-800"
+                        }`}
+                        aria-label="Toggle Watch Intro visibility"
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                            profileForm.show_intro_video ? "translate-x-7" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Video URL or ID Input */}
+                    <div className="space-y-2">
+                      <label className="block text-[11px] font-semibold text-slate-300">
+                        Introduction Video Link or ID:
+                      </label>
+                      <div className="flex flex-col sm:flex-row gap-2.5">
+                        <input
+                          type="text"
+                          value={profileForm.intro_video_url}
+                          onChange={(e) =>
+                            setProfileForm({
+                              ...profileForm,
+                              intro_video_url: e.target.value,
+                            })
+                          }
+                          placeholder="e.g. https://drive.google.com/file/d/1BzSWgFEBgruUq-3wkTWfEiip3Rzxr-Pm/view or YouTube URL"
+                          className="flex-1 px-3.5 py-2.5 text-xs text-white bg-[#090d16] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 font-mono transition-all"
+                        />
+
+                        {profileForm.intro_video_url && (
+                          <button
+                            type="button"
+                            onClick={() => setAdminVideoPreviewOpen(true)}
+                            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-white rounded-xl bg-indigo-600/80 hover:bg-indigo-500 border border-indigo-400/30 transition-all cursor-pointer shrink-0 active:scale-95"
+                          >
+                            {renderIcon(FaPlay, { size: 10 })}
+                            <span>Preview Video</span>
+                          </button>
+                        )}
+
+                        {profileForm.intro_video_url !== PORTFOLIO_INFO.introVideoUrl && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setProfileForm((prev) => ({
+                                ...prev,
+                                intro_video_url: PORTFOLIO_INFO.introVideoUrl || PORTFOLIO_INFO.introVideoId,
+                              }))
+                            }
+                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all cursor-pointer shrink-0"
+                            title="Reset to default intro video"
+                          >
+                            {renderIcon(FaUndo, { size: 10 })}
+                            <span>Reset Default</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Supports <span className="text-cyan-300">Google Drive share links</span>, <span className="text-cyan-300">YouTube URLs</span> (watch or shorts), <span className="text-cyan-300">Loom videos</span>, direct MP4 video URLs, or Google Drive File IDs.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Basic Personal Info */}
-                <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] space-y-4">
-                  <h3 className="text-sm font-bold text-white mb-2">Personal Identity</h3>
+                <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 space-y-4 shadow-xl">
+                  <div className="pb-3 border-b border-white/[0.06]">
+                    <h3 className="text-sm font-bold text-white">Personal Identity</h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Your official name, professional tagline, and narrative biography</p>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Full Legal Name</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Full Legal Name</label>
                       <input
                         type="text"
                         value={profileForm.name}
                         onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                        className="w-full px-3.5 py-2.5 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Display Short Name</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Display Short Name</label>
                       <input
                         type="text"
                         value={profileForm.short_name}
                         onChange={(e) => setProfileForm({ ...profileForm, short_name: e.target.value })}
-                        className="w-full px-3.5 py-2.5 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-slate-300 mb-1">Professional Title / Role</label>
+                    <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Professional Title / Role</label>
                     <input
                       type="text"
                       value={profileForm.title}
                       onChange={(e) => setProfileForm({ ...profileForm, title: e.target.value })}
-                      className="w-full px-3.5 py-2.5 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                      className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-slate-300 mb-1">About Me Story Narrative</label>
+                    <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">About Me Story Narrative</label>
                     <textarea
                       rows={5}
                       value={profileForm.bio}
                       onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                      className="w-full px-3.5 py-2.5 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                      className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 leading-relaxed"
                     />
                   </div>
                 </div>
 
                 {/* Metrics & Experience Counters */}
-                <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] space-y-4">
-                  <h3 className="text-sm font-bold text-white mb-2">Display Statistics</h3>
+                <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 space-y-4 shadow-xl">
+                  <div className="pb-3 border-b border-white/[0.06]">
+                    <h3 className="text-sm font-bold text-white">Display Statistics</h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Quantifiable counters rendered on the home page</p>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Years Experience</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Years Experience</label>
                       <input
                         type="text"
                         value={profileForm.years_experience}
                         onChange={(e) => setProfileForm({ ...profileForm, years_experience: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Projects Completed</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Projects Completed</label>
                       <input
                         type="text"
                         value={profileForm.projects_completed}
                         onChange={(e) => setProfileForm({ ...profileForm, projects_completed: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Satisfaction / Quality</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Satisfaction / Quality</label>
                       <input
                         type="text"
                         value={profileForm.satisfaction_rate}
                         onChange={(e) => setProfileForm({ ...profileForm, satisfaction_rate: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Contact Info & Socials */}
-                <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] space-y-4">
-                  <h3 className="text-sm font-bold text-white mb-2">Contact &amp; Social Links</h3>
+                <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 space-y-4 shadow-xl">
+                  <div className="pb-3 border-b border-white/[0.06]">
+                    <h3 className="text-sm font-bold text-white">Contact &amp; Social Links</h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Reach channels and external developer profiles</p>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Email</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Email</label>
                       <input
                         type="text"
                         value={profileForm.email}
                         onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Phone</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Phone</label>
                       <input
                         type="text"
                         value={profileForm.phone}
                         onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Location</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Location</label>
                       <input
                         type="text"
                         value={profileForm.location}
                         onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">GitHub Profile URL</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">GitHub Profile URL</label>
                       <input
                         type="text"
                         value={profileForm.github}
                         onChange={(e) => setProfileForm({ ...profileForm, github: e.target.value })}
-                        className="w-full px-3.5 py-2 text-xs text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">LinkedIn Profile URL</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">LinkedIn Profile URL</label>
                       <input
                         type="text"
                         value={profileForm.linkedin}
                         onChange={(e) => setProfileForm({ ...profileForm, linkedin: e.target.value })}
-                        className="w-full px-3.5 py-2 text-xs text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-300 mb-1">Twitter / X URL</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Twitter / X URL</label>
                       <input
                         type="text"
                         value={profileForm.twitter}
                         onChange={(e) => setProfileForm({ ...profileForm, twitter: e.target.value })}
-                        className="w-full px-3.5 py-2 text-xs text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400"
+                        className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-2">
                   <button
                     type="submit"
                     disabled={profileSaving}
-                    className="px-6 py-2.5 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 shadow-md transition-all"
+                    className="px-8 py-3 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 shadow-lg shadow-indigo-500/25 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                   >
                     {profileSaving ? "Saving..." : "Save All Profile Settings"}
                   </button>
                 </div>
               </form>
+
+              {/* Admin Intro Video Test Modal */}
+              <AnimatePresence>
+                {adminVideoPreviewOpen && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setAdminVideoPreviewOpen(false)}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="relative w-full max-w-3xl p-3 border shadow-2xl rounded-2xl bg-[#111726] border-white/15 backdrop-blur-xl space-y-3"
+                    >
+                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                        <div className="flex items-center gap-2">
+                          {renderIcon(FaPlay, { size: 12, className: "text-indigo-400" })}
+                          <h4 className="text-xs font-bold text-white">Introduction Video Test Preview</h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAdminVideoPreviewOpen(false)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                        >
+                          {renderIcon(FaTimes, { size: 14 })}
+                        </button>
+                      </div>
+
+                      <div className="relative overflow-hidden rounded-xl aspect-video bg-black">
+                        <iframe
+                          src={getVideoEmbedUrl(profileForm.intro_video_url)}
+                          title="Admin Preview Video"
+                          className="w-full h-full"
+                          allow="autoplay; encrypted-media; fullscreen"
+                          allowFullScreen
+                        />
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
@@ -2689,9 +3468,9 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
           {activeTab === "education" && (
             <div className="space-y-8">
               {/* Header Bar with Action Buttons */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/[0.08]">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                     Education &amp; Credentials Studio
                   </h2>
                   <p className="text-xs text-slate-400 mt-0.5">
@@ -2703,7 +3482,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   <button
                     type="button"
                     onClick={handleResetEducationDefaults}
-                    className="px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+                    className="px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all"
                     title="Restore default sample degrees and certifications"
                   >
                     Reset Defaults
@@ -2711,7 +3490,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   <button
                     type="button"
                     onClick={handleOpenAddDegree}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-xl bg-cyan-600/80 hover:bg-cyan-500 border border-cyan-400/40 shadow-md shadow-cyan-500/20 active:scale-95 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:opacity-95 shadow-md shadow-indigo-500/20 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     {renderIcon(FaPlus, { size: 10 })}
                     <span>+ Add Degree</span>
@@ -2719,7 +3498,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   <button
                     type="button"
                     onClick={handleOpenAddCert}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 border border-purple-400/40 shadow-md shadow-purple-500/20 active:scale-95 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 hover:opacity-95 shadow-md shadow-cyan-500/20 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     {renderIcon(FaPlus, { size: 10 })}
                     <span>+ Add Certificate</span>
@@ -2745,19 +3524,19 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
               {/* SECTION 1: DEGREE PROGRAMS */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
+                    <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                       {renderIcon(FaGraduationCap, { size: 18 })}
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-white tracking-wide">
+                      <h3 className="text-sm font-bold text-white tracking-wide">
                         Academic Degree Programs
                       </h3>
-                      <p className="text-[11px] text-slate-400">Formal engineering degrees and milestones</p>
+                      <p className="text-[11px] text-slate-400">Formal engineering degrees and academic milestones</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
+                  <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
                     {educationList.length} Degrees
                   </span>
                 </div>
@@ -2768,10 +3547,10 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     onSubmit={handleSaveDegree}
-                    className="p-5 sm:p-6 rounded-2xl border border-cyan-500/40 bg-slate-900/90 shadow-2xl space-y-4 text-xs"
+                    className="p-6 rounded-2xl border border-indigo-500/30 bg-[#111726]/90 shadow-2xl space-y-4 text-xs backdrop-blur-sm"
                   >
-                    <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                      <span className="font-bold text-sm text-cyan-300 font-mono uppercase tracking-wider">
+                    <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+                      <span className="font-bold text-xs text-indigo-300 font-mono uppercase tracking-wider">
                         {editingEduIndex !== null ? "Edit Academic Degree" : "Add New Academic Degree"}
                       </span>
                       <button
@@ -2780,15 +3559,15 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           setIsAddingEdu(false);
                           setEditingEduIndex(null);
                         }}
-                        className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
                       >
-                        {renderIcon(FaTimes, { size: 14 })}
+                        {renderIcon(FaTimes, { size: 13 })}
                       </button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
-                        <label className="block font-semibold text-slate-200 mb-1">
+                        <label className="block font-semibold text-slate-200 mb-1 text-xs">
                           Degree / Program Title <span className="text-rose-400">*</span>
                         </label>
                         <input
@@ -2797,12 +3576,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           value={eduForm.degree}
                           onChange={(e) => setEduForm({ ...eduForm, degree: e.target.value })}
                           placeholder="e.g. B.Sc. in Computer Science & Engineering"
-                          className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 font-medium"
+                          className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 font-medium placeholder:text-slate-500"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-semibold text-slate-200 mb-1">
+                        <label className="block font-semibold text-slate-200 mb-1 text-xs">
                           University / Institution <span className="text-rose-400">*</span>
                         </label>
                         <input
@@ -2811,13 +3590,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           value={eduForm.institution}
                           onChange={(e) => setEduForm({ ...eduForm, institution: e.target.value })}
                           placeholder="e.g. Bangladesh University of Business and Technology (BUBT)"
-                          className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 font-medium"
+                          className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 font-medium placeholder:text-slate-500"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block font-semibold text-slate-200 mb-1">
+                      <label className="block font-semibold text-slate-200 mb-1 text-xs">
                         Timeline / Period <span className="text-rose-400">*</span>
                       </label>
                       <input
@@ -2826,12 +3605,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         value={eduForm.period}
                         onChange={(e) => setEduForm({ ...eduForm, period: e.target.value })}
                         placeholder="e.g. 2022 - Present or 2019 - 2021"
-                        className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 font-medium"
+                        className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 font-medium placeholder:text-slate-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-semibold text-slate-200 mb-1">
+                      <label className="block font-semibold text-slate-200 mb-1 text-xs">
                         Program Description &amp; Academic Focus
                       </label>
                       <textarea
@@ -2839,12 +3618,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         value={eduForm.description}
                         onChange={(e) => setEduForm({ ...eduForm, description: e.target.value })}
                         placeholder="Core focus areas, analytical foundation, major coursework, or achievements..."
-                        className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 leading-relaxed"
+                        className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 leading-relaxed placeholder:text-slate-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-semibold text-slate-200 mb-1">
+                      <label className="block font-semibold text-slate-200 mb-1 text-xs">
                         Key Highlights &amp; Honors (One per line)
                       </label>
                       <textarea
@@ -2852,25 +3631,25 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         value={eduForm.highlights}
                         onChange={(e) => setEduForm({ ...eduForm, highlights: e.target.value })}
                         placeholder="Dean's List for Academic Performance&#10;BUBT IT Club Technical Contributor&#10;Winner of Regional Science Fair"
-                        className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 font-mono leading-relaxed"
+                        className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 font-mono leading-relaxed placeholder:text-slate-500"
                       />
                     </div>
 
-                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/[0.08]">
                       <button
                         type="button"
                         onClick={() => {
                           setIsAddingEdu(false);
                           setEditingEduIndex(null);
                         }}
-                        className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+                        className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={eduSaving}
-                        className="inline-flex items-center gap-2 px-6 py-2 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-95 shadow-lg shadow-cyan-500/25 active:scale-95 transition-all cursor-pointer"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
                       >
                         {eduSaving ? renderIcon(FaSpinner, { className: "animate-spin", size: 12 }) : renderIcon(FaSave, { size: 12 })}
                         <span>{eduSaving ? "Saving..." : "Save Degree"}</span>
@@ -2889,26 +3668,26 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     educationList.map((edu, idx) => (
                       <div
                         key={idx}
-                        className="p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-3 shadow-lg hover:border-cyan-500/30 transition-all group"
+                        className="p-5 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-3 shadow-lg hover:border-indigo-500/30 transition-all group"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                           <div>
                             <div className="flex items-center gap-2">
-                              <h4 className="text-base font-bold text-white group-hover:text-cyan-300 transition-colors">
+                              <h4 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
                                 {edu.degree}
                               </h4>
-                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-white/5 border border-white/10 text-cyan-300">
+                              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
                                 {edu.period}
                               </span>
                             </div>
-                            <p className="text-xs font-medium text-purple-300 mt-0.5">{edu.institution}</p>
+                            <p className="text-xs font-medium text-cyan-300 mt-0.5">{edu.institution}</p>
                           </div>
 
                           <div className="flex items-center gap-2 self-end sm:self-auto">
                             <button
                               type="button"
                               onClick={() => handleOpenEditDegree(idx)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-white/5 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-white/10 hover:border-cyan-400/40 transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-white/[0.04] hover:bg-indigo-500/20 text-slate-300 hover:text-indigo-200 border border-white/[0.08] hover:border-indigo-500/40 transition-all cursor-pointer"
                             >
                               {renderIcon(FaEdit, { size: 11 })}
                               <span>Edit</span>
@@ -2916,7 +3695,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             <button
                               type="button"
                               onClick={() => handleDeleteDegree(idx)}
-                              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/30 transition-all cursor-pointer"
+                              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 bg-white/[0.04] hover:bg-rose-500/15 border border-white/[0.08] hover:border-rose-500/30 transition-all cursor-pointer"
                               title="Delete Degree"
                             >
                               {renderIcon(FaTrash, { size: 11 })}
@@ -2932,13 +3711,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
                         {/* Highlights pills */}
                         {Array.isArray(edu.highlights) && edu.highlights.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/10">
+                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/[0.06]">
                             {edu.highlights.map((hl: string, hIdx: number) => (
                               <span
                                 key={hIdx}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] bg-white/5 border border-white/10 text-slate-300"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] bg-white/[0.03] border border-white/[0.06] text-slate-300"
                               >
-                                <span className="text-cyan-400">✓</span>
+                                <span className="text-indigo-400">✓</span>
                                 <span>{hl}</span>
                               </span>
                             ))}
@@ -2951,20 +3730,20 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
               </div>
 
               {/* SECTION 2: CERTIFICATIONS & CREDENTIALS */}
-              <div className="space-y-4 pt-6 border-t border-white/10">
-                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div className="space-y-4 pt-6 border-t border-white/[0.08]">
+                <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
+                    <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                       {renderIcon(FaCertificate, { size: 18 })}
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-white tracking-wide">
+                      <h3 className="text-sm font-bold text-white tracking-wide">
                         Certifications &amp; Verified Credentials
                       </h3>
-                      <p className="text-[11px] text-slate-400">Technical certifications, conference papers &amp; awards</p>
+                      <p className="text-[11px] text-slate-400">Technical certifications, conference papers &amp; verified awards</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/10 border border-purple-500/30 text-purple-300">
+                  <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
                     {certsList.length} Certifications
                   </span>
                 </div>
@@ -2975,10 +3754,10 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     onSubmit={handleSaveCert}
-                    className="p-5 sm:p-6 rounded-2xl border border-purple-500/40 bg-slate-900/90 shadow-2xl space-y-4 text-xs"
+                    className="p-6 rounded-2xl border border-cyan-500/30 bg-[#111726]/90 shadow-2xl space-y-4 text-xs backdrop-blur-sm"
                   >
-                    <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                      <span className="font-bold text-sm text-purple-300 font-mono uppercase tracking-wider">
+                    <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+                      <span className="font-bold text-xs text-cyan-300 font-mono uppercase tracking-wider">
                         {editingCertIndex !== null ? "Edit Certification Details" : "Add New Certification"}
                       </span>
                       <button
@@ -2987,15 +3766,15 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           setIsAddingCert(false);
                           setEditingCertIndex(null);
                         }}
-                        className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
                       >
-                        {renderIcon(FaTimes, { size: 14 })}
+                        {renderIcon(FaTimes, { size: 13 })}
                       </button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
-                        <label className="block font-semibold text-slate-200 mb-1">
+                        <label className="block font-semibold text-slate-200 mb-1 text-xs">
                           Certificate / Award Title <span className="text-rose-400">*</span>
                         </label>
                         <input
@@ -3004,12 +3783,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           value={certForm.title}
                           onChange={(e) => setCertForm({ ...certForm, title: e.target.value })}
                           placeholder="e.g. Full Stack Development with MERN"
-                          className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-purple-400 font-medium"
+                          className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-semibold text-slate-200 mb-1">
+                        <label className="block font-semibold text-slate-200 mb-1 text-xs">
                           Issuing Organization <span className="text-rose-400">*</span>
                         </label>
                         <input
@@ -3018,20 +3797,20 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           value={certForm.issuer}
                           onChange={(e) => setCertForm({ ...certForm, issuer: e.target.value })}
                           placeholder="e.g. HackerRank, IEEE, Grameenphone Academy"
-                          className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-purple-400 font-medium"
+                          className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
-                        <label className="block font-semibold text-slate-200 mb-1">
+                        <label className="block font-semibold text-slate-200 mb-1 text-xs">
                           Credential Type
                         </label>
                         <select
                           value={certForm.type}
                           onChange={(e) => setCertForm({ ...certForm, type: e.target.value })}
-                          className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-purple-400 font-medium"
+                          className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-cyan-500/60 font-medium"
                         >
                           <option value="Professional">Professional Certification</option>
                           <option value="Achievement">Achievement &amp; Award</option>
@@ -3041,7 +3820,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       </div>
 
                       <div>
-                        <label className="block font-semibold text-slate-200 mb-1">
+                        <label className="block font-semibold text-slate-200 mb-1 text-xs">
                           Year Issued
                         </label>
                         <input
@@ -3049,14 +3828,14 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           value={certForm.year}
                           onChange={(e) => setCertForm({ ...certForm, year: e.target.value })}
                           placeholder="e.g. 2026"
-                          className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-purple-400 font-medium"
+                          className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-cyan-500/60 font-medium placeholder:text-slate-500"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
-                        <label className="block font-semibold text-slate-200 mb-1">
+                        <label className="block font-semibold text-slate-200 mb-1 text-xs">
                           Verification / Credential URL
                         </label>
                         <input
@@ -3064,12 +3843,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           value={certForm.link}
                           onChange={(e) => setCertForm({ ...certForm, link: e.target.value })}
                           placeholder="https://www.hackerrank.com/certificates/..."
-                          className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-purple-400 font-medium"
+                          className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-cyan-500/60 font-medium placeholder:text-slate-500"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-semibold text-slate-200 mb-1">
+                        <label className="block font-semibold text-slate-200 mb-1 text-xs">
                           Verification ID / License Number
                         </label>
                         <input
@@ -3077,13 +3856,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           value={certForm.verificationId}
                           onChange={(e) => setCertForm({ ...certForm, verificationId: e.target.value })}
                           placeholder="e.g. 42cafa841d01"
-                          className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-purple-400 font-medium"
+                          className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-cyan-500/60 font-medium placeholder:text-slate-500"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block font-semibold text-slate-200 mb-1">
+                      <label className="block font-semibold text-slate-200 mb-1 text-xs">
                         Details &amp; Competencies Covered
                       </label>
                       <textarea
@@ -3091,25 +3870,25 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         value={certForm.details}
                         onChange={(e) => setCertForm({ ...certForm, details: e.target.value })}
                         placeholder="Key skills assessed, algorithms, full-stack architecture, or contribution details..."
-                        className="w-full px-3.5 py-2.5 text-xs text-white bg-slate-950/70 border border-white/15 rounded-xl focus:outline-none focus:border-purple-400 leading-relaxed"
+                        className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-cyan-500/60 leading-relaxed placeholder:text-slate-500"
                       />
                     </div>
 
-                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/[0.08]">
                       <button
                         type="button"
                         onClick={() => {
                           setIsAddingCert(false);
                           setEditingCertIndex(null);
                         }}
-                        className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+                        className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={eduSaving}
-                        className="inline-flex items-center gap-2 px-6 py-2 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-purple-500/25 active:scale-95 transition-all cursor-pointer"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-indigo-500 hover:opacity-95 shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
                       >
                         {eduSaving ? renderIcon(FaSpinner, { className: "animate-spin", size: 12 }) : renderIcon(FaSave, { size: 12 })}
                         <span>{eduSaving ? "Saving..." : "Save Certificate"}</span>
@@ -3128,20 +3907,20 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     certsList.map((cert, idx) => (
                       <div
                         key={idx}
-                        className="p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-2.5 shadow-lg hover:border-purple-500/30 transition-all flex flex-col justify-between group"
+                        className="p-5 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-2.5 shadow-lg hover:border-cyan-500/30 transition-all flex flex-col justify-between group"
                       >
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
                               {cert.type}
                             </span>
                             <span className="text-xs text-slate-400 font-mono font-semibold">{cert.year}</span>
                           </div>
 
-                          <h4 className="text-sm font-bold text-white group-hover:text-purple-300 transition-colors">
+                          <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
                             {cert.title}
                           </h4>
-                          <p className="text-xs text-cyan-300 font-medium">{cert.issuer}</p>
+                          <p className="text-xs text-indigo-300 font-medium">{cert.issuer}</p>
 
                           {cert.details && (
                             <p className="text-xs text-slate-400 leading-relaxed font-light line-clamp-2">
@@ -3156,7 +3935,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                        <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
                           {cert.link ? (
                             <a
                               href={cert.link}
@@ -3175,7 +3954,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             <button
                               type="button"
                               onClick={() => handleOpenEditCert(idx)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-white/5 hover:bg-purple-500/20 text-slate-300 hover:text-purple-300 border border-white/10 hover:border-purple-400/40 transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-white/[0.04] hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 border border-white/[0.08] hover:border-cyan-500/40 transition-all cursor-pointer"
                             >
                               {renderIcon(FaEdit, { size: 10 })}
                               <span>Edit</span>
@@ -3183,7 +3962,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             <button
                               type="button"
                               onClick={() => handleDeleteCert(idx)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/30 transition-all cursor-pointer"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 bg-white/[0.04] hover:bg-rose-500/15 border border-white/[0.08] hover:border-rose-500/30 transition-all cursor-pointer"
                               title="Delete Certificate"
                             >
                               {renderIcon(FaTrash, { size: 10 })}
@@ -3203,39 +3982,45 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
           {/* ============================================================== */}
           {activeTab === "resume" && (
             <div className="space-y-6">
-              <div className="pb-4 border-b border-white/10">
-                <h2 className="text-xl font-bold text-white">Resume &amp; Asset Cloud Storage</h2>
+              <div className="pb-4 border-b border-white/[0.08]">
+                <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Resume &amp; Asset Cloud Storage</h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Direct upload and management of your resume PDF and portfolio media
+                  Direct management of your primary curriculum vitae PDF and CDN portfolio media assets
                 </p>
               </div>
 
               {uploadStatus && (
-                <div className="p-3 text-xs text-cyan-300 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
-                  {uploadStatus}
+                <div className="p-3.5 text-xs text-cyan-300 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center gap-2.5">
+                  {renderIcon(FaSpinner, { className: "animate-spin shrink-0", size: 13 })}
+                  <span className="font-medium">{uploadStatus}</span>
                 </div>
               )}
 
               {renderStorageRlsBanner()}
 
               {/* Current Resume Info Card */}
-              <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] space-y-4">
+              <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-5 shadow-xl">
                 <div className="flex items-center gap-4">
-                  <div className="p-3.5 rounded-2xl bg-pink-500/20 text-pink-400">
+                  <div className="p-3.5 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                     {renderIcon(FaFilePdf, { size: 28 })}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Currently Active Resume</h3>
-                    <p className="text-xs text-slate-400 font-mono break-all mt-0.5">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-white">Currently Active Resume Document</h3>
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        LIVE ON PORTFOLIO
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 font-mono break-all mt-1 bg-[#0c101d] px-3 py-1.5 rounded-lg border border-white/[0.06]">
                       {profileForm.resume_url || "/PDF/Maharab_Hosen.pdf"}
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-300">
-                      Live Resume / CV File URL:
+                    <label className="text-xs font-semibold text-slate-200">
+                      Live Resume / CV Hosted URL:
                     </label>
                     {resumeSavedToast && (
                       <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
@@ -3244,13 +4029,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <input
                       type="text"
                       value={profileForm.resume_url}
                       onChange={(e) => setProfileForm({ ...profileForm, resume_url: e.target.value })}
                       placeholder="https://..."
-                      className="flex-1 px-3.5 py-2.5 text-xs text-white bg-slate-950/80 border border-white/15 rounded-xl focus:outline-none focus:border-cyan-400 font-mono transition-all"
+                      className="flex-1 px-4 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 font-mono transition-all placeholder:text-slate-500"
                     />
                     <button
                       type="button"
@@ -3262,19 +4047,19 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         setResumeSavedToast(true);
                         setTimeout(() => setResumeSavedToast(false), 3000);
                       }}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-xs font-bold text-white transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 text-xs font-bold text-white transition-all shadow-md shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0"
                     >
                       {resumeManualSaving ? "Saving..." : "Save & Activate"}
                     </button>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-white/10">
+                <div className="flex flex-wrap items-center gap-2.5 pt-3 border-t border-white/[0.06]">
                   <a
                     href={profileForm.resume_url || "/PDF/Maharab_Hosen.pdf"}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white transition-colors cursor-pointer"
                   >
                     {renderIcon(FaExternalLinkAlt, { size: 10 })}
                     <span>Preview Live Resume</span>
@@ -3287,7 +4072,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       setResumeCopied(true);
                       setTimeout(() => setResumeCopied(false), 2500);
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border border-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white transition-colors cursor-pointer"
                   >
                     {renderIcon(resumeCopied ? FaCheck : FaCopy, { size: 10 })}
                     <span>{resumeCopied ? "Copied!" : "Copy URL"}</span>
@@ -3296,17 +4081,17 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
               </div>
 
               {/* Direct In-Page File Upload Card */}
-              <div className="p-6 rounded-2xl border border-dashed border-white/20 bg-white/[0.01] space-y-3 text-center">
-                <div className="p-3 w-fit mx-auto rounded-xl bg-purple-500/10 text-purple-400">
+              <div className="p-8 rounded-2xl border border-dashed border-white/[0.15] bg-[#111726]/40 hover:bg-[#111726]/60 transition-all space-y-3 text-center">
+                <div className="p-3.5 w-fit mx-auto rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                   {renderIcon(FaFilePdf, { size: 24 })}
                 </div>
-                <h3 className="text-sm font-bold text-white">Upload Updated Resume PDF</h3>
+                <h3 className="text-sm font-bold text-white">Upload New Resume PDF</h3>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto font-light">
-                  Select a new PDF from your computer. It will automatically upload to Supabase Storage and become your live active resume.
+                  Select a new PDF from your computer. It will automatically upload to Supabase Storage and instantly become your live active resume.
                 </p>
 
                 <div className="pt-2">
-                  <label className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 text-xs font-semibold text-white shadow-lg cursor-pointer hover:opacity-90 active:scale-95 transition-all">
+                  <label className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 text-xs font-semibold text-white shadow-lg shadow-indigo-500/20 cursor-pointer hover:opacity-95 active:scale-[0.98] transition-all">
                     <span>Choose PDF File</span>
                     <input
                       type="file"
@@ -3325,51 +4110,51 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
           {/* ============================================================== */}
           {activeTab === "messages" && (
             <div className="space-y-6">
-              <div className="pb-4 border-b border-white/10 flex items-center justify-between">
+              <div className="pb-4 border-b border-white/[0.08] flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white">Contact Inquiries</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Contact Inquiries</h2>
                   <p className="text-xs text-slate-400 mt-0.5">
                     Messages submitted directly by recruiters and clients via your Contact form
                   </p>
                 </div>
                 <button
                   onClick={fetchMessages}
-                  className="px-3 py-1.5 text-xs rounded-xl border border-white/10 hover:bg-white/5 text-slate-300 transition-colors"
+                  className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white transition-all cursor-pointer"
                 >
                   Refresh Inbox
                 </button>
               </div>
 
               {messagesList.length === 0 ? (
-                <div className="p-12 text-center rounded-2xl border border-white/10 bg-white/[0.02] text-slate-400 text-xs">
-                  No incoming messages found. Form submissions will automatically appear here.
+                <div className="p-12 text-center rounded-2xl border border-white/[0.08] bg-[#111726]/50 text-slate-400 text-xs">
+                  No incoming messages found. Form submissions from visitors will automatically appear here.
                 </div>
               ) : (
                 /* Split Inbox Layout: Messages List on Left, Selected Message Reader on Right */
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                   
                   {/* Messages List (5 cols) */}
-                  <div className="lg:col-span-5 space-y-2 max-h-[600px] overflow-y-auto pr-1">
+                  <div className="lg:col-span-5 space-y-2.5 max-h-[620px] overflow-y-auto pr-1">
                     {messagesList.map((msg) => {
                       const isSelected = selectedMessage?.id === msg.id;
                       return (
                         <div
                           key={msg.id}
                           onClick={() => setSelectedMessage(msg)}
-                          className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                          className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                             isSelected
-                              ? "border-cyan-500/50 bg-cyan-500/10 text-white shadow-md"
-                              : "border-white/5 bg-white/[0.02] text-slate-300 hover:border-white/15"
+                              ? "border-indigo-500/60 bg-indigo-500/10 text-white shadow-md ring-1 ring-indigo-500/30"
+                              : "border-white/[0.06] bg-[#111726]/75 hover:bg-[#111726] text-slate-300 hover:border-white/[0.12]"
                           }`}
                         >
                           <div className="flex items-center justify-between text-xs font-bold">
-                            <span className="truncate">{msg.name}</span>
+                            <span className="truncate text-white">{msg.name}</span>
                             <span className="text-[10px] text-slate-500 font-mono">
                               {new Date(msg.created_at).toLocaleDateString()}
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-400 truncate mt-0.5">{msg.email}</p>
-                          <p className="text-xs text-slate-300 truncate mt-1 font-medium">
+                          <p className="text-[11px] text-cyan-300 truncate mt-0.5 font-medium">{msg.email}</p>
+                          <p className="text-xs text-slate-300 truncate mt-1.5 font-medium">
                             {msg.subject || "(No Subject)"}
                           </p>
                         </div>
@@ -3378,15 +4163,15 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   </div>
 
                   {/* Selected Message Viewer (7 cols) */}
-                  <div className="lg:col-span-7 p-6 rounded-2xl border border-white/10 bg-white/[0.02] space-y-4">
+                  <div className="lg:col-span-7 p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/85 backdrop-blur-sm space-y-5 shadow-xl">
                     {selectedMessage ? (
                       <div className="space-y-4 text-xs">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
                           <div>
                             <h3 className="text-base font-bold text-white">{selectedMessage.name}</h3>
                             <a
                               href={`mailto:${selectedMessage.email}`}
-                              className="text-cyan-400 hover:underline text-xs"
+                              className="text-cyan-400 hover:text-cyan-300 hover:underline text-xs font-medium"
                             >
                               {selectedMessage.email}
                             </a>
@@ -3395,14 +4180,15 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           <div className="flex items-center gap-2">
                             <a
                               href={`mailto:${selectedMessage.email}?subject=Re: ${encodeURIComponent(selectedMessage.subject || "Your Portfolio Inquiry")}`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-semibold transition-colors"
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold transition-colors"
                             >
                               {renderIcon(FaReply, { size: 10 })}
                               <span>Reply Email</span>
                             </a>
                             <button
                               onClick={() => handleDeleteMessage(selectedMessage.id)}
-                              className="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors"
+                              className="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-rose-500/10 transition-colors"
+                              title="Delete Message"
                             >
                               {renderIcon(FaTrash, { size: 12 })}
                             </button>
@@ -3410,15 +4196,15 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         </div>
 
                         <div>
-                          <span className="text-slate-500 text-[10px] uppercase font-mono">Subject</span>
+                          <span className="text-slate-500 text-[10px] uppercase font-mono tracking-wider">Subject</span>
                           <p className="text-sm font-bold text-white mt-0.5">
                             {selectedMessage.subject || "General Inquiry"}
                           </p>
                         </div>
 
                         <div>
-                          <span className="text-slate-500 text-[10px] uppercase font-mono">Message Content</span>
-                          <div className="mt-1 p-4 rounded-xl bg-black/40 border border-white/5 text-slate-200 text-xs leading-relaxed whitespace-pre-wrap">
+                          <span className="text-slate-500 text-[10px] uppercase font-mono tracking-wider">Message Content</span>
+                          <div className="mt-1.5 p-4 rounded-xl bg-[#0c101d] border border-white/[0.08] text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans">
                             {selectedMessage.message}
                           </div>
                         </div>
@@ -3429,7 +4215,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       </div>
                     ) : (
                       <div className="p-8 text-center text-slate-500 text-xs">
-                        Select a message from the list to read it.
+                        Select a message from the list to view full transmission details.
                       </div>
                     )}
                   </div>
@@ -3444,31 +4230,31 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
           {/* ============================================================== */}
           {activeTab === "setup" && (
             <div className="space-y-6">
-              <div className="pb-4 border-b border-white/10">
-                <h2 className="text-xl font-bold text-white">Supabase Setup &amp; Live SQL Schema</h2>
+              <div className="pb-4 border-b border-white/[0.08]">
+                <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Supabase Setup &amp; Live SQL Schema</h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Verify your connection and run table schemas in 1 click
+                  Verify your database connection and deploy schema configurations in 1 click
                 </p>
               </div>
 
               {/* Status Indicator */}
-              <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] flex items-center justify-between">
+              <div className="p-5 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm flex items-center justify-between shadow-xl">
                 <div className="flex items-center gap-3">
-                  <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                   <div>
-                    <h4 className="text-sm font-bold text-white">Connection Active</h4>
-                    <p className="text-xs text-slate-400 font-mono">
+                    <h4 className="text-sm font-bold text-white">Database Connection Active</h4>
+                    <p className="text-xs text-slate-400 font-mono mt-0.5">
                       https://zcmeryxyifkxbxkmgvfe.supabase.co
                     </p>
                   </div>
                 </div>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  Ready
+                  Ready &amp; Synced
                 </span>
               </div>
 
               {/* Quick Fix for RLS Write Permissions */}
-              <div className="p-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-4">
+              <div className="p-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-4 shadow-xl">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
                     {renderIcon(FaShieldAlt, { size: 15 })}
@@ -3490,7 +4276,7 @@ CREATE POLICY "Allow public all on portfolio-assets" ON storage.objects FOR ALL 
                       setDatabaseFixCopied(true);
                       setTimeout(() => setDatabaseFixCopied(false), 2500);
                     }}
-                    className="px-4 py-2 text-xs font-semibold rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center gap-2 transition-all shadow-md shadow-amber-500/20 active:scale-95 cursor-pointer"
+                    className="px-4 py-2 text-xs font-semibold rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 flex items-center gap-2 transition-all shadow-md active:scale-[0.98] cursor-pointer"
                   >
                     {renderIcon(databaseFixCopied ? FaCheck : FaCopy, { size: 12 })}
                     <span>{databaseFixCopied ? "Copied to Clipboard!" : "Copy Full RLS Fix SQL"}</span>
@@ -3499,7 +4285,7 @@ CREATE POLICY "Allow public all on portfolio-assets" ON storage.objects FOR ALL 
                 <p className="text-xs text-slate-300 leading-relaxed font-light">
                   If editing says <code className="text-amber-300 bg-black/40 px-1 py-0.5 rounded font-mono">RLS error</code> or file uploading says <code className="text-amber-300 bg-black/40 px-1 py-0.5 rounded font-mono">new row violates row-level security policy</code>, simply copy and run this script in your <strong className="text-cyan-300">Supabase SQL Editor</strong>:
                 </p>
-                <pre className="p-3.5 rounded-xl bg-black/70 border border-white/10 text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed">
+                <pre className="p-4 rounded-xl bg-[#0c101d] border border-white/[0.08] text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed">
 {`-- 1. Disable RLS on all tables
 ALTER TABLE public.projects DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profile_info DISABLE ROW LEVEL SECURITY;
@@ -3514,20 +4300,20 @@ CREATE POLICY "Allow public all on portfolio-assets" ON storage.objects FOR ALL 
               </div>
 
               {/* Step by Step SQL Instructions */}
-              <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] space-y-4 text-xs leading-relaxed text-slate-300">
+              <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-4 text-xs leading-relaxed text-slate-300 shadow-xl">
                 <h3 className="text-sm font-bold text-white">How to initialize your tables in Supabase:</h3>
                 <ol className="list-decimal pl-5 space-y-2 text-slate-400">
                   <li>
-                    Open your project root file: <code className="text-cyan-400">supabase_schema.sql</code>.
+                    Open your project root file: <code className="text-cyan-400 font-mono">supabase_schema.sql</code>.
                   </li>
                   <li>
-                    Go to your <a href="https://supabase.com" target="_blank" rel="noreferrer" className="text-purple-400 underline">Supabase Dashboard</a> ➔ <strong>SQL Editor</strong>.
+                    Go to your <a href="https://supabase.com" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">Supabase Dashboard</a> ➔ <strong>SQL Editor</strong>.
                   </li>
                   <li>
-                    Paste all the code from <code className="text-cyan-400">supabase_schema.sql</code> and click <strong>Run</strong>.
+                    Paste all the code from <code className="text-cyan-400 font-mono">supabase_schema.sql</code> and click <strong>Run</strong>.
                   </li>
                   <li>
-                    In Supabase Dashboard, go to <strong>Storage ➔ New Bucket</strong>, name it: <code className="text-pink-400 font-bold">portfolio-assets</code>, and toggle <strong>Public Bucket: ON</strong>.
+                    In Supabase Dashboard, go to <strong>Storage ➔ New Bucket</strong>, name it: <code className="text-cyan-400 font-mono font-bold">portfolio-assets</code>, and toggle <strong>Public Bucket: ON</strong>.
                   </li>
                 </ol>
               </div>

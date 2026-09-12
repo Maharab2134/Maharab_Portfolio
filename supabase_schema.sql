@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS public.profile_info (
   location TEXT,
   resume_url TEXT,
   profile_image TEXT,
+  show_intro_video BOOLEAN DEFAULT true,
+  intro_video_url TEXT,
   available_for_hire BOOLEAN DEFAULT true,
   years_experience TEXT DEFAULT '2+',
   projects_completed TEXT DEFAULT '50+',
@@ -43,6 +45,10 @@ CREATE TABLE IF NOT EXISTS public.profile_info (
   twitter_url TEXT,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- In case profile_info already exists, safe column additions:
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS show_intro_video BOOLEAN DEFAULT true;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS intro_video_url TEXT;
 
 -- 3. Create Contact Messages Table (stores form submissions)
 CREATE TABLE IF NOT EXISTS public.contact_messages (

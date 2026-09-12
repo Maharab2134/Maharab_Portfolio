@@ -60,6 +60,46 @@ export const mapSupabaseToProject = (raw: any): ExtendedProject => {
   };
 };
 
+// Smart Video Embed URL parser (Google Drive, YouTube, Loom, direct video links)
+export const getVideoEmbedUrl = (raw?: string | null): string => {
+  if (!raw || typeof raw !== "string") return "";
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+
+  // YouTube watch or embed or short link
+  const ytMatch = trimmed.match(
+    /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/
+  );
+  if (ytMatch?.[1]) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1`;
+  }
+
+  // Google Drive file link: drive.google.com/file/d/{id}/...
+  const driveMatch = trimmed.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if (driveMatch?.[1]) {
+    return `https://drive.google.com/file/d/${driveMatch[1]}/preview?autoplay=1`;
+  }
+
+  // Google Drive uc link: drive.google.com/uc?id={id}
+  const driveUcMatch = trimmed.match(/drive\.google\.com\/uc\?[^\s]*id=([^&]+)/);
+  if (driveUcMatch?.[1]) {
+    return `https://drive.google.com/file/d/${driveUcMatch[1]}/preview?autoplay=1`;
+  }
+
+  // Loom share link: loom.com/share/{id}
+  const loomMatch = trimmed.match(/loom\.com\/share\/([^?]+)/);
+  if (loomMatch?.[1]) {
+    return `https://www.loom.com/embed/${loomMatch[1]}?autoplay=1`;
+  }
+
+  // If raw is just a Google Drive alphanumeric ID (length >= 20)
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(trimmed)) {
+    return `https://drive.google.com/file/d/${trimmed}/preview?autoplay=1`;
+  }
+
+  return trimmed;
+};
+
 // Fetch live projects (Supabase + LocalStorage Smart Merge)
 export const getLiveProjects = async (): Promise<ExtendedProject[]> => {
   let cachedList: ExtendedProject[] = [];
@@ -368,6 +408,35 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
           location: row.location || PORTFOLIO_INFO.location,
           resumeUrl: row.resume_url || PORTFOLIO_INFO.resumeUrl,
           profileImage: row.profile_image || row.profileImage || PORTFOLIO_INFO.profileImage,
+          profile_image: row.profile_image || row.profileImage || PORTFOLIO_INFO.profileImage,
+          showIntroVideo:
+            row.show_intro_video !== undefined
+              ? Boolean(row.show_intro_video)
+              : row.showIntroVideo !== undefined
+              ? Boolean(row.showIntroVideo)
+              : PORTFOLIO_INFO.showIntroVideo,
+          show_intro_video:
+            row.show_intro_video !== undefined
+              ? Boolean(row.show_intro_video)
+              : row.showIntroVideo !== undefined
+              ? Boolean(row.showIntroVideo)
+              : PORTFOLIO_INFO.showIntroVideo,
+          introVideoUrl:
+            row.intro_video_url ||
+            row.introVideoUrl ||
+            row.intro_video_id ||
+            row.introVideoId ||
+            PORTFOLIO_INFO.introVideoUrl,
+          intro_video_url:
+            row.intro_video_url ||
+            row.introVideoUrl ||
+            row.intro_video_id ||
+            row.introVideoId ||
+            PORTFOLIO_INFO.introVideoUrl,
+          introVideoId:
+            row.intro_video_id ||
+            row.introVideoId ||
+            PORTFOLIO_INFO.introVideoId,
           stats: {
             ...PORTFOLIO_INFO.stats,
             yearsExperience: row.years_experience || PORTFOLIO_INFO.stats.yearsExperience,
@@ -396,12 +465,28 @@ export const saveLiveProfile = async (
 ): Promise<{ success: boolean; error?: string }> => {
   const resumeUrl = profileData.resume_url || profileData.resumeUrl;
   const profileImage = profileData.profile_image || profileData.profileImage;
+  const showIntroVideo =
+    profileData.show_intro_video !== undefined
+      ? Boolean(profileData.show_intro_video)
+      : profileData.showIntroVideo !== undefined
+      ? Boolean(profileData.showIntroVideo)
+      : true;
+  const introVideoUrl =
+    profileData.intro_video_url !== undefined
+      ? profileData.intro_video_url
+      : profileData.introVideoUrl !== undefined
+      ? profileData.introVideoUrl
+      : profileData.introVideoId || PORTFOLIO_INFO.introVideoUrl;
 
   // Normalize and cache
   const toCache = {
     ...profileData,
     ...(resumeUrl ? { resume_url: resumeUrl, resumeUrl } : {}),
     ...(profileImage ? { profile_image: profileImage, profileImage } : {}),
+    show_intro_video: showIntroVideo,
+    showIntroVideo: showIntroVideo,
+    intro_video_url: introVideoUrl,
+    introVideoUrl: introVideoUrl,
   };
 
   try {
@@ -429,6 +514,8 @@ export const saveLiveProfile = async (
         location: profileData.location,
         resume_url: resumeUrl,
         profile_image: profileImage,
+        show_intro_video: showIntroVideo,
+        intro_video_url: introVideoUrl,
         available_for_hire: profileData.available_for_hire,
         years_experience: profileData.years_experience,
         projects_completed: profileData.projects_completed,
@@ -447,9 +534,22 @@ export const saveLiveProfile = async (
 
       const { data: existing } = await supabase.from("profile_info").select("id").limit(1);
       if (existing && existing.length > 0) {
-        await supabase.from("profile_info").update(dbProfile).eq("id", existing[0].id);
+        const { error: updErr } = await supabase.from("profile_info").update(dbProfile).eq("id", existing[0].id);
+        if (updErr) {
+          // If custom column not yet migrated in Supabase, retry with core fields
+          const safeDb = { ...dbProfile };
+          delete safeDb.show_intro_video;
+          delete safeDb.intro_video_url;
+          await supabase.from("profile_info").update(safeDb).eq("id", existing[0].id);
+        }
       } else {
-        await supabase.from("profile_info").insert([dbProfile]);
+        const { error: insErr } = await supabase.from("profile_info").insert([dbProfile]);
+        if (insErr) {
+          const safeDb = { ...dbProfile };
+          delete safeDb.show_intro_video;
+          delete safeDb.intro_video_url;
+          await supabase.from("profile_info").insert([safeDb]);
+        }
       }
     } catch (err: any) {
       return { success: true, error: err.message };
@@ -491,6 +591,29 @@ export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
             location: parsed.location || PORTFOLIO_INFO.location,
             resumeUrl: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
             profileImage: parsed.profile_image || parsed.profileImage || PORTFOLIO_INFO.profileImage,
+            profile_image: parsed.profile_image || parsed.profileImage || PORTFOLIO_INFO.profileImage,
+            showIntroVideo:
+              parsed.show_intro_video !== undefined
+                ? Boolean(parsed.show_intro_video)
+                : parsed.showIntroVideo !== undefined
+                ? Boolean(parsed.showIntroVideo)
+                : PORTFOLIO_INFO.showIntroVideo,
+            show_intro_video:
+              parsed.show_intro_video !== undefined
+                ? Boolean(parsed.show_intro_video)
+                : parsed.showIntroVideo !== undefined
+                ? Boolean(parsed.showIntroVideo)
+                : PORTFOLIO_INFO.showIntroVideo,
+            introVideoUrl:
+              parsed.intro_video_url ||
+              parsed.introVideoUrl ||
+              parsed.introVideoId ||
+              PORTFOLIO_INFO.introVideoUrl,
+            intro_video_url:
+              parsed.intro_video_url ||
+              parsed.introVideoUrl ||
+              parsed.introVideoId ||
+              PORTFOLIO_INFO.introVideoUrl,
             stats: {
               ...PORTFOLIO_INFO.stats,
               yearsExperience: parsed.years_experience || parsed.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,

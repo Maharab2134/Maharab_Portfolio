@@ -41,6 +41,8 @@ export const PORTFOLIO_INFO = {
   resumeUrl:
     "https://zcmeryxyifkxbxkmgvfe.supabase.co/storage/v1/object/public/portfolio-assets/resumes/1789151663633_9bxyr9.pdf",
   introVideoId: "1BzSWgFEBgruUq-3wkTWfEiip3Rzxr-Pm",
+  showIntroVideo: true,
+  introVideoUrl: "https://drive.google.com/file/d/1BzSWgFEBgruUq-3wkTWfEiip3Rzxr-Pm/preview",
   profileImage: "/images/img.jpg",
   stats: {
     yearsExperience: "2+",
