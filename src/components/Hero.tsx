@@ -217,15 +217,17 @@ const Hero: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Subtitle Bio */}
-            <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="max-w-xl text-base sm:text-lg leading-relaxed text-slate-300/90 font-light"
-            >
-              {profile.tagline || profile.bio || "Software Engineering student at BUBT. I bridge architectural discipline with human-centered product design to build scalable digital systems."}
-            </motion.p>
+            {/* Subtitle Bio / Tagline (100% Dynamic from Admin Panel) */}
+            {(profile.tagline || profile.bio) && (
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="max-w-xl text-base sm:text-lg leading-relaxed text-slate-300/90 font-light"
+              >
+                {profile.tagline || profile.bio}
+              </motion.p>
+            )}
 
             {/* Stats Metric Strip */}
             <motion.div

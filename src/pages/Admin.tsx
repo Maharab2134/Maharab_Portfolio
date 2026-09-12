@@ -320,6 +320,7 @@ const Admin: React.FC = () => {
     name: PORTFOLIO_INFO.name,
     short_name: PORTFOLIO_INFO.shortName,
     title: PORTFOLIO_INFO.title,
+    tagline: (PORTFOLIO_INFO as any).tagline || "",
     bio: PORTFOLIO_INFO.bio,
     phone: PORTFOLIO_INFO.phone,
     email: PORTFOLIO_INFO.email,
@@ -444,6 +445,7 @@ const Admin: React.FC = () => {
         name: liveProfile.name || PORTFOLIO_INFO.name,
         short_name: liveProfile.shortName || PORTFOLIO_INFO.shortName,
         title: liveProfile.title || PORTFOLIO_INFO.title,
+        tagline: (liveProfile as any).tagline || (PORTFOLIO_INFO as any).tagline || "",
         bio: liveProfile.bio || PORTFOLIO_INFO.bio,
         phone: liveProfile.phone || PORTFOLIO_INFO.phone,
         email: liveProfile.email || PORTFOLIO_INFO.email,
@@ -3284,6 +3286,27 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       onChange={(e) => setProfileForm({ ...profileForm, title: e.target.value })}
                       className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                     />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
+                        Hero Subtitle Tagline (Hero Section Under Name)
+                      </label>
+                      <span className="text-[10px] text-indigo-400/90 font-medium px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+                        Live Dynamic Hero Subtitle
+                      </span>
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={profileForm.tagline}
+                      onChange={(e) => setProfileForm({ ...profileForm, tagline: e.target.value })}
+                      placeholder="e.g. Software Engineering student at BUBT. I bridge architectural discipline with human-centered product design to build scalable digital systems."
+                      className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 leading-relaxed placeholder:text-slate-600 transition-all"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Controls the introductory statement beneath your name in the Hero section without any static fallback text.
+                    </p>
                   </div>
 
                   <div>

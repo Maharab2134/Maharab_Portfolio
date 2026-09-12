@@ -540,6 +540,7 @@ export const saveLiveProfile = async (
           const safeDb = { ...dbProfile };
           delete safeDb.show_intro_video;
           delete safeDb.intro_video_url;
+          delete safeDb.tagline;
           await supabase.from("profile_info").update(safeDb).eq("id", existing[0].id);
         }
       } else {
@@ -548,6 +549,7 @@ export const saveLiveProfile = async (
           const safeDb = { ...dbProfile };
           delete safeDb.show_intro_video;
           delete safeDb.intro_video_url;
+          delete safeDb.tagline;
           await supabase.from("profile_info").insert([safeDb]);
         }
       }

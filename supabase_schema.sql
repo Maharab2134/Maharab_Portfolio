@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS public.profile_info (
 );
 
 -- In case profile_info already exists, safe column additions:
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS tagline TEXT;
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS show_intro_video BOOLEAN DEFAULT true;
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS intro_video_url TEXT;
 

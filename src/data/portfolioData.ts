@@ -30,7 +30,7 @@ export const PORTFOLIO_INFO = {
   shortName: "Md. Maharab",
   initials: "MH",
   title: "Full Stack Software Engineer & Mobile Developer",
-  tagline: "I build robust, high-performance web applications and mobile experiences.",
+  tagline: "Software Engineering student at BUBT. I bridge architectural discipline with human-centered product design to build scalable digital systems.",
   bio: "Passionate Software Engineering student at Bangladesh University of Business and Technology (BUBT). I bridge technical rigor with modern user experience, engineering scalable systems across React, Next.js, Node.js, Flutter, and cloud ecosystems.",
   email: "maharab442@gmail.com",
   phone: "+880 15862 82609",
