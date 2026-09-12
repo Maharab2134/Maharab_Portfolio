@@ -30,6 +30,7 @@ const Hero: React.FC = () => {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeTab, setActiveTab] = useState<"spec" | "capabilities">("spec");
+  const [showAllTech, setShowAllTech] = useState(false);
 
   // Dynamic Animated Typewriter Configuration from Admin
   const typewriterPrefix =
@@ -343,14 +344,37 @@ const Hero: React.FC = () => {
 
               {/* Core Tech Stack Mini Chips */}
               <div className="flex flex-wrap items-center gap-1.5">
-                {techBadges.slice(0, 5).map((tech) => (
-                  <span
+                {(showAllTech ? techBadges : techBadges.slice(0, 3)).map((tech) => (
+                  <motion.span
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.2 }}
                     key={tech}
-                    className="px-2.5 py-1 text-[11px] font-mono rounded-md bg-white/[0.03] border border-white/10 text-slate-400"
+                    className="px-2.5 py-1 text-[11px] font-mono rounded-md bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 text-slate-400 hover:text-slate-200 transition-colors"
                   >
                     {tech}
-                  </span>
+                  </motion.span>
                 ))}
+
+                <button
+                  type="button"
+                  onClick={() => setShowAllTech((prev) => !prev)}
+                  title={showAllTech ? "Show fewer technologies" : `Show all ${techBadges.length} technologies`}
+                  className={`px-2 py-1 text-[11px] font-mono rounded-md border transition-all cursor-pointer flex items-center gap-1 active:scale-95 ${
+                    showAllTech
+                      ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20"
+                      : "bg-white/[0.04] border-white/10 text-slate-400 hover:text-white hover:border-white/25 hover:bg-white/[0.08]"
+                  }`}
+                >
+                  <span>...</span>
+                  {!showAllTech && (
+                    <span className="text-[10px] text-slate-500 font-sans">
+                      +{techBadges.length - 3}
+                    </span>
+                  )}
+                </button>
               </div>
             </motion.div>
           </div>
