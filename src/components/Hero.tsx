@@ -14,9 +14,9 @@ import {
   FaArrowDown,
   FaRocket,
   FaTerminal,
-  FaCheckCircle,
   FaShieldAlt,
 } from "react-icons/fa";
+import { SiReact, SiFlutter, SiNodedotjs } from "react-icons/si";
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { TypeAnimation } from "react-type-animation";
 import { useLiveProfile } from "../lib/portfolioService";
@@ -29,7 +29,6 @@ const Hero: React.FC = () => {
   const profile = useLiveProfile();
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [activeTab, setActiveTab] = useState<"spec" | "capabilities">("spec");
   const [showAllTech, setShowAllTech] = useState(false);
 
   // Dynamic Animated Typewriter Configuration from Admin
@@ -383,7 +382,7 @@ const Hero: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* RIGHT COLUMN: Unique Holographic Developer HUD / Interactive Terminal (5 cols) */}
+          {/* RIGHT COLUMN: Holographic Developer HUD / Visual Showcase (5 cols) */}
           <motion.div
             style={{ rotateX, rotateY, transformPerspective: 1000 }}
             className="relative lg:col-span-5"
@@ -391,167 +390,147 @@ const Hero: React.FC = () => {
             {/* Ambient Background Aura */}
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-purple-600/20 via-pink-600/10 to-cyan-500/20 blur-2xl -z-10" />
 
-            {/* Floating Orbit Badge 1: Clean Architecture */}
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-5 -right-4 z-20 flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white rounded-xl bg-slate-900/90 border border-purple-500/40 backdrop-blur-xl shadow-xl shadow-purple-500/10"
-            >
-              <span className="w-2 h-2 rounded-full bg-purple-400" />
-              <span>Clean Architecture</span>
-            </motion.div>
-
-            {/* Floating Orbit Badge 2: Flutter & Android */}
-            <motion.div
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-              className="absolute -bottom-5 -left-4 z-20 flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white rounded-xl bg-slate-900/90 border border-cyan-500/40 backdrop-blur-xl shadow-xl shadow-cyan-500/10"
-            >
-              <span className="w-2 h-2 rounded-full bg-cyan-400" />
-              <span>Flutter 3 &amp; Android</span>
-            </motion.div>
-
             {/* Main Cyber Terminal Glass Frame */}
             <div className="overflow-hidden border shadow-2xl rounded-3xl bg-slate-950/85 border-white/15 backdrop-blur-2xl">
               
               {/* Terminal Title Bar */}
               <div className="flex items-center justify-between px-4 py-3 border-b bg-white/[0.02] border-white/10">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-rose-500/80 inline-block" />
-                  <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
-                  <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
                   <span className="ml-2 font-mono text-xs text-slate-400 flex items-center gap-1.5">
                     {renderIcon(FaTerminal, { size: 10, className: "text-slate-500" })}
-                    maharab@engine: ~
+                    maharab.dev
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 font-mono text-[10px] text-emerald-400">
+                <div className="flex items-center gap-1.5 font-mono text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>14ms ping</span>
+                  <span>Available for Hire</span>
                 </div>
               </div>
 
               {/* Developer Portrait & Identity Banner */}
-              <div className="p-5 border-b border-white/5 bg-gradient-to-r from-purple-950/20 via-slate-900/40 to-cyan-950/20 flex items-center gap-4">
-                <div className="relative flex-shrink-0">
-                  <img
-                    src={profile.profileImage}
-                    alt={profile.name}
-                    className="w-16 h-16 rounded-2xl object-cover object-top border border-white/20 shadow-md shadow-black/40"
-                  />
+              <div className="p-4 sm:p-5 border-b border-white/5 bg-gradient-to-r from-purple-950/25 via-slate-900/40 to-cyan-950/25 flex items-center gap-3.5 sm:gap-4">
+                <div className="relative shrink-0">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden p-0.5 bg-gradient-to-tr from-purple-500 via-pink-500 to-cyan-400 shadow-lg shadow-purple-500/20">
+                    <div className="w-full h-full rounded-[14px] overflow-hidden bg-slate-900 relative flex items-center justify-center">
+                      <img
+                        src={profile.profileImage || "/images/img.jpg"}
+                        alt={profile.name}
+                        className="w-full h-full object-cover object-top"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center font-bold text-white text-base bg-gradient-to-tr from-purple-600 to-cyan-500 -z-10">
+                        MH
+                      </span>
+                    </div>
+                  </div>
                   <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-950" />
                 </div>
 
-                <div className="space-y-1">
+                <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-white">
+                    <h3 className="text-base sm:text-lg font-bold text-white truncate">
                       {profile.name}
                     </h3>
-                    <span className="px-2 py-0.5 text-[10px] font-semibold text-cyan-300 rounded-full bg-cyan-500/10 border border-cyan-500/20">
+                    <span className="shrink-0 px-2 py-0.5 text-[10px] font-semibold text-cyan-300 rounded-full bg-cyan-500/10 border border-cyan-500/20">
                       CSE BUBT
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-300 truncate">
                     {profile.title}
                   </p>
-                  <p className="font-mono text-[11px] text-purple-300 flex items-center gap-1">
-                    {renderIcon(FaShieldAlt, { size: 10 })}
-                    <span>OWASP Top 10 Hardened Architecture</span>
+                  <p className="text-[11px] text-slate-400 flex items-center gap-1.5 truncate">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                    <span className="truncate">Mirpur, Dhaka, Bangladesh</span>
                   </p>
                 </div>
               </div>
 
-              {/* Terminal Interactive Tabs */}
-              <div className="flex border-b border-white/5 bg-black/30 text-xs font-mono">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("spec")}
-                  className={`flex-1 py-2.5 px-4 text-center transition-colors border-r border-white/5 ${
-                    activeTab === "spec"
-                      ? "text-cyan-300 bg-white/[0.04] border-b-2 border-cyan-400 font-semibold"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  system_spec.json
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("capabilities")}
-                  className={`flex-1 py-2.5 px-4 text-center transition-colors ${
-                    activeTab === "capabilities"
-                      ? "text-purple-300 bg-white/[0.04] border-b-2 border-purple-400 font-semibold"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  live_metrics.sh
-                </button>
-              </div>
+              {/* Visual Core Specialties Grid (2x2) - Visual, not text heavy */}
+              <div className="p-4 sm:p-5 space-y-3">
+                <div className="flex items-center justify-between text-[11px] uppercase tracking-wider font-mono text-slate-400">
+                  <span>Core Expertise</span>
+                  <span className="text-cyan-400">Production Ready</span>
+                </div>
 
-              {/* Terminal Code / Capabilities View */}
-              <div className="p-5 font-mono text-xs leading-relaxed overflow-x-auto min-h-[190px]">
-                {activeTab === "spec" ? (
-                  <div className="space-y-1.5 text-slate-300">
-                    <p className="text-slate-500">{"// Engine runtime parameters"}</p>
-                    <p>
-                      <span className="text-pink-400">const</span>{" "}
-                      <span className="text-cyan-300">engineer</span> = &#123;
-                    </p>
-                    <p className="pl-4">
-                      <span className="text-purple-300">name</span>:{" "}
-                      <span className="text-emerald-300">"{profile.name}"</span>,
-                    </p>
-                    <p className="pl-4">
-                      <span className="text-purple-300">institution</span>:{" "}
-                      <span className="text-emerald-300">"BUBT (CSE)"</span>,
-                    </p>
-                    <p className="pl-4">
-                      <span className="text-purple-300">primaryStack</span>: [
-                      <span className="text-amber-300">"Next.js"</span>,{" "}
-                      <span className="text-amber-300">"Flutter"</span>,{" "}
-                      <span className="text-amber-300">"Node.js"</span>],
-                    </p>
-                    <p className="pl-4">
-                      <span className="text-purple-300">database</span>: [
-                      <span className="text-amber-300">"PostgreSQL"</span>,{" "}
-                      <span className="text-amber-300">"MongoDB"</span>],
-                    </p>
-                    <p className="pl-4">
-                      <span className="text-purple-300">status</span>:{" "}
-                      <span className="text-cyan-300">"Ready to Deploy &amp; Scale 🚀"</span>
-                    </p>
-                    <p>&#125;;</p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {/* Full-Stack Web */}
+                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:border-cyan-500/40 hover:bg-white/[0.06] transition-all group">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform shrink-0">
+                        {renderIcon(SiReact, { size: 14 })}
+                      </div>
+                      <span className="text-xs font-semibold text-white truncate">Web Apps</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 truncate">React • Next.js</p>
                   </div>
-                ) : (
-                  <div className="space-y-2 text-slate-300">
-                    <p className="text-slate-500">{"// Diagnostic capabilities"}</p>
-                    <div className="flex items-center gap-2 text-emerald-400">
-                      {renderIcon(FaCheckCircle, { size: 12 })}
-                      <span>Zero OWASP Top 10 Vulnerabilities</span>
+
+                  {/* Mobile Engineering */}
+                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:border-sky-500/40 hover:bg-white/[0.06] transition-all group">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:scale-110 transition-transform shrink-0">
+                        {renderIcon(SiFlutter, { size: 14 })}
+                      </div>
+                      <span className="text-xs font-semibold text-white truncate">Mobile Apps</span>
                     </div>
-                    <div className="flex items-center gap-2 text-cyan-300">
-                      {renderIcon(FaCheckCircle, { size: 12 })}
-                      <span>Sub-100ms API Latencies (Redis / Node)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-purple-300">
-                      {renderIcon(FaCheckCircle, { size: 12 })}
-                      <span>60fps Smooth Mobile Renders (Flutter)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-pink-300">
-                      {renderIcon(FaCheckCircle, { size: 12 })}
-                      <span>Full CI/CD &amp; Automated Testing</span>
-                    </div>
+                    <p className="text-[11px] text-slate-400 truncate">Flutter • Android</p>
                   </div>
-                )}
+
+                  {/* Backend & DB */}
+                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:border-purple-500/40 hover:bg-white/[0.06] transition-all group">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform shrink-0">
+                        {renderIcon(SiNodedotjs, { size: 14 })}
+                      </div>
+                      <span className="text-xs font-semibold text-white truncate">Backend &amp; DB</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 truncate">Node.js • Postgres</p>
+                  </div>
+
+                  {/* Clean Architecture */}
+                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:border-pink-500/40 hover:bg-white/[0.06] transition-all group">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-7 h-7 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform shrink-0">
+                        {renderIcon(FaShieldAlt, { size: 12 })}
+                      </div>
+                      <span className="text-xs font-semibold text-white truncate">Architecture</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 truncate">OWASP • Clean Code</p>
+                  </div>
+                </div>
+
+                {/* Quick Performance Strip */}
+                <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
+                  <div className="py-2 px-1 rounded-lg bg-white/[0.02] border border-white/5">
+                    <p className="text-xs font-bold text-cyan-400">50+</p>
+                    <p className="text-[10px] text-slate-400">Projects</p>
+                  </div>
+                  <div className="py-2 px-1 rounded-lg bg-white/[0.02] border border-white/5">
+                    <p className="text-xs font-bold text-emerald-400">&lt;50ms</p>
+                    <p className="text-[10px] text-slate-400">Fast APIs</p>
+                  </div>
+                  <div className="py-2 px-1 rounded-lg bg-white/[0.02] border border-white/5">
+                    <p className="text-xs font-bold text-purple-400">100%</p>
+                    <p className="text-[10px] text-slate-400">Commitment</p>
+                  </div>
+                </div>
               </div>
 
               {/* Terminal Bottom Command Line */}
               <div className="px-4 py-2.5 border-t border-white/5 bg-black/40 flex items-center justify-between font-mono text-[11px] text-slate-400">
                 <div className="flex items-center gap-2">
-                  <span className="text-emerald-400">&gt;</span>
-                  <span>readyForInterview: true</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-slate-300">Ready to Deploy &amp; Scale</span>
                 </div>
-                <span className="text-purple-400 font-semibold">100% Verified</span>
+                <span className="text-cyan-400 font-semibold flex items-center gap-1">
+                  {renderIcon(HiOutlineSparkles, { size: 12 })}
+                  <span>Verified Dev</span>
+                </span>
               </div>
             </div>
           </motion.div>
