@@ -26,6 +26,8 @@ const Contact: React.FC = () => {
   });
 
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedPhone, setCopiedPhone] = useState(false);
+  const [copiedWhatsapp, setCopiedWhatsapp] = useState(false);
   const [submittedStatus, setSubmittedStatus] = useState<string | null>(null);
 
   const email = profile.email || PORTFOLIO_INFO.email;
@@ -47,6 +49,18 @@ const Contact: React.FC = () => {
     navigator.clipboard.writeText(email);
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2500);
+  };
+
+  const handleCopyPhone = () => {
+    navigator.clipboard.writeText(phone);
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2500);
+  };
+
+  const handleCopyWhatsapp = () => {
+    navigator.clipboard.writeText(phone);
+    setCopiedWhatsapp(true);
+    setTimeout(() => setCopiedWhatsapp(false), 2500);
   };
 
   const handleSubmitWhatsApp = (e: React.FormEvent) => {
@@ -169,6 +183,14 @@ const Contact: React.FC = () => {
                       {phone}
                     </a>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyWhatsapp}
+                    title="Copy WhatsApp Number"
+                    className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    {copiedWhatsapp ? renderIcon(FaCheck, { size: 14, className: "text-emerald-400" }) : renderIcon(FaCopy, { size: 14 })}
+                  </button>
                 </div>
 
                 {/* Phone Item */}
@@ -187,6 +209,14 @@ const Contact: React.FC = () => {
                       {phone}
                     </a>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyPhone}
+                    title="Copy Phone Number"
+                    className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    {copiedPhone ? renderIcon(FaCheck, { size: 14, className: "text-emerald-400" }) : renderIcon(FaCopy, { size: 14 })}
+                  </button>
                 </div>
 
                 {/* Location Item */}
