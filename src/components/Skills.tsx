@@ -1,100 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaReact,
-  FaNodeJs,
-  FaGitAlt,
-  FaMobileAlt,
-  FaPython,
-  FaJava,
-  FaAndroid,
-  FaFigma,
-  FaHtml5,
-  FaCss3Alt,
-  FaDocker,
-  FaLinux,
   FaCode,
-  FaServer,
-  FaDatabase,
-  FaBrain,
-  FaMicrochip,
   FaArrowRight,
   FaChevronDown,
   FaChevronUp,
 } from "react-icons/fa";
 import {
-  SiMongodb,
-  SiExpress,
-  SiPostman,
-  SiTensorflow,
-  SiFlutter,
-  SiKotlin,
-  SiMysql,
-  SiFirebase,
-  SiArduino,
-  SiCplusplus,
-  SiJavascript,
-  SiPostgresql,
-  SiTailwindcss,
-  SiNextdotjs,
-  SiTypescript,
-} from "react-icons/si";
-
-interface SkillItem {
-  name: string;
-  category: "frontend" | "backend" | "mobile" | "languages" | "tools" | "aiml";
-  level: "Core Production" | "Advanced" | "Proficient";
-  icon: any;
-  color: string;
-}
+  useLiveSkills,
+  useLiveSkillCategories,
+  resolveSkillIcon,
+  resolveCategoryIcon,
+} from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
-  return <Icon {...props} />;
+  const Comp: any = Icon || FaCode;
+  return <Comp {...props} />;
 };
 
-const SKILLS_LIST: SkillItem[] = [
-  // Frontend & Full Stack
-  { name: "React.js", category: "frontend", level: "Core Production", icon: FaReact, color: "#61DAFB" },
-  { name: "Next.js", category: "frontend", level: "Core Production", icon: SiNextdotjs, color: "#ffffff" },
-  { name: "TypeScript", category: "frontend", level: "Core Production", icon: SiTypescript, color: "#3178C6" },
-  { name: "Tailwind CSS", category: "frontend", level: "Core Production", icon: SiTailwindcss, color: "#06B6D4" },
-  { name: "HTML5 / Semantic Web", category: "frontend", level: "Advanced", icon: FaHtml5, color: "#E34F26" },
-  { name: "Modern CSS3", category: "frontend", level: "Advanced", icon: FaCss3Alt, color: "#1572B6" },
-
-  // Mobile
-  { name: "Flutter", category: "mobile", level: "Core Production", icon: SiFlutter, color: "#02569B" },
-  { name: "Android Native", category: "mobile", level: "Advanced", icon: FaAndroid, color: "#3DDC84" },
-  { name: "Kotlin", category: "mobile", level: "Advanced", icon: SiKotlin, color: "#7F52FF" },
-  { name: "Java (Android)", category: "mobile", level: "Advanced", icon: FaJava, color: "#ED8B00" },
-
-  // Backend & Database
-  { name: "Node.js", category: "backend", level: "Core Production", icon: FaNodeJs, color: "#339933" },
-  { name: "Express.js", category: "backend", level: "Core Production", icon: SiExpress, color: "#ffffff" },
-  { name: "MongoDB & Mongoose", category: "backend", level: "Core Production", icon: SiMongodb, color: "#47A248" },
-  { name: "PostgreSQL", category: "backend", level: "Advanced", icon: SiPostgresql, color: "#336791" },
-  { name: "MySQL", category: "backend", level: "Advanced", icon: SiMysql, color: "#4479A1" },
-  { name: "Firebase (Auth/DB)", category: "backend", level: "Advanced", icon: SiFirebase, color: "#FFCA28" },
-
-  // Languages
-  { name: "JavaScript (ES6+)", category: "languages", level: "Core Production", icon: SiJavascript, color: "#F7DF1E" },
-  { name: "Python", category: "languages", level: "Advanced", icon: FaPython, color: "#3776AB" },
-  { name: "C++", category: "languages", level: "Advanced", icon: SiCplusplus, color: "#00599C" },
-  { name: "Java", category: "languages", level: "Advanced", icon: FaJava, color: "#ED8B00" },
-
-  // Tools & DevOps
-  { name: "Git & GitHub", category: "tools", level: "Core Production", icon: FaGitAlt, color: "#F05032" },
-  { name: "Postman", category: "tools", level: "Core Production", icon: SiPostman, color: "#FF6C37" },
-  { name: "Linux Environments", category: "tools", level: "Advanced", icon: FaLinux, color: "#FCC624" },
-  { name: "Docker Basics", category: "tools", level: "Proficient", icon: FaDocker, color: "#2496ED" },
-  { name: "UI/UX & Figma", category: "tools", level: "Proficient", icon: FaFigma, color: "#F24E1E" },
-
-  // AI & IoT
-  { name: "TensorFlow & Keras", category: "aiml", level: "Advanced", icon: SiTensorflow, color: "#FF6F00" },
-  { name: "ESP32 & IoT Embedded", category: "aiml", level: "Advanced", icon: FaMicrochip, color: "#38BDF8" },
-  { name: "Arduino Hardware", category: "aiml", level: "Advanced", icon: SiArduino, color: "#00979D" },
-];
-
 const Skills: React.FC = () => {
+  const liveSkills = useLiveSkills();
+  const liveCategories = useLiveSkillCategories();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [showAllSkills, setShowAllSkills] = useState<boolean>(false);
   const [columns, setColumns] = useState<number>(5);
@@ -120,15 +46,14 @@ const Skills: React.FC = () => {
 
   const filterTabs = [
     { id: "all", label: "All Technologies", icon: FaCode },
-    { id: "frontend", label: "Frontend & Full Stack", icon: FaReact },
-    { id: "mobile", label: "Mobile Apps", icon: FaMobileAlt },
-    { id: "backend", label: "Backend & Database", icon: FaServer },
-    { id: "languages", label: "Programming Languages", icon: FaCode },
-    { id: "aiml", label: "AI/ML & IoT", icon: FaBrain },
-    { id: "tools", label: "Tools & DevOps", icon: FaDatabase },
+    ...liveCategories.map((c) => ({
+      id: c.id,
+      label: c.label,
+      icon: resolveCategoryIcon(c.id, c.iconName),
+    })),
   ];
 
-  const filteredSkills = SKILLS_LIST.filter((skill) => {
+  const filteredSkills = liveSkills.filter((skill) => {
     if (activeCategory === "all") return true;
     return skill.category === activeCategory;
   });
@@ -198,47 +123,62 @@ const Skills: React.FC = () => {
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4"
         >
           <AnimatePresence>
-            {visibleSkills.map((skill, index) => (
-              <motion.div
-                key={skill.name}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.25, delay: index * 0.02 }}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                className="flex flex-col items-center justify-center p-4 text-center border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl hover:border-purple-500/40 hover:bg-white/[0.06] transition-colors group shadow-md shadow-black/10"
-              >
-                {/* Icon Container */}
-                <div
-                  className="flex items-center justify-center w-12 h-12 mb-3 rounded-xl transition-transform duration-300 group-hover:scale-110"
-                  style={{ backgroundColor: `${skill.color}15` }}
-                >
-                  {renderIcon(skill.icon, {
-                    size: 26,
-                    style: { color: skill.color },
-                  })}
-                </div>
+            {visibleSkills.map((skill, index) => {
+              const skillIcon = resolveSkillIcon(skill.name, skill.iconName, skill.category);
+              const lvlLower = (skill.level || "").toLowerCase();
+              const isExpert =
+                skill.level === "Core Production" ||
+                lvlLower.includes("core") ||
+                lvlLower.includes("expert") ||
+                lvlLower.includes("beshi");
+              const isAdvanced =
+                skill.level === "Advanced" ||
+                lvlLower.includes("adv") ||
+                lvlLower.includes("valo") ||
+                lvlLower.includes("high");
 
-                {/* Skill Name */}
-                <h3 className="text-sm font-semibold text-white group-hover:text-purple-300 transition-colors">
-                  {skill.name}
-                </h3>
-
-                {/* Level Tag */}
-                <span
-                  className={`inline-block mt-2 px-2.5 py-0.5 text-[10px] font-semibold rounded-full border ${
-                    skill.level === "Core Production"
-                      ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
-                      : skill.level === "Advanced"
-                      ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-300"
-                      : "bg-slate-500/10 border-slate-500/30 text-slate-300"
-                  }`}
+              return (
+                <motion.div
+                  key={skill.id || skill.name}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.25, delay: index * 0.02 }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  className="flex flex-col items-center justify-center p-4 text-center border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl hover:border-purple-500/40 hover:bg-white/[0.06] transition-colors group shadow-md shadow-black/10"
                 >
-                  {skill.level}
-                </span>
-              </motion.div>
-            ))}
+                  {/* Icon Container */}
+                  <div
+                    className="flex items-center justify-center w-12 h-12 mb-3 rounded-xl transition-transform duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: `${skill.color || "#a855f7"}18` }}
+                  >
+                    {renderIcon(skillIcon, {
+                      size: 26,
+                      style: { color: skill.color || "#a855f7" },
+                    })}
+                  </div>
+
+                  {/* Skill Name */}
+                  <h3 className="text-sm font-semibold text-white group-hover:text-purple-300 transition-colors">
+                    {skill.name}
+                  </h3>
+
+                  {/* Level Tag */}
+                  <span
+                    className={`inline-block mt-2 px-2.5 py-0.5 text-[10px] font-semibold rounded-full border ${
+                      isExpert
+                        ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                        : isAdvanced
+                        ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-300"
+                        : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                    }`}
+                  >
+                    {skill.level}
+                  </span>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </motion.div>
 

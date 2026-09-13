@@ -91,6 +91,29 @@ CREATE TABLE IF NOT EXISTS public.certificates (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 6. Create Skill Categories Table
+CREATE TABLE IF NOT EXISTS public.skill_categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  category_id TEXT UNIQUE NOT NULL,
+  label TEXT NOT NULL,
+  icon_name TEXT,
+  order_index INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 7. Create Skills Table
+CREATE TABLE IF NOT EXISTS public.skills (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  skill_id TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  level TEXT NOT NULL DEFAULT 'Core Production',
+  color TEXT NOT NULL DEFAULT '#a855f7',
+  icon_name TEXT,
+  order_index INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- ==============================================================================
 -- Row Level Security (RLS) Configuration
 -- Run this in Supabase SQL Editor to allow your Admin Console to Edit & Save
@@ -102,6 +125,8 @@ ALTER TABLE public.profile_info DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_messages DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.education DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.certificates DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.skill_categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.skills DISABLE ROW LEVEL SECURITY;
 
 -- Option 2: If you prefer keeping RLS enabled, grant full access to public (both anon & authenticated):
 -- DROP POLICY IF EXISTS "Allow admin full access on projects" ON public.projects;

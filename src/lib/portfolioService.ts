@@ -7,7 +7,85 @@ import {
   CERTIFICATES_DATA,
   EducationItem,
   CertificateItem,
+  DEFAULT_SKILL_CATEGORIES,
+  DEFAULT_SKILLS_DATA,
+  SkillCategory,
+  SkillItemData,
 } from "../data/portfolioData";
+import {
+  FaReact,
+  FaNodeJs,
+  FaGitAlt,
+  FaMobileAlt,
+  FaPython,
+  FaJava,
+  FaAndroid,
+  FaFigma,
+  FaHtml5,
+  FaCss3Alt,
+  FaDocker,
+  FaLinux,
+  FaCode,
+  FaServer,
+  FaDatabase,
+  FaBrain,
+  FaMicrochip,
+  FaTerminal,
+  FaCloud,
+  FaShieldAlt,
+  FaTools,
+  FaLayerGroup,
+  FaNetworkWired,
+  FaLaptopCode,
+  FaCogs,
+  FaCube,
+  FaFire,
+  FaGlobe,
+  FaAws,
+} from "react-icons/fa";
+import {
+  SiMongodb,
+  SiExpress,
+  SiPostman,
+  SiTensorflow,
+  SiFlutter,
+  SiKotlin,
+  SiMysql,
+  SiFirebase,
+  SiArduino,
+  SiCplusplus,
+  SiJavascript,
+  SiPostgresql,
+  SiTailwindcss,
+  SiNextdotjs,
+  SiTypescript,
+  SiVuedotjs,
+  SiAngular,
+  SiSvelte,
+  SiGraphql,
+  SiRedux,
+  SiRedis,
+  SiNginx,
+  SiKubernetes,
+  SiGooglecloud,
+  SiVercel,
+  SiSupabase,
+  SiDjango,
+  SiFastapi,
+  SiFlask,
+  SiSpringboot,
+  SiPytorch,
+  SiPandas,
+  SiNumpy,
+  SiScikitlearn,
+  SiOpencv,
+  SiRust,
+  SiGo,
+  SiPhp,
+  SiRubyonrails,
+  SiSwift,
+  SiDart,
+} from "react-icons/si";
 
 export interface ExtendedProject extends Project {
   db_id?: string;
@@ -890,3 +968,424 @@ export const saveLiveCertificates = async (
 
   return { success: true };
 };
+
+// ============================================================================
+// Skills & Categories Icon Registry & Resolvers
+// ============================================================================
+export const ICON_REGISTRY: Record<string, any> = {
+  FaReact,
+  FaNodeJs,
+  FaGitAlt,
+  FaMobileAlt,
+  FaPython,
+  FaJava,
+  FaAndroid,
+  FaFigma,
+  FaHtml5,
+  FaCss3Alt,
+  FaDocker,
+  FaLinux,
+  FaCode,
+  FaServer,
+  FaDatabase,
+  FaBrain,
+  FaMicrochip,
+  FaTerminal,
+  FaCloud,
+  FaShieldAlt,
+  FaTools,
+  FaLayerGroup,
+  FaNetworkWired,
+  FaLaptopCode,
+  FaCogs,
+  FaCube,
+  FaFire,
+  FaGlobe,
+  FaAws,
+  SiMongodb,
+  SiExpress,
+  SiPostman,
+  SiTensorflow,
+  SiFlutter,
+  SiKotlin,
+  SiMysql,
+  SiFirebase,
+  SiArduino,
+  SiCplusplus,
+  SiJavascript,
+  SiPostgresql,
+  SiTailwindcss,
+  SiNextdotjs,
+  SiTypescript,
+  SiVuedotjs,
+  SiAngular,
+  SiSvelte,
+  SiGraphql,
+  SiRedux,
+  SiRedis,
+  SiNginx,
+  SiKubernetes,
+  SiGooglecloud,
+  SiVercel,
+  SiSupabase,
+  SiDjango,
+  SiFastapi,
+  SiFlask,
+  SiSpringboot,
+  SiPytorch,
+  SiPandas,
+  SiNumpy,
+  SiScikitlearn,
+  SiOpencv,
+  SiRust,
+  SiGo,
+  SiPhp,
+  SiRubyonrails,
+  SiSwift,
+  SiDart,
+};
+
+export const AVAILABLE_SKILL_ICONS = [
+  { id: "FaReact", label: "React", icon: FaReact },
+  { id: "SiNextdotjs", label: "Next.js", icon: SiNextdotjs },
+  { id: "SiTypescript", label: "TypeScript", icon: SiTypescript },
+  { id: "SiJavascript", label: "JavaScript", icon: SiJavascript },
+  { id: "SiTailwindcss", label: "Tailwind CSS", icon: SiTailwindcss },
+  { id: "FaHtml5", label: "HTML5", icon: FaHtml5 },
+  { id: "FaCss3Alt", label: "CSS3", icon: FaCss3Alt },
+  { id: "SiFlutter", label: "Flutter", icon: SiFlutter },
+  { id: "SiDart", label: "Dart", icon: SiDart },
+  { id: "FaAndroid", label: "Android", icon: FaAndroid },
+  { id: "SiKotlin", label: "Kotlin", icon: SiKotlin },
+  { id: "SiSwift", label: "Swift", icon: SiSwift },
+  { id: "FaNodeJs", label: "Node.js", icon: FaNodeJs },
+  { id: "SiExpress", label: "Express", icon: SiExpress },
+  { id: "SiMongodb", label: "MongoDB", icon: SiMongodb },
+  { id: "SiPostgresql", label: "PostgreSQL", icon: SiPostgresql },
+  { id: "SiMysql", label: "MySQL", icon: SiMysql },
+  { id: "SiFirebase", label: "Firebase", icon: SiFirebase },
+  { id: "SiSupabase", label: "Supabase", icon: SiSupabase },
+  { id: "FaPython", label: "Python", icon: FaPython },
+  { id: "FaJava", label: "Java", icon: FaJava },
+  { id: "SiCplusplus", label: "C++", icon: SiCplusplus },
+  { id: "FaGitAlt", label: "Git / GitHub", icon: FaGitAlt },
+  { id: "SiPostman", label: "Postman", icon: SiPostman },
+  { id: "FaLinux", label: "Linux", icon: FaLinux },
+  { id: "FaDocker", label: "Docker", icon: FaDocker },
+  { id: "FaFigma", label: "Figma / UI", icon: FaFigma },
+  { id: "SiTensorflow", label: "TensorFlow", icon: SiTensorflow },
+  { id: "SiPytorch", label: "PyTorch", icon: SiPytorch },
+  { id: "SiArduino", label: "Arduino", icon: SiArduino },
+  { id: "FaMicrochip", label: "IoT / ESP32", icon: FaMicrochip },
+  { id: "FaAws", label: "AWS Cloud", icon: FaAws },
+  { id: "SiGooglecloud", label: "Google Cloud", icon: SiGooglecloud },
+  { id: "FaCode", label: "Code (Generic)", icon: FaCode },
+  { id: "FaServer", label: "Server", icon: FaServer },
+  { id: "FaDatabase", label: "Database", icon: FaDatabase },
+  { id: "FaBrain", label: "AI / Brain", icon: FaBrain },
+  { id: "FaTerminal", label: "Terminal", icon: FaTerminal },
+  { id: "FaCloud", label: "Cloud", icon: FaCloud },
+  { id: "FaShieldAlt", label: "Security", icon: FaShieldAlt },
+  { id: "FaTools", label: "Tools", icon: FaTools },
+  { id: "FaGlobe", label: "Web / Globe", icon: FaGlobe },
+];
+
+export const resolveCategoryIcon = (categoryId: string, iconName?: string): any => {
+  if (iconName && ICON_REGISTRY[iconName]) {
+    return ICON_REGISTRY[iconName];
+  }
+  const id = (categoryId || "").toLowerCase();
+  if (id.includes("front") || id.includes("web")) return FaReact;
+  if (id.includes("mobile") || id.includes("app")) return FaMobileAlt;
+  if (id.includes("back") || id.includes("db") || id.includes("data")) return FaServer;
+  if (id.includes("lang") || id.includes("code")) return FaCode;
+  if (id.includes("ai") || id.includes("ml") || id.includes("iot") || id.includes("embedded")) return FaBrain;
+  if (id.includes("tool") || id.includes("devops") || id.includes("cloud")) return FaDatabase;
+  return FaCode;
+};
+
+export const resolveSkillIcon = (name: string, iconName?: string, category?: string): any => {
+  if (iconName && ICON_REGISTRY[iconName]) {
+    return ICON_REGISTRY[iconName];
+  }
+  const n = (name || "").toLowerCase().trim();
+  if (n.includes("react")) return FaReact;
+  if (n.includes("next")) return SiNextdotjs;
+  if (n.includes("typescript") || n === "ts") return SiTypescript;
+  if (n.includes("javascript") || n === "js") return SiJavascript;
+  if (n.includes("tailwind")) return SiTailwindcss;
+  if (n.includes("html")) return FaHtml5;
+  if (n.includes("css")) return FaCss3Alt;
+  if (n.includes("flutter")) return SiFlutter;
+  if (n.includes("dart")) return SiDart;
+  if (n.includes("android")) return FaAndroid;
+  if (n.includes("kotlin")) return SiKotlin;
+  if (n.includes("swift")) return SiSwift;
+  if (n.includes("node")) return FaNodeJs;
+  if (n.includes("express")) return SiExpress;
+  if (n.includes("mongo")) return SiMongodb;
+  if (n.includes("postgre") || n.includes("postgres")) return SiPostgresql;
+  if (n.includes("mysql")) return SiMysql;
+  if (n.includes("firebase")) return SiFirebase;
+  if (n.includes("supabase")) return SiSupabase;
+  if (n.includes("python")) return FaPython;
+  if (n.includes("django")) return SiDjango;
+  if (n.includes("fastapi")) return SiFastapi;
+  if (n.includes("flask")) return SiFlask;
+  if (n.includes("c++") || n.includes("cpp")) return SiCplusplus;
+  if (n.includes("c#") || n.includes("csharp") || n === "c") return FaCode;
+  if (n.includes("java") && !n.includes("javascript")) return FaJava;
+  if (n.includes("spring")) return SiSpringboot;
+  if (n.includes("git")) return FaGitAlt;
+  if (n.includes("postman")) return SiPostman;
+  if (n.includes("linux")) return FaLinux;
+  if (n.includes("docker")) return FaDocker;
+  if (n.includes("figma") || n.includes("ui/ux")) return FaFigma;
+  if (n.includes("tensor") || n.includes("keras")) return SiTensorflow;
+  if (n.includes("pytorch")) return SiPytorch;
+  if (n.includes("arduino")) return SiArduino;
+  if (n.includes("esp32") || n.includes("microchip") || n.includes("iot")) return FaMicrochip;
+  if (n.includes("vue")) return SiVuedotjs;
+  if (n.includes("angular")) return SiAngular;
+  if (n.includes("svelte")) return SiSvelte;
+  if (n.includes("graphql")) return SiGraphql;
+  if (n.includes("redux")) return SiRedux;
+  if (n.includes("redis")) return SiRedis;
+  if (n.includes("nginx")) return SiNginx;
+  if (n.includes("kubern")) return SiKubernetes;
+  if (n.includes("aws")) return FaAws;
+  if (n.includes("gcp") || n.includes("google cloud")) return SiGooglecloud;
+  if (n.includes("vercel")) return SiVercel;
+  if (n.includes("rust")) return SiRust;
+  if (n.includes("go") || n.includes("golang")) return SiGo;
+  if (n.includes("php")) return SiPhp;
+  if (n.includes("ruby") || n.includes("rails")) return SiRubyonrails;
+
+  if (category) {
+    return resolveCategoryIcon(category);
+  }
+  return FaCode;
+};
+
+// ============================================================================
+// Skill Categories Service (Local-First with Supabase Cloud Sync)
+// ============================================================================
+export const getLiveSkillCategories = async (): Promise<SkillCategory[]> => {
+  try {
+    const cached = localStorage.getItem("maharab_cached_skill_categories");
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("skill_categories")
+        .select("*")
+        .order("order_index", { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        const mapped: SkillCategory[] = data.map((c: any) => ({
+          id: c.category_id || c.id,
+          label: c.label || "",
+          iconName: c.icon_name || c.iconName || "",
+          order_index: c.order_index ?? 0,
+        }));
+        try {
+          localStorage.setItem("maharab_cached_skill_categories", JSON.stringify(mapped));
+        } catch (e) {}
+        return mapped;
+      }
+    } catch (e) {}
+  }
+
+  return DEFAULT_SKILL_CATEGORIES;
+};
+
+export const saveLiveSkillCategories = async (
+  categories: SkillCategory[]
+): Promise<{ success: boolean; error?: string }> => {
+  // 1. Immediately update localStorage & dispatch event
+  try {
+    localStorage.setItem("maharab_cached_skill_categories", JSON.stringify(categories));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_skills_updated"));
+    }
+  } catch (e) {}
+
+  // 2. Sync with Supabase cloud if configured
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const rows = categories.map((cat, idx) => ({
+        category_id: cat.id,
+        label: cat.label,
+        icon_name: cat.iconName || "",
+        order_index: idx,
+      }));
+
+      await supabase.from("skill_categories").delete().neq("category_id", "___never_match___");
+      const { error } = await supabase.from("skill_categories").insert(rows);
+      if (error) {
+        return { success: true, error: error.message };
+      }
+    } catch (err: any) {
+      return { success: true, error: err.message };
+    }
+  }
+
+  return { success: true };
+};
+
+export const useLiveSkillCategories = (): SkillCategory[] => {
+  const [categories, setCategories] = useState<SkillCategory[]>(() => {
+    try {
+      const cached = localStorage.getItem("maharab_cached_skill_categories");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return DEFAULT_SKILL_CATEGORIES;
+  });
+
+  useEffect(() => {
+    let active = true;
+    const fetchLatest = async () => {
+      const live = await getLiveSkillCategories();
+      if (active && live && live.length > 0) setCategories(live);
+    };
+
+    fetchLatest();
+
+    const handleUpdate = () => {
+      fetchLatest();
+    };
+
+    window.addEventListener("portfolio_skills_updated", handleUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_skills_updated", handleUpdate);
+    };
+  }, []);
+
+  return categories;
+};
+
+// ============================================================================
+// Skills List Service (Local-First with Supabase Cloud Sync)
+// ============================================================================
+export const getLiveSkills = async (): Promise<SkillItemData[]> => {
+  try {
+    const cached = localStorage.getItem("maharab_cached_skills");
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("skills")
+        .select("*")
+        .order("order_index", { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        const mapped: SkillItemData[] = data.map((s: any) => ({
+          id: s.skill_id || s.id || `skill-${s.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+          name: s.name || "",
+          category: s.category || "frontend",
+          level: s.level || "Core Production",
+          color: s.color || "#a855f7",
+          iconName: s.icon_name || s.iconName || "",
+          order_index: s.order_index ?? 0,
+        }));
+        try {
+          localStorage.setItem("maharab_cached_skills", JSON.stringify(mapped));
+        } catch (e) {}
+        return mapped;
+      }
+    } catch (e) {}
+  }
+
+  return DEFAULT_SKILLS_DATA;
+};
+
+export const saveLiveSkills = async (
+  skillsList: SkillItemData[]
+): Promise<{ success: boolean; error?: string }> => {
+  // 1. Immediately update localStorage & dispatch event
+  try {
+    localStorage.setItem("maharab_cached_skills", JSON.stringify(skillsList));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_skills_updated"));
+    }
+  } catch (e) {}
+
+  // 2. Sync with Supabase cloud if configured
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const rows = skillsList.map((skill, idx) => ({
+        skill_id: skill.id,
+        name: skill.name,
+        category: skill.category,
+        level: skill.level,
+        color: skill.color || "#a855f7",
+        icon_name: skill.iconName || "",
+        order_index: idx,
+      }));
+
+      await supabase.from("skills").delete().neq("skill_id", "___never_match___");
+      const { error } = await supabase.from("skills").insert(rows);
+      if (error) {
+        return { success: true, error: error.message };
+      }
+    } catch (err: any) {
+      return { success: true, error: err.message };
+    }
+  }
+
+  return { success: true };
+};
+
+export const useLiveSkills = (): SkillItemData[] => {
+  const [skills, setSkills] = useState<SkillItemData[]>(() => {
+    try {
+      const cached = localStorage.getItem("maharab_cached_skills");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return DEFAULT_SKILLS_DATA;
+  });
+
+  useEffect(() => {
+    let active = true;
+    const fetchLatest = async () => {
+      const live = await getLiveSkills();
+      if (active && live && live.length > 0) setSkills(live);
+    };
+
+    fetchLatest();
+
+    const handleUpdate = () => {
+      fetchLatest();
+    };
+
+    window.addEventListener("portfolio_skills_updated", handleUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_skills_updated", handleUpdate);
+    };
+  }, []);
+
+  return skills;
+};
+
