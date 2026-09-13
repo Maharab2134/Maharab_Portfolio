@@ -357,6 +357,7 @@ const Admin: React.FC = () => {
     phone: PORTFOLIO_INFO.phone,
     email: PORTFOLIO_INFO.email,
     location: PORTFOLIO_INFO.location,
+    maps_url: (PORTFOLIO_INFO as any).mapsUrl || "",
     resume_url: PORTFOLIO_INFO.resumeUrl,
     profile_image: PORTFOLIO_INFO.profileImage,
     show_intro_video: (PORTFOLIO_INFO as any).showIntroVideo ?? true,
@@ -567,6 +568,7 @@ const Admin: React.FC = () => {
         phone: liveProfile.phone || PORTFOLIO_INFO.phone,
         email: liveProfile.email || PORTFOLIO_INFO.email,
         location: liveProfile.location || PORTFOLIO_INFO.location,
+        maps_url: (liveProfile as any).maps_url || (liveProfile as any).mapsUrl || (PORTFOLIO_INFO as any).mapsUrl || "",
         resume_url: liveProfile.resumeUrl || PORTFOLIO_INFO.resumeUrl,
         profile_image: (liveProfile as any).profile_image || liveProfile.profileImage || PORTFOLIO_INFO.profileImage,
         show_intro_video:
@@ -4994,14 +4996,34 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">Location</label>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <span>Current Location</span>
+                        <span className="text-[10px] text-cyan-400 normal-case font-normal">Opens in Google Maps</span>
+                      </label>
                       <input
                         type="text"
                         value={profileForm.location}
                         onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+                        placeholder="e.g. Mirpur, Dhaka, Bangladesh"
                         className="w-full px-3.5 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
                       />
                     </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                      <span>Custom Google Maps URL (Optional)</span>
+                      <span className="text-[10px] text-slate-400 normal-case font-normal">
+                        Leave blank to automatically link to Current Location above
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.maps_url}
+                      onChange={(e) => setProfileForm({ ...profileForm, maps_url: e.target.value })}
+                      placeholder="e.g. https://maps.google.com/?q=Mirpur+Dhaka+Bangladesh"
+                      className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">

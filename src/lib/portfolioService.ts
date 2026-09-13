@@ -478,6 +478,18 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
           email: parsed.email || PORTFOLIO_INFO.email,
           phone: parsed.phone || PORTFOLIO_INFO.phone,
           location: parsed.location || PORTFOLIO_INFO.location,
+          mapsUrl:
+            parsed.maps_url ||
+            parsed.mapsUrl ||
+            (parsed.location
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
+              : PORTFOLIO_INFO.mapsUrl),
+          maps_url:
+            parsed.maps_url ||
+            parsed.mapsUrl ||
+            (parsed.location
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
+              : PORTFOLIO_INFO.mapsUrl),
           resumeUrl: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
           stats: {
             ...PORTFOLIO_INFO.stats,
@@ -528,6 +540,18 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
           whatsappNumber: (row.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, ""),
           whatsappUrl: `https://wa.me/${(row.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, "")}`,
           location: row.location || PORTFOLIO_INFO.location,
+          mapsUrl:
+            row.maps_url ||
+            row.mapsUrl ||
+            (row.location
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.location)}`
+              : PORTFOLIO_INFO.mapsUrl),
+          maps_url:
+            row.maps_url ||
+            row.mapsUrl ||
+            (row.location
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.location)}`
+              : PORTFOLIO_INFO.mapsUrl),
           resumeUrl: row.resume_url || PORTFOLIO_INFO.resumeUrl,
           profileImage: row.profile_image || row.profileImage || PORTFOLIO_INFO.profileImage,
           profile_image: row.profile_image || row.profileImage || PORTFOLIO_INFO.profileImage,
@@ -653,6 +677,7 @@ export const saveLiveProfile = async (
         email: profileData.email,
         phone: profileData.phone,
         location: profileData.location,
+        maps_url: profileData.maps_url || profileData.mapsUrl,
         resume_url: resumeUrl,
         profile_image: profileImage,
         show_intro_video: showIntroVideo,
@@ -683,6 +708,7 @@ export const saveLiveProfile = async (
           delete safeDb.intro_video_url;
           delete safeDb.typewriter_prefix;
           delete safeDb.typewriter_phrases;
+          delete safeDb.maps_url;
           await supabase.from("profile_info").update(safeDb).eq("id", existing[0].id);
         }
       } else {
@@ -745,6 +771,18 @@ export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
             whatsappNumber: (parsed.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, ""),
             whatsappUrl: `https://wa.me/${(parsed.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, "")}`,
             location: parsed.location || PORTFOLIO_INFO.location,
+            mapsUrl:
+              parsed.maps_url ||
+              parsed.mapsUrl ||
+              (parsed.location
+                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
+                : PORTFOLIO_INFO.mapsUrl),
+            maps_url:
+              parsed.maps_url ||
+              parsed.mapsUrl ||
+              (parsed.location
+                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
+                : PORTFOLIO_INFO.mapsUrl),
             resumeUrl: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
             profileImage: parsed.profile_image || parsed.profileImage || PORTFOLIO_INFO.profileImage,
             profile_image: parsed.profile_image || parsed.profileImage || PORTFOLIO_INFO.profileImage,

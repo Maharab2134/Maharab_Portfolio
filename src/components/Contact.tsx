@@ -8,6 +8,7 @@ import {
   FaCopy,
   FaCheck,
   FaPaperPlane,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
 import { useLiveProfile } from "../lib/portfolioService";
@@ -27,7 +28,6 @@ const Contact: React.FC = () => {
 
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
-  const [copiedWhatsapp, setCopiedWhatsapp] = useState(false);
   const [submittedStatus, setSubmittedStatus] = useState<string | null>(null);
 
   const email = profile.email || PORTFOLIO_INFO.email;
@@ -36,7 +36,12 @@ const Contact: React.FC = () => {
   const whatsappNumber = rawWhatsapp.replace(/\D+/g, "");
   const whatsappUrl = profile.whatsappUrl || (whatsappNumber ? `https://wa.me/${whatsappNumber}` : PORTFOLIO_INFO.whatsappUrl);
   const location = profile.location || PORTFOLIO_INFO.location;
-  const mapsUrl = profile.mapsUrl || PORTFOLIO_INFO.mapsUrl;
+  const customMapsUrl = (profile as any).mapsUrl || (profile as any).maps_url;
+  const mapsUrl = customMapsUrl && customMapsUrl.trim()
+    ? customMapsUrl.trim()
+    : location
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`
+    : PORTFOLIO_INFO.mapsUrl;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -55,12 +60,6 @@ const Contact: React.FC = () => {
     navigator.clipboard.writeText(phone);
     setCopiedPhone(true);
     setTimeout(() => setCopiedPhone(false), 2500);
-  };
-
-  const handleCopyWhatsapp = () => {
-    navigator.clipboard.writeText(phone);
-    setCopiedWhatsapp(true);
-    setTimeout(() => setCopiedWhatsapp(false), 2500);
   };
 
   const handleSubmitWhatsApp = (e: React.FormEvent) => {
@@ -183,14 +182,6 @@ const Contact: React.FC = () => {
                       {phone}
                     </a>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyWhatsapp}
-                    title="Copy WhatsApp Number"
-                    className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
-                  >
-                    {copiedWhatsapp ? renderIcon(FaCheck, { size: 14, className: "text-emerald-400" }) : renderIcon(FaCopy, { size: 14 })}
-                  </button>
                 </div>
 
                 {/* Phone Item */}
@@ -232,11 +223,21 @@ const Contact: React.FC = () => {
                       href={mapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-semibold text-white hover:text-pink-300 transition-colors block"
+                      className="text-sm font-semibold text-white hover:text-pink-300 transition-colors truncate block"
+                      title="Open location in Google Maps"
                     >
                       {location}
                     </a>
                   </div>
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open in Google Maps"
+                    className="p-2 text-slate-400 hover:text-pink-400 rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    {renderIcon(FaExternalLinkAlt, { size: 13 })}
+                  </a>
                 </div>
               </div>
             </div>
