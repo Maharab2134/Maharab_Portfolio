@@ -276,17 +276,21 @@ export const saveLiveProject = async (
     full_desc: payload.full_desc || payload.longDescription || payload.description || "",
     image_url: payload.image_url || payload.image || "",
     technologies: Array.isArray(payload.technologies)
+      ? payload.technologies.map((t: any) => String(t).trim()).filter(Boolean)
+      : typeof payload.technologies === "string"
       ? payload.technologies
-      : (payload.technologies || "")
           .split(",")
           .map((t: string) => t.trim())
-          .filter(Boolean),
+          .filter(Boolean)
+      : [],
     features: Array.isArray(payload.features)
+      ? payload.features.map((f: any) => String(f).trim()).filter(Boolean)
+      : typeof payload.features === "string"
       ? payload.features
-      : (payload.features || "")
           .split("\n")
           .map((f: string) => f.trim())
-          .filter(Boolean),
+          .filter(Boolean)
+      : [],
     github_url: payload.github_url || payload.github || "",
     live_url: payload.live_url || payload.link || "",
     featured: Boolean(payload.featured),

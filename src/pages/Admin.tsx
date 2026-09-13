@@ -674,12 +674,32 @@ const Admin: React.FC = () => {
   };
 
   // Helper Functions for Technology Tags & Presets
-  const getSelectedTechs = (techStr: string): string[] => {
+  const getSelectedTechs = (techStr: any): string[] => {
     if (!techStr) return [];
-    return techStr
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
+    if (Array.isArray(techStr)) {
+      return techStr.map((t) => String(t).trim()).filter(Boolean);
+    }
+    if (typeof techStr === "string") {
+      return techStr
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+    }
+    return [];
+  };
+
+  const getFeatureList = (features: any): string[] => {
+    if (!features) return [];
+    if (Array.isArray(features)) {
+      return features.map((f) => String(f).trim()).filter(Boolean);
+    }
+    if (typeof features === "string") {
+      return features
+        .split("\n")
+        .map((f) => f.trim())
+        .filter(Boolean);
+    }
+    return [];
   };
 
   const toggleTechTag = (techName: string) => {
@@ -823,8 +843,8 @@ const Admin: React.FC = () => {
       const idx = prev.findIndex((p) => (p.project_id || p.id) === targetId);
       const updatedItem = {
         ...payload,
-        technologies: payload.technologies.split(",").map((t: string) => t.trim()).filter(Boolean),
-        features: payload.features.split("\n").map((f: string) => f.trim()).filter(Boolean),
+        technologies: getSelectedTechs(payload.technologies),
+        features: getFeatureList(payload.features),
       };
       if (idx >= 0) {
         const copy = [...prev];
@@ -1376,10 +1396,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
       institution: eduForm.institution.trim(),
       period: eduForm.period.trim() || "2024 - Present",
       description: eduForm.description.trim(),
-      highlights: eduForm.highlights
-        .split("\n")
-        .map((h) => h.trim())
-        .filter(Boolean),
+      highlights: getFeatureList(eduForm.highlights),
     };
 
     let updatedList: any[];
@@ -3555,7 +3572,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             </div>
                           </div>
                           <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
-                            {projectForm.features.split("\n").filter((f) => f.trim()).length} Features
+                            {getFeatureList(projectForm.features).length} Features
                           </span>
                         </div>
 
@@ -3843,24 +3860,20 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           </div>
 
                           {/* Features list */}
-                          {projectForm.features && (
+                          {getFeatureList(projectForm.features).length > 0 && (
                             <div className="space-y-2 pt-2 border-t border-white/[0.06]">
                               <h4 className="text-xs font-bold font-mono text-slate-300 uppercase tracking-wide">
                                 Key Deliverables
                               </h4>
                               <ul className="space-y-1.5">
-                                {projectForm.features
-                                  .split("\n")
-                                  .map((f) => f.trim())
-                                  .filter(Boolean)
-                                  .map((feat, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-xs text-slate-300">
-                                      <span className="text-emerald-400 mt-0.5">
-                                        {renderIcon(FaCheckCircle, { size: 12 })}
-                                      </span>
-                                      <span>{feat}</span>
-                                    </li>
-                                  ))}
+                                {getFeatureList(projectForm.features).map((feat, i) => (
+                                  <li key={i} className="flex items-start gap-2 text-xs text-slate-300">
+                                    <span className="text-emerald-400 mt-0.5">
+                                      {renderIcon(FaCheckCircle, { size: 12 })}
+                                    </span>
+                                    <span>{feat}</span>
+                                  </li>
+                                ))}
                               </ul>
                             </div>
                           )}
@@ -3907,8 +3920,8 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-slate-300">Key Features Specified</span>
-                            <span className={projectForm.features.trim() ? "text-emerald-400 font-bold" : "text-slate-500"}>
-                              {projectForm.features.split("\n").filter((f) => f.trim()).length} points
+                            <span className={getFeatureList(projectForm.features).length > 0 ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                              {getFeatureList(projectForm.features).length} points
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
@@ -4966,13 +4979,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             Animated Roles / Phrases
                           </label>
                           <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
-                            {
-                              profileForm.typewriter_phrases
-                                .split("\n")
-                                .map((s: string) => s.trim())
-                                .filter(Boolean).length
-                            }{" "}
-                            Phrases Active
+                            {getFeatureList(profileForm.typewriter_phrases).length} Phrases Active
                           </span>
                         </div>
                         <textarea
@@ -5011,10 +5018,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             )}
                             <div className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
                               {(() => {
-                                const phrases = profileForm.typewriter_phrases
-                                  .split("\n")
-                                  .map((s: string) => s.trim())
-                                  .filter(Boolean);
+                                const phrases = getFeatureList(profileForm.typewriter_phrases);
                                 if (phrases.length === 0) {
                                   return <span className="text-slate-600 italic">No phrases specified</span>;
                                 }
