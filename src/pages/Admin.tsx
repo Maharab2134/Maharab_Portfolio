@@ -51,6 +51,8 @@ import {
   FaUsers,
   FaClock,
   FaPercentage,
+  FaMapMarkerAlt,
+  FaCrosshairs,
 } from "react-icons/fa";
 import { TypeAnimation } from "react-type-animation";
 import {
@@ -378,6 +380,8 @@ const Admin: React.FC = () => {
   const [profileMessage, setProfileMessage] = useState("");
   const [profileImageUploading, setProfileImageUploading] = useState(false);
   const [adminVideoPreviewOpen, setAdminVideoPreviewOpen] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [locationStatus, setLocationStatus] = useState<string | null>(null);
 
   // Education & Certificates State
   const [educationList, setEducationList] = useState<any[]>(EDUCATION_DATA);
@@ -1137,6 +1141,116 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
       setProfileMessage("Profile successfully saved and synchronized!");
     }
     setTimeout(() => setProfileMessage(""), 4000);
+  };
+
+  // Auto-detect GPS Current Location
+  const handleDetectLocation = async () => {
+    if (!navigator.geolocation) {
+      setLocationStatus("Geolocation is not supported by your browser.");
+      setTimeout(() => setLocationStatus(null), 4000);
+      return;
+    }
+
+    setDetectingLocation(true);
+    setLocationStatus("Getting GPS coordinates...");
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setLocationStatus("Resolving address details...");
+
+        let resolvedLocation = "";
+        const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+        try {
+          // OpenStreetMap Nominatim reverse geocode
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 6000);
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14&addressdetails=1`,
+            {
+              headers: { "Accept-Language": "en" },
+              signal: controller.signal,
+            }
+          );
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            const neighborhood =
+              addr.suburb ||
+              addr.neighbourhood ||
+              addr.residential ||
+              addr.subdistrict ||
+              addr.quarter;
+            const city =
+              addr.city ||
+              addr.town ||
+              addr.municipality ||
+              addr.county ||
+              addr.state_district;
+            const country = addr.country;
+
+            const parts = [neighborhood, city, country].filter(Boolean);
+            if (parts.length >= 2) {
+              resolvedLocation = parts.join(", ");
+            } else if (data.display_name) {
+              resolvedLocation = data.display_name
+                .split(",")
+                .slice(0, 3)
+                .map((s: string) => s.trim())
+                .join(", ");
+            }
+          }
+        } catch (e) {
+          console.warn("Reverse geocoding error, applying fallback", e);
+        }
+
+        // Fallback if reverse geocode didn't return a name
+        if (!resolvedLocation) {
+          try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (tz && tz.includes("/")) {
+              const [region, city] = tz.split("/");
+              resolvedLocation = `${city.replace(/_/g, " ")}, ${region.replace(/_/g, " ")}`;
+            } else {
+              resolvedLocation = `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`;
+            }
+          } catch (e) {
+            resolvedLocation = `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`;
+          }
+        }
+
+        setProfileForm((prev) => ({
+          ...prev,
+          location: resolvedLocation,
+          maps_url: mapsLink,
+        }));
+
+        setDetectingLocation(false);
+        setLocationStatus(`Current location detected: ${resolvedLocation}`);
+        setTimeout(() => setLocationStatus(null), 4500);
+      },
+      (err) => {
+        setDetectingLocation(false);
+        let msg = "Could not get current location.";
+        if (err.code === 1) {
+          msg = "Location permission denied in browser.";
+        } else if (err.code === 2) {
+          msg = "GPS position unavailable.";
+        } else if (err.code === 3) {
+          msg = "Location request timed out.";
+        }
+        setLocationStatus(msg);
+        setTimeout(() => setLocationStatus(null), 4500);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000,
+      }
+    );
   };
 
   // Delete message
@@ -4996,17 +5110,72 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                        <span>Current Location</span>
-                        <span className="text-[10px] text-cyan-400 normal-case font-normal">Opens in Google Maps</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={profileForm.location}
-                        onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
-                        placeholder="e.g. Mirpur, Dhaka, Bangladesh"
-                        className="w-full px-3.5 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
-                      />
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
+                          Current Location
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleDetectLocation}
+                          disabled={detectingLocation}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 px-2 py-0.5 rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                          title="Click to auto-detect current location via GPS"
+                        >
+                          {detectingLocation ? (
+                            <>
+                              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                              <span>Detecting GPS...</span>
+                            </>
+                          ) : (
+                            <>
+                              {renderIcon(FaMapMarkerAlt, { size: 10 })}
+                              <span>Auto Detect</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={profileForm.location}
+                          onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+                          onClick={() => {
+                            if (!detectingLocation) {
+                              handleDetectLocation();
+                            }
+                          }}
+                          placeholder="Click here to auto-detect current GPS location..."
+                          className="w-full pl-3.5 pr-10 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 cursor-pointer hover:border-cyan-500/40 transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDetectLocation();
+                          }}
+                          disabled={detectingLocation}
+                          title="Click to auto-detect GPS location"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer"
+                        >
+                          {renderIcon(FaCrosshairs, {
+                            size: 14,
+                            className: detectingLocation ? "animate-spin text-cyan-400" : "text-cyan-400",
+                          })}
+                        </button>
+                      </div>
+                      {locationStatus && (
+                        <p
+                          className={`mt-1.5 text-[11px] font-medium transition-all ${
+                            locationStatus.includes("detected")
+                              ? "text-emerald-400"
+                              : locationStatus.includes("denied") || locationStatus.includes("timed out")
+                              ? "text-rose-400"
+                              : "text-cyan-300"
+                          }`}
+                        >
+                          {locationStatus}
+                        </p>
+                      )}
                     </div>
                   </div>
 
