@@ -53,6 +53,8 @@ ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS show_intro_video BOOLEA
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS intro_video_url TEXT;
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS typewriter_prefix TEXT DEFAULT 'I engineer';
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS typewriter_phrases TEXT[] DEFAULT ARRAY['Scalable Full-Stack Web Apps', 'Cross-Platform Mobile Experiences', 'High-Throughput REST & GraphQL APIs', 'Secure Microservices Architecture'];
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS footer_bio TEXT;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS maps_url TEXT;
 
 -- 3. Create Contact Messages Table (stores form submissions)
 CREATE TABLE IF NOT EXISTS public.contact_messages (

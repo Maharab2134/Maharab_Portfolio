@@ -475,6 +475,16 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
               : parsed.typewriterPhrases
           ),
           bio: parsed.bio || PORTFOLIO_INFO.bio,
+          footerBio:
+            parsed.footer_bio ||
+            parsed.footerBio ||
+            (PORTFOLIO_INFO as any).footerBio ||
+            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
+          footer_bio:
+            parsed.footer_bio ||
+            parsed.footerBio ||
+            (PORTFOLIO_INFO as any).footerBio ||
+            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
           email: parsed.email || PORTFOLIO_INFO.email,
           phone: parsed.phone || PORTFOLIO_INFO.phone,
           location: parsed.location || PORTFOLIO_INFO.location,
@@ -535,6 +545,16 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
               : row.typewriterPhrases
           ),
           bio: row.bio || PORTFOLIO_INFO.bio,
+          footerBio:
+            row.footer_bio ||
+            row.footerBio ||
+            (PORTFOLIO_INFO as any).footerBio ||
+            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
+          footer_bio:
+            row.footer_bio ||
+            row.footerBio ||
+            (PORTFOLIO_INFO as any).footerBio ||
+            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
           email: row.email || PORTFOLIO_INFO.email,
           phone: row.phone || PORTFOLIO_INFO.phone,
           whatsappNumber: (row.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, ""),
@@ -674,6 +694,7 @@ export const saveLiveProfile = async (
         typewriter_prefix: typewriterPrefix,
         typewriter_phrases: typewriterPhrases,
         bio: profileData.bio,
+        footer_bio: profileData.footer_bio || profileData.footerBio,
         email: profileData.email,
         phone: profileData.phone,
         location: profileData.location,
@@ -709,6 +730,7 @@ export const saveLiveProfile = async (
           delete safeDb.typewriter_prefix;
           delete safeDb.typewriter_phrases;
           delete safeDb.maps_url;
+          delete safeDb.footer_bio;
           await supabase.from("profile_info").update(safeDb).eq("id", existing[0].id);
         }
       } else {
@@ -719,6 +741,8 @@ export const saveLiveProfile = async (
           delete safeDb.intro_video_url;
           delete safeDb.typewriter_prefix;
           delete safeDb.typewriter_phrases;
+          delete safeDb.maps_url;
+          delete safeDb.footer_bio;
           await supabase.from("profile_info").insert([safeDb]);
         }
       }

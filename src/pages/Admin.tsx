@@ -356,6 +356,9 @@ const Admin: React.FC = () => {
     title: PORTFOLIO_INFO.title,
     tagline: PORTFOLIO_INFO.tagline,
     bio: PORTFOLIO_INFO.bio,
+    footer_bio:
+      (PORTFOLIO_INFO as any).footerBio ||
+      "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
     phone: PORTFOLIO_INFO.phone,
     email: PORTFOLIO_INFO.email,
     location: PORTFOLIO_INFO.location,
@@ -569,6 +572,11 @@ const Admin: React.FC = () => {
         title: liveProfile.title || PORTFOLIO_INFO.title,
         tagline: liveProfile.tagline || PORTFOLIO_INFO.tagline,
         bio: liveProfile.bio || PORTFOLIO_INFO.bio,
+        footer_bio:
+          (liveProfile as any).footer_bio ||
+          (liveProfile as any).footerBio ||
+          (PORTFOLIO_INFO as any).footerBio ||
+          "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
         phone: liveProfile.phone || PORTFOLIO_INFO.phone,
         email: liveProfile.email || PORTFOLIO_INFO.email,
         location: liveProfile.location || PORTFOLIO_INFO.location,
@@ -5097,13 +5105,45 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">About Me Story Narrative</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
+                        About Me Story Narrative (About Section)
+                      </label>
+                      <span className="text-[10px] text-purple-400/90 font-medium px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20">
+                        About Section Narrative
+                      </span>
+                    </div>
                     <textarea
-                      rows={5}
+                      rows={4}
                       value={profileForm.bio}
                       onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                      placeholder="e.g. Passionate Software Engineering student at BUBT. I bridge technical rigor with modern user experience..."
                       className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 leading-relaxed"
                     />
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Controls the personal story paragraph displayed in the About Me section of the portfolio.
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
+                        Footer Brand Narrative / Short Bio (Footer Section)
+                      </label>
+                      <span className="text-[10px] text-cyan-400/90 font-medium px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20">
+                        Footer Section Narrative
+                      </span>
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={profileForm.footer_bio}
+                      onChange={(e) => setProfileForm({ ...profileForm, footer_bio: e.target.value })}
+                      placeholder="e.g. Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design."
+                      className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 leading-relaxed placeholder:text-slate-600 transition-all"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Controls the brief summary narrative displayed under your profile avatar and name in the website Footer.
+                    </p>
                   </div>
                 </div>
 

@@ -39,6 +39,7 @@ export const PORTFOLIO_INFO = {
     "Secure Microservices Architecture",
   ],
   bio: "Passionate Software Engineering student at Bangladesh University of Business and Technology (BUBT). I bridge technical rigor with modern user experience, engineering scalable systems across React, Next.js, Node.js, Flutter, and cloud ecosystems.",
+  footerBio: "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
   email: "maharab442@gmail.com",
   phone: "+880 15862 82609",
   whatsappNumber: "8801586282609",

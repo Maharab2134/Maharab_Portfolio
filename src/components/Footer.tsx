@@ -7,6 +7,13 @@ import {
   FaEnvelope,
   FaPhoneAlt,
   FaMapMarkerAlt,
+  FaHome,
+  FaUser,
+  FaGraduationCap,
+  FaCertificate,
+  FaLaptopCode,
+  FaProjectDiagram,
+  FaPaperPlane,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
 import { useLiveProfile } from "../lib/portfolioService";
@@ -65,13 +72,13 @@ const Footer: React.FC = () => {
   ];
 
   const quickNav = [
-    { label: "Home", href: "#home" },
-    { label: "About", href: "#about" },
-    { label: "Education", href: "#education" },
-    { label: "Certificates", href: "#certificates" },
-    { label: "Skills", href: "#skills" },
-    { label: "Projects", href: "#projects" },
-    { label: "Contact", href: "#contact" },
+    { label: "Home", href: "#home", icon: FaHome },
+    { label: "About", href: "#about", icon: FaUser },
+    { label: "Education", href: "#education", icon: FaGraduationCap },
+    { label: "Certificates", href: "#certificates", icon: FaCertificate },
+    { label: "Skills", href: "#skills", icon: FaLaptopCode },
+    { label: "Projects", href: "#projects", icon: FaProjectDiagram },
+    { label: "Contact", href: "#contact", icon: FaPaperPlane },
   ];
 
   return (
@@ -105,7 +112,7 @@ const Footer: React.FC = () => {
               </span>
             </div>
             <p className="text-sm leading-relaxed text-slate-400 max-w-sm">
-              {profile.bio || "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design."}
+              {(profile as any).footer_bio || (profile as any).footerBio || profile.bio || "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design."}
             </p>
 
             {/* Social Links */}
@@ -135,9 +142,12 @@ const Footer: React.FC = () => {
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-slate-400 hover:text-white transition-colors duration-200"
+                    className="group inline-flex items-center gap-2.5 text-slate-400 hover:text-white transition-colors duration-200 py-0.5"
                   >
-                    {link.label}
+                    <span className="flex items-center justify-center w-5 h-5 rounded-md bg-white/[0.03] border border-white/5 text-slate-400 group-hover:text-cyan-400 group-hover:border-cyan-500/30 group-hover:bg-cyan-500/10 transition-all">
+                      {renderIcon(link.icon, { size: 10 })}
+                    </span>
+                    <span className="group-hover:translate-x-0.5 transition-transform">{link.label}</span>
                   </a>
                 </li>
               ))}
