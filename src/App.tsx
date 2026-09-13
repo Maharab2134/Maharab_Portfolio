@@ -13,12 +13,20 @@ import MyJourney from "./pages/MyJourney";
 import Hire from "./pages/Hire";
 import Admin from "./pages/Admin";
 import { Project } from "./data/projectsData";
+import { trackVisitorHit } from "./lib/analyticsService";
 
 type ActiveView = "home" | "hire" | "journey" | "project" | "admin";
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeView, setActiveView] = useState<ActiveView>("home");
+
+  // Track telemetry hit when visitor navigates across views
+  useEffect(() => {
+    if (activeView !== "admin") {
+      trackVisitorHit(activeView);
+    }
+  }, [activeView]);
 
   const syncViewFromLocation = useCallback(() => {
     if (typeof window === "undefined") return;

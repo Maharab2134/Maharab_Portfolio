@@ -173,3 +173,44 @@ TO public
 USING (bucket_id = 'portfolio-assets')
 WITH CHECK (bucket_id = 'portfolio-assets');
 
+-- ==============================================================================
+-- 7. Visitor Analytics & Interaction Telemetry Table
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.portfolio_analytics (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  visitor_id TEXT NOT NULL,          -- Anonymized token: "vid_xxxxxxxx"
+  session_id TEXT NOT NULL,          -- Session token: "sid_xxxxxxxx"
+  is_new_visitor BOOLEAN DEFAULT true,
+  country TEXT DEFAULT 'Unknown',
+  city TEXT DEFAULT 'Unknown',
+  device TEXT DEFAULT 'Desktop',      -- Desktop, Mobile, Tablet
+  browser TEXT DEFAULT 'Other',
+  os TEXT DEFAULT 'Other',
+  referrer TEXT DEFAULT 'Direct',
+  page_path TEXT NOT NULL DEFAULT 'home',
+  section TEXT DEFAULT 'hero',
+  duration_seconds INTEGER DEFAULT 10,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Indices for high performance telemetry queries
+CREATE INDEX IF NOT EXISTS idx_analytics_created_at ON public.portfolio_analytics(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_visitor_id ON public.portfolio_analytics(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_page_path ON public.portfolio_analytics(page_path);
+
+-- Enable Row Level Security
+ALTER TABLE public.portfolio_analytics ENABLE ROW LEVEL SECURITY;
+
+-- Allow public anonymous inserts for visitor hits
+DROP POLICY IF EXISTS "Allow public insert on portfolio_analytics" ON public.portfolio_analytics;
+CREATE POLICY "Allow public insert on portfolio_analytics"
+ON public.portfolio_analytics FOR INSERT TO public
+WITH CHECK (true);
+
+-- Allow public / admin reading of analytics summary
+DROP POLICY IF EXISTS "Allow select on portfolio_analytics" ON public.portfolio_analytics;
+CREATE POLICY "Allow select on portfolio_analytics"
+ON public.portfolio_analytics FOR SELECT TO public
+USING (true);
+
+
