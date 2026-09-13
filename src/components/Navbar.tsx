@@ -125,9 +125,9 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
             href="#home"
             onClick={(e) => handleLinkClick(e, "#home")}
             aria-label={`${profile.name || PORTFOLIO_INFO.name} Home`}
-            className="flex items-center gap-3 group"
+            className="flex items-center gap-2.5 sm:gap-3 group min-w-0 max-w-[calc(100%-120px)] sm:max-w-none"
           >
-            <div className="relative flex items-center justify-center w-10 h-10 overflow-hidden font-bold text-white transition-transform duration-300 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 group-hover:scale-105 shadow-md shadow-purple-500/20 border border-white/20">
+            <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 shrink-0 overflow-hidden font-bold text-white transition-transform duration-300 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 group-hover:scale-105 shadow-md shadow-purple-500/20 border border-white/20">
               <img
                 src={profile.profileImage || PORTFOLIO_INFO.profileImage}
                 alt={profile.name || PORTFOLIO_INFO.name}
@@ -141,11 +141,11 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
               </span>
               <div className="absolute inset-0 transition-opacity opacity-0 bg-white/20 group-hover:opacity-100" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-base font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-purple-300">
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm sm:text-base font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-purple-300 truncate">
                 {displayName}
               </span>
-              <span className="text-[11px] font-medium tracking-wide text-cyan-400/80">
+              <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-cyan-400/80 truncate">
                 {displayTitle}
               </span>
             </div>
@@ -193,24 +193,24 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
           </nav>
 
           {/* Mobile Menu Button */}
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2 md:hidden shrink-0">
             <a
               href="#hire"
               onClick={() => {
                 if (onNavigatePage) onNavigatePage("hire");
                 else window.location.hash = "#hire";
               }}
-              className="px-3 py-1.5 text-xs font-semibold text-white rounded-full bg-gradient-to-r from-purple-600 to-pink-600"
+              className="shrink-0 whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold text-white rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-md shadow-purple-500/20 active:scale-95 transition-transform"
             >
               Hire Me
             </a>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2.5 text-slate-300 transition-colors rounded-xl bg-white/5 border border-white/10 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="p-2.5 text-slate-300 transition-colors rounded-xl bg-white/5 border border-white/10 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 shrink-0"
               aria-label={isMenuOpen ? "Close menu" : "Open navigation menu"}
               aria-expanded={isMenuOpen}
             >
-              {isMenuOpen ? renderIcon(FaTimes, { size: 20 }) : renderIcon(FaBars, { size: 20 })}
+              {isMenuOpen ? renderIcon(FaTimes, { size: 18 }) : renderIcon(FaBars, { size: 18 })}
             </button>
           </div>
         </div>

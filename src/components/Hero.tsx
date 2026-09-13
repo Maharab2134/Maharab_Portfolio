@@ -299,45 +299,47 @@ const Hero: React.FC = () => {
               </a>
             </motion.div>
 
-            {/* Social Connection Pills */}
+            {/* Social Connection Pills & Tech Stack */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.45 }}
-              className="flex items-center gap-2.5 pt-2"
+              className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-2"
             >
-              <span className="text-xs font-semibold tracking-wider uppercase text-slate-400 mr-1 hidden sm:inline">
-                Network:
-              </span>
-              <div className="flex items-center gap-2">
-                {socialLinks.map(({ href, label, icon: Icon, hoverColor }) => (
-                  <div key={label} className="relative">
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={label}
-                      onMouseEnter={() => setActiveTooltip(label)}
-                      onMouseLeave={() => setActiveTooltip(null)}
-                      className={`flex items-center justify-center w-10 h-10 transition-all duration-300 border rounded-full text-slate-400 bg-white/[0.03] border-white/10 backdrop-blur-sm ${hoverColor} hover:scale-110 active:scale-95`}
-                    >
-                      {renderIcon(Icon, { size: 16 })}
-                    </a>
-                    <AnimatePresence>
-                      {activeTooltip === label && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 6, scale: 0.9 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.9 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute z-30 px-2.5 py-1 text-xs font-medium text-white -translate-x-1/2 border rounded-md shadow-lg pointer-events-none -bottom-8 left-1/2 bg-slate-900/90 border-white/10 backdrop-blur-md whitespace-nowrap"
-                        >
-                          {label}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2.5">
+                <span className="text-xs font-semibold tracking-wider uppercase text-slate-400 mr-1">
+                  Network:
+                </span>
+                <div className="flex items-center gap-2">
+                  {socialLinks.map(({ href, label, icon: Icon, hoverColor }) => (
+                    <div key={label} className="relative">
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={label}
+                        onMouseEnter={() => setActiveTooltip(label)}
+                        onMouseLeave={() => setActiveTooltip(null)}
+                        className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 transition-all duration-300 border rounded-full text-slate-400 bg-white/[0.03] border-white/10 backdrop-blur-sm ${hoverColor} hover:scale-110 active:scale-95`}
+                      >
+                        {renderIcon(Icon, { size: 15 })}
+                      </a>
+                      <AnimatePresence>
+                        {activeTooltip === label && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 6, scale: 0.9 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute z-30 px-2.5 py-1 text-xs font-medium text-white -translate-x-1/2 border rounded-md shadow-lg pointer-events-none -bottom-8 left-1/2 bg-slate-900/90 border-white/10 backdrop-blur-md whitespace-nowrap"
+                          >
+                            {label}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="w-px h-6 bg-white/10 hidden sm:block" />
