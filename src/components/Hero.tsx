@@ -227,10 +227,12 @@ const Hero: React.FC = () => {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-wrap items-center gap-2 text-lg sm:text-2xl font-medium text-slate-400"
+              className="flex items-center gap-1.5 sm:gap-2 text-sm xs:text-base sm:text-xl md:text-2xl font-medium text-slate-400 whitespace-nowrap overflow-hidden"
             >
-              {typewriterPrefix && <span>{typewriterPrefix}</span>}
-              <div className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+              {typewriterPrefix && (
+                <span className="shrink-0 whitespace-nowrap">{typewriterPrefix}</span>
+              )}
+              <div className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 whitespace-nowrap truncate min-w-0">
                 <TypeAnimation
                   key={typewriterPhrases.join("|")}
                   sequence={typewriterSequence}
