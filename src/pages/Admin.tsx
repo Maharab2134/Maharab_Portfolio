@@ -1143,6 +1143,55 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
     setTimeout(() => setProfileMessage(""), 4000);
   };
 
+  // Quick Location Presets (especially for Rupnagar, Mirpur 2 to avoid ISP Wi-Fi triangulation to Borobag)
+  const LOCATION_PRESETS = [
+    {
+      label: "Rupnagar, Mirpur 2, Dhaka",
+      shortLabel: "Rupnagar, Mirpur 2",
+      tag: "My Home",
+      isRecommended: true,
+      mapsUrl: "https://www.google.com/maps/search/?api=1&query=Rupnagar,+Mirpur+2,+Dhaka,+Bangladesh",
+    },
+    {
+      label: "Mirpur 2, Dhaka, Bangladesh",
+      shortLabel: "Mirpur 2, Dhaka",
+      tag: "Mirpur 2",
+      isRecommended: false,
+      mapsUrl: "https://www.google.com/maps/search/?api=1&query=Mirpur+2,+Dhaka,+Bangladesh",
+    },
+    {
+      label: "Rupnagar R/A, Mirpur, Dhaka",
+      shortLabel: "Rupnagar R/A",
+      tag: "Rupnagar",
+      isRecommended: false,
+      mapsUrl: "https://www.google.com/maps/search/?api=1&query=Rupnagar+Residential+Area,+Mirpur,+Dhaka",
+    },
+    {
+      label: "Mirpur, Dhaka, Bangladesh",
+      shortLabel: "Mirpur, Dhaka",
+      tag: "Mirpur",
+      isRecommended: false,
+      mapsUrl: "https://www.google.com/maps/search/?api=1&query=Mirpur,+Dhaka,+Bangladesh",
+    },
+    {
+      label: "Dhaka, Bangladesh",
+      shortLabel: "Dhaka",
+      tag: "City",
+      isRecommended: false,
+      mapsUrl: "https://www.google.com/maps/search/?api=1&query=Dhaka,+Bangladesh",
+    },
+  ];
+
+  const handleSelectLocationPreset = (preset: (typeof LOCATION_PRESETS)[0]) => {
+    setProfileForm((prev) => ({
+      ...prev,
+      location: preset.label,
+      maps_url: preset.mapsUrl,
+    }));
+    setLocationStatus(`Set location to "${preset.label}" with direct Google Maps link.`);
+    setTimeout(() => setLocationStatus(null), 4000);
+  };
+
   // Auto-detect GPS Current Location
   const handleDetectLocation = async () => {
     if (!navigator.geolocation) {
@@ -1222,6 +1271,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
           }
         }
 
+        // Check if detected location is in Mirpur/Dhaka or near Borobag (Broadband/Wi-Fi gateway)
+        const isNearMirpurOrBorobag =
+          resolvedLocation.toLowerCase().includes("borobag") ||
+          resolvedLocation.toLowerCase().includes("mirpur") ||
+          (latitude > 23.75 && latitude < 23.85 && longitude > 90.33 && longitude < 90.40);
+
         setProfileForm((prev) => ({
           ...prev,
           location: resolvedLocation,
@@ -1229,8 +1284,15 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
         }));
 
         setDetectingLocation(false);
-        setLocationStatus(`Current location detected: ${resolvedLocation}`);
-        setTimeout(() => setLocationStatus(null), 4500);
+        if (isNearMirpurOrBorobag) {
+          setLocationStatus(
+            `GPS detected ISP hub (${resolvedLocation}). Wi-Fi/broadband often routes through Borobag. If you live in Rupnagar, Mirpur 2, click the preset below.`
+          );
+          setTimeout(() => setLocationStatus(null), 8000);
+        } else {
+          setLocationStatus(`Current location detected: ${resolvedLocation}`);
+          setTimeout(() => setLocationStatus(null), 4500);
+        }
       },
       (err) => {
         setDetectingLocation(false);
@@ -5138,14 +5200,26 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         <input
                           type="text"
                           value={profileForm.location}
-                          onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setProfileForm((prev) => ({
+                              ...prev,
+                              location: val,
+                              maps_url:
+                                !prev.maps_url ||
+                                prev.maps_url.includes("google.com/maps/search/?api=1&query=")
+                                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(val)}`
+                                  : prev.maps_url,
+                            }));
+                          }}
                           onClick={() => {
-                            if (!detectingLocation) {
+                            // If empty, click to auto-detect; if already has text, user can freely edit
+                            if (!profileForm.location.trim() && !detectingLocation) {
                               handleDetectLocation();
                             }
                           }}
-                          placeholder="Click here to auto-detect current GPS location..."
-                          className="w-full pl-3.5 pr-10 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 cursor-pointer hover:border-cyan-500/40 transition-colors"
+                          placeholder="e.g. Rupnagar, Mirpur 2, Dhaka"
+                          className="w-full pl-3.5 pr-10 py-2 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 hover:border-cyan-500/40 transition-colors"
                         />
                         <button
                           type="button"
@@ -5163,36 +5237,113 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           })}
                         </button>
                       </div>
+
+                      {/* Quick Location Presets */}
+                      <div className="mt-2.5 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                            Quick Presets (1-Click Apply)
+                          </span>
+                          <span className="text-[10px] text-amber-400/90 font-medium">
+                            💡 Wi-Fi/ISP GPS may approximate to Borobag
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {LOCATION_PRESETS.map((preset) => {
+                            const isSelected =
+                              profileForm.location.trim().toLowerCase() === preset.label.toLowerCase();
+                            return (
+                              <button
+                                key={preset.label}
+                                type="button"
+                                onClick={() => handleSelectLocationPreset(preset)}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                                  isSelected
+                                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/20"
+                                    : preset.isRecommended
+                                    ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20"
+                                    : "bg-white/[0.04] text-slate-300 border border-white/10 hover:bg-white/[0.08] hover:text-white"
+                                }`}
+                              >
+                                {preset.isRecommended ? (
+                                  <span className="text-emerald-400 font-bold text-xs">⭐</span>
+                                ) : (
+                                  renderIcon(FaMapMarkerAlt, {
+                                    size: 9,
+                                    className: isSelected ? "text-cyan-400" : "text-slate-400",
+                                  })
+                                )}
+                                <span>{preset.label}</span>
+                                {preset.tag && (
+                                  <span className="ml-0.5 text-[9px] px-1 py-0.2 bg-emerald-500/25 text-emerald-300 rounded font-bold uppercase tracking-wider">
+                                    {preset.tag}
+                                  </span>
+                                )}
+                                {isSelected && (
+                                  renderIcon(FaCheck, { size: 9, className: "text-cyan-400 ml-0.5" })
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Status / Alert */}
                       {locationStatus && (
-                        <p
-                          className={`mt-1.5 text-[11px] font-medium transition-all ${
-                            locationStatus.includes("detected")
-                              ? "text-emerald-400"
+                        <div
+                          className={`mt-2 p-2.5 rounded-xl border text-xs font-medium transition-all flex items-center justify-between gap-3 ${
+                            locationStatus.includes("ISP") || locationStatus.includes("Borobag")
+                              ? "bg-amber-500/10 border-amber-500/20 text-amber-300"
+                              : locationStatus.includes("detected") || locationStatus.includes("Set location")
+                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
                               : locationStatus.includes("denied") || locationStatus.includes("timed out")
-                              ? "text-rose-400"
-                              : "text-cyan-300"
+                              ? "bg-rose-500/10 border-rose-500/20 text-rose-300"
+                              : "bg-cyan-500/10 border-cyan-500/20 text-cyan-300"
                           }`}
                         >
-                          {locationStatus}
-                        </p>
+                          <span className="leading-relaxed">{locationStatus}</span>
+                          {(locationStatus.includes("ISP") || locationStatus.includes("Borobag")) && (
+                            <button
+                              type="button"
+                              onClick={() => handleSelectLocationPreset(LOCATION_PRESETS[0])}
+                              className="px-2.5 py-1 bg-emerald-500/25 hover:bg-emerald-500/35 text-emerald-200 border border-emerald-500/40 rounded-lg text-xs font-bold shrink-0 transition-colors cursor-pointer"
+                            >
+                              ⭐ Set Rupnagar, Mirpur 2
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
 
                   <div className="pt-2">
-                    <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                      <span>Custom Google Maps URL (Optional)</span>
-                      <span className="text-[10px] text-slate-400 normal-case font-normal">
-                        Leave blank to automatically link to Current Location above
-                      </span>
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
+                        Google Maps URL (Auto-Generated)
+                      </label>
+                      {profileForm.maps_url && (
+                        <a
+                          href={profileForm.maps_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[11px] text-cyan-400 hover:text-cyan-300 font-medium transition-colors cursor-pointer"
+                          title="Click to preview this pin on Google Maps in a new tab"
+                        >
+                          {renderIcon(FaExternalLinkAlt, { size: 9 })}
+                          <span>Preview Pin on Map</span>
+                        </a>
+                      )}
+                    </div>
                     <input
                       type="text"
                       value={profileForm.maps_url}
                       onChange={(e) => setProfileForm({ ...profileForm, maps_url: e.target.value })}
-                      placeholder="e.g. https://maps.google.com/?q=Mirpur+Dhaka+Bangladesh"
-                      className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
+                      placeholder="e.g. https://www.google.com/maps/search/?api=1&query=Rupnagar,+Mirpur+2,+Dhaka"
+                      className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 transition-colors"
                     />
+                    <p className="mt-1 text-[10px] text-slate-400">
+                      When visitors click Location in your portfolio, this exact Google Maps link opens in a new tab.
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">

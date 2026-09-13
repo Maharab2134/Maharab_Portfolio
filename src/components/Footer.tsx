@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
   const email = profile.email || PORTFOLIO_INFO.email;
   const phone = profile.phone || PORTFOLIO_INFO.phone;
   const location = profile.location || PORTFOLIO_INFO.location;
-  const mapsUrl = profile.mapsUrl || PORTFOLIO_INFO.mapsUrl;
+  const mapsUrl = profile.mapsUrl || (profile as any).maps_url || PORTFOLIO_INFO.mapsUrl;
   const profileImage = profile.profileImage || PORTFOLIO_INFO.profileImage;
   const github = profile.socials?.github || PORTFOLIO_INFO.socials.github;
   const linkedin = profile.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin;
