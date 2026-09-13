@@ -2094,9 +2094,9 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
   ];
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col antialiased selection:bg-indigo-500/30 selection:text-white">
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-[#090d16] text-slate-100 flex flex-col antialiased selection:bg-indigo-500/30 selection:text-white">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b bg-[#090d16]/90 backdrop-blur-xl border-white/[0.08] px-4 sm:px-8 py-3 flex items-center justify-between transition-all">
+      <header className="shrink-0 sticky top-0 z-40 border-b bg-[#090d16]/90 backdrop-blur-xl border-white/[0.08] px-4 sm:px-8 py-3 flex items-center justify-between transition-all">
         <div className="flex items-center gap-3 sm:gap-4">
           {/* Mobile hamburger menu toggle */}
           <button
@@ -2163,10 +2163,10 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
       </header>
 
       {/* Main Layout: Sidebar + In-Page Content */}
-      <div className="flex-1 flex flex-col md:flex-row w-full px-4 sm:px-6 lg:px-8 py-6 gap-6 lg:gap-8 max-w-[1700px] mx-auto">
+      <div className="flex-1 flex flex-col md:flex-row w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 gap-6 lg:gap-8 max-w-[1700px] mx-auto min-h-0 md:overflow-hidden">
         
-        {/* Left Navigation Sidebar (Desktop) */}
-        <aside className="hidden md:flex w-64 lg:w-72 flex-shrink-0 flex-col justify-between self-start sticky top-20 rounded-2xl bg-[#111726]/75 border border-white/[0.08] p-3.5 shadow-xl backdrop-blur-xl space-y-6">
+        {/* Left Navigation Sidebar (Desktop) - Fixed in place with its own scrollbar */}
+        <aside className="hidden md:flex w-64 lg:w-72 flex-shrink-0 flex-col justify-between h-full rounded-2xl bg-[#111726]/75 border border-white/[0.08] p-3.5 shadow-xl backdrop-blur-xl overflow-y-auto space-y-6">
           <div className="space-y-5">
             {navCategories.map((group) => (
               <div key={group.title} className="space-y-1">
@@ -2308,7 +2308,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
         </AnimatePresence>
 
         {/* Right Main Page Content Area (Full in-page views, no dialog boxes) */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 md:h-full md:overflow-y-auto md:pr-2 pb-16 min-h-0">
           
           {/* ============================================================== */}
           {/* VIEW 1: OVERVIEW DASHBOARD */}
@@ -3691,7 +3691,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     </form>
 
                     {/* Right: Live Interactive Card Preview (5 cols, sticky) */}
-                    <div className="lg:col-span-5 sticky top-24 space-y-4">
+                    <div className="lg:col-span-5 sticky top-2 space-y-4">
                       {/* Preview Studio Header & View Switcher */}
                       <div className="p-3.5 rounded-2xl border border-white/[0.08] bg-[#111726]/85 backdrop-blur-sm flex items-center justify-between shadow-xl">
                         <div className="flex items-center gap-2">
