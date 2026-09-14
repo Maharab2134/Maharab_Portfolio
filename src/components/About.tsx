@@ -114,17 +114,14 @@ const About: React.FC = () => {
             className="space-y-6 lg:col-span-7"
           >
             {/* Short Bio (Simple, No Wall of Text) */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <h3 className="text-2xl font-bold text-white sm:text-3xl">
                 Hi, I'm{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
                   {profile.name || PORTFOLIO_INFO.name}
                 </span>
               </h3>
-              <p className="text-base sm:text-lg leading-relaxed text-slate-300">
-                A passionate <strong className="font-semibold text-white">{profile.title || "Full-Stack Software Developer"}</strong> and Computer Science &amp; Engineering student at BUBT.
-              </p>
-              <p className="text-sm sm:text-base leading-relaxed text-slate-400">
+              <p className="text-sm sm:text-base leading-relaxed text-slate-300">
                 {profile.bio || "I enjoy building modern web and mobile applications using React, Next.js, Node.js, and Flutter. My focus is on writing clean, scalable code and turning ideas into fast, user-friendly digital products."}
               </p>
             </div>

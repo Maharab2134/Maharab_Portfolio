@@ -12,6 +12,7 @@ import {
   SkillCategory,
   SkillItemData,
 } from "../data/portfolioData";
+import { VscVscode, VscCode, VscTerminal } from "react-icons/vsc";
 import {
   FaReact,
   FaNodeJs,
@@ -42,6 +43,16 @@ import {
   FaFire,
   FaGlobe,
   FaAws,
+  FaGithub,
+  FaGitlab,
+  FaBitbucket,
+  FaUbuntu,
+  FaStripe,
+  FaWordpress,
+  FaShopify,
+  FaTrello,
+  FaSlack,
+  FaMarkdown,
 } from "react-icons/fa";
 import {
   SiMongodb,
@@ -85,6 +96,44 @@ import {
   SiRubyonrails,
   SiSwift,
   SiDart,
+  SiVite,
+  SiPrisma,
+  SiNetlify,
+  SiCloudflare,
+  SiOpenai,
+  SiJupyter,
+  SiNotion,
+  SiInsomnia,
+  SiSwagger,
+  SiJest,
+  SiCypress,
+  SiVitest,
+  SiEslint,
+  SiPrettier,
+  SiWebpack,
+  SiBabel,
+  SiNpm,
+  SiYarn,
+  SiPnpm,
+  SiBun,
+  SiDeno,
+  SiWebstorm,
+  SiPycharm,
+  SiIntellijidea,
+  SiSublimetext,
+  SiBootstrap,
+  SiSass,
+  SiSqlite,
+  SiMariadb,
+  SiCanva,
+  SiJira,
+  SiDebian,
+  SiArchlinux,
+  SiRaspberrypi,
+  SiEspressif,
+  SiApollographql,
+  SiHuggingface,
+  SiSocketdotio,
 } from "react-icons/si";
 
 export interface ExtendedProject extends Project {
@@ -1336,122 +1385,290 @@ export const saveLiveCertificates = async (
 // ============================================================================
 // Skills & Categories Icon Registry & Resolvers
 // ============================================================================
+// ============================================================================
+// Skills & Categories Icon Registry & Resolvers (Comprehensive Developer Icons)
+// ============================================================================
 export const ICON_REGISTRY: Record<string, any> = {
-  FaReact,
-  FaNodeJs,
-  FaGitAlt,
-  FaMobileAlt,
+  // IDEs & Code Editors
+  VscVscode,
+  VscCode,
+  VscTerminal,
+  SiWebstorm,
+  SiPycharm,
+  SiIntellijidea,
+  SiSublimetext,
+
+  // Languages
+  SiTypescript,
+  SiJavascript,
   FaPython,
+  SiDart,
   FaJava,
-  FaAndroid,
-  FaFigma,
+  SiCplusplus,
+  SiRust,
+  SiGo,
+  SiPhp,
+  SiSwift,
+  SiKotlin,
+  SiRubyonrails,
   FaHtml5,
   FaCss3Alt,
-  FaDocker,
-  FaLinux,
-  FaCode,
+
+  // Frontend & Mobile
+  FaReact,
+  SiNextdotjs,
+  SiFlutter,
+  FaAndroid,
+  SiVuedotjs,
+  SiAngular,
+  SiSvelte,
+  SiTailwindcss,
+  SiBootstrap,
+  SiSass,
+  SiRedux,
+  SiVite,
+  SiWebpack,
+  SiBabel,
+
+  // Backend & APIs
+  FaNodeJs,
+  SiExpress,
+  SiFastapi,
+  SiDjango,
+  SiFlask,
+  SiSpringboot,
+  SiGraphql,
+  SiApollographql,
+  SiSocketdotio,
+  SiPostman,
+  SiInsomnia,
+  SiSwagger,
   FaServer,
+
+  // Databases & ORMs
+  SiPostgresql,
+  SiMongodb,
+  SiMysql,
+  SiSqlite,
+  SiMariadb,
+  SiRedis,
+  SiPrisma,
+  SiSupabase,
+  SiFirebase,
   FaDatabase,
-  FaBrain,
-  FaMicrochip,
-  FaTerminal,
+
+  // DevOps & Cloud
+  FaGitAlt,
+  FaGithub,
+  FaGitlab,
+  FaBitbucket,
+  FaDocker,
+  SiKubernetes,
+  FaAws,
+  SiGooglecloud,
+  SiVercel,
+  SiNetlify,
+  SiCloudflare,
+  FaLinux,
+  FaUbuntu,
+  SiDebian,
+  SiArchlinux,
+  SiNginx,
   FaCloud,
+
+  // AI & Data Science
+  SiOpenai,
+  SiHuggingface,
+  SiJupyter,
+  SiTensorflow,
+  SiPytorch,
+  SiOpencv,
+  SiScikitlearn,
+  SiPandas,
+  SiNumpy,
+  FaBrain,
+
+  // IoT & Hardware
+  SiArduino,
+  SiRaspberrypi,
+  SiEspressif,
+  FaMicrochip,
+  FaCogs,
+
+  // Testing & Tooling
+  SiJest,
+  SiCypress,
+  SiVitest,
+  SiEslint,
+  SiPrettier,
+  SiNpm,
+  SiYarn,
+  SiPnpm,
+  SiBun,
+  SiDeno,
+
+  // Design, Collaboration & CMS
+  FaFigma,
+  SiCanva,
+  SiNotion,
+  SiJira,
+  FaTrello,
+  FaSlack,
+  FaStripe,
+  FaWordpress,
+  FaShopify,
+  FaMarkdown,
+
+  // Generic Utility Icons
+  FaCode,
+  FaMobileAlt,
+  FaTerminal,
   FaShieldAlt,
   FaTools,
   FaLayerGroup,
   FaNetworkWired,
   FaLaptopCode,
-  FaCogs,
   FaCube,
   FaFire,
   FaGlobe,
-  FaAws,
-  SiMongodb,
-  SiExpress,
-  SiPostman,
-  SiTensorflow,
-  SiFlutter,
-  SiKotlin,
-  SiMysql,
-  SiFirebase,
-  SiArduino,
-  SiCplusplus,
-  SiJavascript,
-  SiPostgresql,
-  SiTailwindcss,
-  SiNextdotjs,
-  SiTypescript,
-  SiVuedotjs,
-  SiAngular,
-  SiSvelte,
-  SiGraphql,
-  SiRedux,
-  SiRedis,
-  SiNginx,
-  SiKubernetes,
-  SiGooglecloud,
-  SiVercel,
-  SiSupabase,
-  SiDjango,
-  SiFastapi,
-  SiFlask,
-  SiSpringboot,
-  SiPytorch,
-  SiPandas,
-  SiNumpy,
-  SiScikitlearn,
-  SiOpencv,
-  SiRust,
-  SiGo,
-  SiPhp,
-  SiRubyonrails,
-  SiSwift,
-  SiDart,
 };
 
 export const AVAILABLE_SKILL_ICONS = [
-  { id: "FaReact", label: "React", icon: FaReact },
-  { id: "SiNextdotjs", label: "Next.js", icon: SiNextdotjs },
-  { id: "SiTypescript", label: "TypeScript", icon: SiTypescript },
-  { id: "SiJavascript", label: "JavaScript", icon: SiJavascript },
-  { id: "SiTailwindcss", label: "Tailwind CSS", icon: SiTailwindcss },
-  { id: "FaHtml5", label: "HTML5", icon: FaHtml5 },
-  { id: "FaCss3Alt", label: "CSS3", icon: FaCss3Alt },
-  { id: "SiFlutter", label: "Flutter", icon: SiFlutter },
-  { id: "SiDart", label: "Dart", icon: SiDart },
-  { id: "FaAndroid", label: "Android", icon: FaAndroid },
-  { id: "SiKotlin", label: "Kotlin", icon: SiKotlin },
-  { id: "SiSwift", label: "Swift", icon: SiSwift },
-  { id: "FaNodeJs", label: "Node.js", icon: FaNodeJs },
-  { id: "SiExpress", label: "Express", icon: SiExpress },
-  { id: "SiMongodb", label: "MongoDB", icon: SiMongodb },
-  { id: "SiPostgresql", label: "PostgreSQL", icon: SiPostgresql },
-  { id: "SiMysql", label: "MySQL", icon: SiMysql },
-  { id: "SiFirebase", label: "Firebase", icon: SiFirebase },
-  { id: "SiSupabase", label: "Supabase", icon: SiSupabase },
-  { id: "FaPython", label: "Python", icon: FaPython },
-  { id: "FaJava", label: "Java", icon: FaJava },
-  { id: "SiCplusplus", label: "C++", icon: SiCplusplus },
-  { id: "FaGitAlt", label: "Git / GitHub", icon: FaGitAlt },
-  { id: "SiPostman", label: "Postman", icon: SiPostman },
-  { id: "FaLinux", label: "Linux", icon: FaLinux },
-  { id: "FaDocker", label: "Docker", icon: FaDocker },
-  { id: "FaFigma", label: "Figma / UI", icon: FaFigma },
-  { id: "SiTensorflow", label: "TensorFlow", icon: SiTensorflow },
-  { id: "SiPytorch", label: "PyTorch", icon: SiPytorch },
-  { id: "SiArduino", label: "Arduino", icon: SiArduino },
-  { id: "FaMicrochip", label: "IoT / ESP32", icon: FaMicrochip },
-  { id: "FaAws", label: "AWS Cloud", icon: FaAws },
-  { id: "SiGooglecloud", label: "Google Cloud", icon: SiGooglecloud },
-  { id: "FaCode", label: "Code (Generic)", icon: FaCode },
-  { id: "FaServer", label: "Server", icon: FaServer },
-  { id: "FaDatabase", label: "Database", icon: FaDatabase },
-  { id: "FaBrain", label: "AI / Brain", icon: FaBrain },
-  { id: "FaTerminal", label: "Terminal", icon: FaTerminal },
-  { id: "FaCloud", label: "Cloud", icon: FaCloud },
-  { id: "FaShieldAlt", label: "Security", icon: FaShieldAlt },
-  { id: "FaTools", label: "Tools", icon: FaTools },
-  { id: "FaGlobe", label: "Web / Globe", icon: FaGlobe },
+  // IDEs & Code Editors
+  { id: "VscVscode", label: "VS Code / Visual Studio Code", icon: VscVscode, category: "tools" },
+  { id: "SiWebstorm", label: "WebStorm IDE", icon: SiWebstorm, category: "tools" },
+  { id: "SiPycharm", label: "PyCharm IDE", icon: SiPycharm, category: "tools" },
+  { id: "SiIntellijidea", label: "IntelliJ IDEA", icon: SiIntellijidea, category: "tools" },
+  { id: "SiSublimetext", label: "Sublime Text", icon: SiSublimetext, category: "tools" },
+  { id: "FaTerminal", label: "Terminal / Bash / CLI", icon: FaTerminal, category: "tools" },
+  { id: "FaLaptopCode", label: "Code Studio / IDE", icon: FaLaptopCode, category: "tools" },
+
+  // Programming Languages
+  { id: "SiTypescript", label: "TypeScript", icon: SiTypescript, category: "languages" },
+  { id: "SiJavascript", label: "JavaScript", icon: SiJavascript, category: "languages" },
+  { id: "FaPython", label: "Python", icon: FaPython, category: "languages" },
+  { id: "SiDart", label: "Dart", icon: SiDart, category: "languages" },
+  { id: "FaJava", label: "Java", icon: FaJava, category: "languages" },
+  { id: "SiCplusplus", label: "C++ / C", icon: SiCplusplus, category: "languages" },
+  { id: "SiRust", label: "Rust", icon: SiRust, category: "languages" },
+  { id: "SiGo", label: "Go / Golang", icon: SiGo, category: "languages" },
+  { id: "SiPhp", label: "PHP", icon: SiPhp, category: "languages" },
+  { id: "SiSwift", label: "Swift", icon: SiSwift, category: "languages" },
+  { id: "SiKotlin", label: "Kotlin", icon: SiKotlin, category: "languages" },
+  { id: "SiRubyonrails", label: "Ruby on Rails", icon: SiRubyonrails, category: "languages" },
+  { id: "FaHtml5", label: "HTML5", icon: FaHtml5, category: "languages" },
+  { id: "FaCss3Alt", label: "CSS3", icon: FaCss3Alt, category: "languages" },
+
+  // Frontend Frameworks & Libraries
+  { id: "FaReact", label: "React / React Native", icon: FaReact, category: "frontend" },
+  { id: "SiNextdotjs", label: "Next.js", icon: SiNextdotjs, category: "frontend" },
+  { id: "SiVuedotjs", label: "Vue.js", icon: SiVuedotjs, category: "frontend" },
+  { id: "SiAngular", label: "Angular", icon: SiAngular, category: "frontend" },
+  { id: "SiSvelte", label: "Svelte", icon: SiSvelte, category: "frontend" },
+  { id: "SiTailwindcss", label: "Tailwind CSS", icon: SiTailwindcss, category: "frontend" },
+  { id: "SiBootstrap", label: "Bootstrap", icon: SiBootstrap, category: "frontend" },
+  { id: "SiSass", label: "Sass / SCSS", icon: SiSass, category: "frontend" },
+  { id: "SiRedux", label: "Redux / Toolkit", icon: SiRedux, category: "frontend" },
+  { id: "SiVite", label: "Vite Bundler", icon: SiVite, category: "frontend" },
+  { id: "SiWebpack", label: "Webpack", icon: SiWebpack, category: "frontend" },
+  { id: "SiBabel", label: "Babel", icon: SiBabel, category: "frontend" },
+
+  // Mobile App Development
+  { id: "SiFlutter", label: "Flutter (Cross-Platform)", icon: SiFlutter, category: "mobile" },
+  { id: "FaAndroid", label: "Android Development", icon: FaAndroid, category: "mobile" },
+  { id: "FaMobileAlt", label: "Mobile Apps (Generic)", icon: FaMobileAlt, category: "mobile" },
+
+  // Backend & APIs
+  { id: "FaNodeJs", label: "Node.js", icon: FaNodeJs, category: "backend" },
+  { id: "SiExpress", label: "Express.js", icon: SiExpress, category: "backend" },
+  { id: "SiFastapi", label: "FastAPI", icon: SiFastapi, category: "backend" },
+  { id: "SiDjango", label: "Django", icon: SiDjango, category: "backend" },
+  { id: "SiFlask", label: "Flask", icon: SiFlask, category: "backend" },
+  { id: "SiSpringboot", label: "Spring Boot", icon: SiSpringboot, category: "backend" },
+  { id: "SiGraphql", label: "GraphQL", icon: SiGraphql, category: "backend" },
+  { id: "SiApollographql", label: "Apollo GraphQL", icon: SiApollographql, category: "backend" },
+  { id: "SiSocketdotio", label: "Socket.io (WebSockets)", icon: SiSocketdotio, category: "backend" },
+  { id: "SiPostman", label: "Postman API Platform", icon: SiPostman, category: "tools" },
+  { id: "SiInsomnia", label: "Insomnia REST", icon: SiInsomnia, category: "tools" },
+  { id: "SiSwagger", label: "Swagger / OpenAPI", icon: SiSwagger, category: "tools" },
+  { id: "FaServer", label: "REST APIs & Servers", icon: FaServer, category: "backend" },
+
+  // Databases & Backend As A Service
+  { id: "SiPostgresql", label: "PostgreSQL", icon: SiPostgresql, category: "database" },
+  { id: "SiMongodb", label: "MongoDB", icon: SiMongodb, category: "database" },
+  { id: "SiMysql", label: "MySQL", icon: SiMysql, category: "database" },
+  { id: "SiSqlite", label: "SQLite", icon: SiSqlite, category: "database" },
+  { id: "SiMariadb", label: "MariaDB", icon: SiMariadb, category: "database" },
+  { id: "SiRedis", label: "Redis Cache", icon: SiRedis, category: "database" },
+  { id: "SiPrisma", label: "Prisma ORM", icon: SiPrisma, category: "database" },
+  { id: "SiSupabase", label: "Supabase (Cloud DB & Auth)", icon: SiSupabase, category: "database" },
+  { id: "SiFirebase", label: "Firebase (Firestore & Auth)", icon: SiFirebase, category: "database" },
+  { id: "FaDatabase", label: "Database Management", icon: FaDatabase, category: "database" },
+
+  // DevOps, Cloud & Version Control
+  { id: "FaGitAlt", label: "Git Version Control", icon: FaGitAlt, category: "tools" },
+  { id: "FaGithub", label: "GitHub", icon: FaGithub, category: "tools" },
+  { id: "FaGitlab", label: "GitLab", icon: FaGitlab, category: "tools" },
+  { id: "FaBitbucket", label: "Bitbucket", icon: FaBitbucket, category: "tools" },
+  { id: "FaDocker", label: "Docker Containers", icon: FaDocker, category: "cloud" },
+  { id: "SiKubernetes", label: "Kubernetes (K8s)", icon: SiKubernetes, category: "cloud" },
+  { id: "FaAws", label: "Amazon Web Services (AWS)", icon: FaAws, category: "cloud" },
+  { id: "SiGooglecloud", label: "Google Cloud Platform (GCP)", icon: SiGooglecloud, category: "cloud" },
+  { id: "SiVercel", label: "Vercel Cloud", icon: SiVercel, category: "cloud" },
+  { id: "SiNetlify", label: "Netlify Hosting", icon: SiNetlify, category: "cloud" },
+  { id: "SiCloudflare", label: "Cloudflare", icon: SiCloudflare, category: "cloud" },
+  { id: "FaLinux", label: "Linux Administration", icon: FaLinux, category: "cloud" },
+  { id: "FaUbuntu", label: "Ubuntu Server / OS", icon: FaUbuntu, category: "cloud" },
+  { id: "SiDebian", label: "Debian Linux", icon: SiDebian, category: "cloud" },
+  { id: "SiArchlinux", label: "Arch Linux", icon: SiArchlinux, category: "cloud" },
+  { id: "SiNginx", label: "Nginx Reverse Proxy", icon: SiNginx, category: "cloud" },
+  { id: "FaCloud", label: "Cloud Infrastructure", icon: FaCloud, category: "cloud" },
+
+  // Artificial Intelligence, ML & Data
+  { id: "SiOpenai", label: "OpenAI / ChatGPT / GPT-4", icon: SiOpenai, category: "ai" },
+  { id: "SiHuggingface", label: "Hugging Face Models", icon: SiHuggingface, category: "ai" },
+  { id: "SiJupyter", label: "Jupyter Notebooks", icon: SiJupyter, category: "ai" },
+  { id: "SiTensorflow", label: "TensorFlow & Keras", icon: SiTensorflow, category: "ai" },
+  { id: "SiPytorch", label: "PyTorch Deep Learning", icon: SiPytorch, category: "ai" },
+  { id: "SiOpencv", label: "OpenCV Computer Vision", icon: SiOpencv, category: "ai" },
+  { id: "SiScikitlearn", label: "Scikit-Learn ML", icon: SiScikitlearn, category: "ai" },
+  { id: "SiPandas", label: "Pandas Data Science", icon: SiPandas, category: "ai" },
+  { id: "SiNumpy", label: "NumPy Arrays", icon: SiNumpy, category: "ai" },
+  { id: "FaBrain", label: "Artificial Intelligence (AI)", icon: FaBrain, category: "ai" },
+
+  // IoT & Embedded Systems
+  { id: "SiArduino", label: "Arduino Microcontrollers", icon: SiArduino, category: "iot" },
+  { id: "SiRaspberrypi", label: "Raspberry Pi", icon: SiRaspberrypi, category: "iot" },
+  { id: "SiEspressif", label: "ESP32 / ESP8266 IoT", icon: SiEspressif, category: "iot" },
+  { id: "FaMicrochip", label: "Hardware & Microchips", icon: FaMicrochip, category: "iot" },
+  { id: "FaCogs", label: "Robotics & Embedded", icon: FaCogs, category: "iot" },
+
+  // Testing & Package Managers
+  { id: "SiJest", label: "Jest Testing Framework", icon: SiJest, category: "tools" },
+  { id: "SiCypress", label: "Cypress E2E", icon: SiCypress, category: "tools" },
+  { id: "SiVitest", label: "Vitest Unit Testing", icon: SiVitest, category: "tools" },
+  { id: "SiEslint", label: "ESLint Linter", icon: SiEslint, category: "tools" },
+  { id: "SiPrettier", label: "Prettier Code Formatter", icon: SiPrettier, category: "tools" },
+  { id: "SiNpm", label: "npm Package Manager", icon: SiNpm, category: "tools" },
+  { id: "SiYarn", label: "Yarn", icon: SiYarn, category: "tools" },
+  { id: "SiPnpm", label: "pnpm", icon: SiPnpm, category: "tools" },
+  { id: "SiBun", label: "Bun Runtime", icon: SiBun, category: "tools" },
+  { id: "SiDeno", label: "Deno Runtime", icon: SiDeno, category: "tools" },
+
+  // Design, Collaboration, Payments & CMS
+  { id: "FaFigma", label: "Figma UI/UX Design", icon: FaFigma, category: "tools" },
+  { id: "SiCanva", label: "Canva Design", icon: SiCanva, category: "tools" },
+  { id: "SiNotion", label: "Notion Workspace", icon: SiNotion, category: "tools" },
+  { id: "SiJira", label: "Jira Agile", icon: SiJira, category: "tools" },
+  { id: "FaTrello", label: "Trello Kanban", icon: FaTrello, category: "tools" },
+  { id: "FaSlack", label: "Slack Team Chat", icon: FaSlack, category: "tools" },
+  { id: "FaStripe", label: "Stripe Payments", icon: FaStripe, category: "tools" },
+  { id: "FaWordpress", label: "WordPress CMS", icon: FaWordpress, category: "tools" },
+  { id: "FaShopify", label: "Shopify E-Commerce", icon: FaShopify, category: "tools" },
+  { id: "FaMarkdown", label: "Markdown Documentation", icon: FaMarkdown, category: "tools" },
+  { id: "FaShieldAlt", label: "Security & Authentication", icon: FaShieldAlt, category: "tools" },
+  { id: "FaTools", label: "Developer Tools (Generic)", icon: FaTools, category: "tools" },
+  { id: "FaCode", label: "General Programming", icon: FaCode, category: "languages" },
 ];
 
 export const resolveCategoryIcon = (categoryId: string, iconName?: string): any => {
@@ -1473,57 +1690,133 @@ export const resolveSkillIcon = (name: string, iconName?: string, category?: str
     return ICON_REGISTRY[iconName];
   }
   const n = (name || "").toLowerCase().trim();
-  if (n.includes("react")) return FaReact;
-  if (n.includes("next")) return SiNextdotjs;
+
+  // 1. IDEs, Editors & CLI
+  if (n.includes("vs code") || n.includes("vscode") || n.includes("visual studio code") || n === "vsc") return VscVscode;
+  if (n.includes("visual studio")) return VscCode;
+  if (n.includes("webstorm")) return SiWebstorm;
+  if (n.includes("pycharm")) return SiPycharm;
+  if (n.includes("intellij") || n.includes("idea")) return SiIntellijidea;
+  if (n.includes("sublime")) return SiSublimetext;
+  if (n.includes("terminal") || n.includes("bash") || n.includes("shell") || n.includes("cli")) return FaTerminal;
+
+  // 2. Developer Tools & APIs
+  if (n.includes("postman")) return SiPostman;
+  if (n.includes("insomnia")) return SiInsomnia;
+  if (n.includes("swagger") || n.includes("openapi")) return SiSwagger;
+  if (n.includes("vite")) return SiVite;
+  if (n.includes("webpack")) return SiWebpack;
+  if (n.includes("babel")) return SiBabel;
+  if (n.includes("prisma")) return SiPrisma;
+  if (n.includes("npm")) return SiNpm;
+  if (n.includes("yarn")) return SiYarn;
+  if (n.includes("pnpm")) return SiPnpm;
+  if (n.includes("bun")) return SiBun;
+  if (n.includes("deno")) return SiDeno;
+
+  // 3. Languages
   if (n.includes("typescript") || n === "ts") return SiTypescript;
   if (n.includes("javascript") || n === "js") return SiJavascript;
-  if (n.includes("tailwind")) return SiTailwindcss;
-  if (n.includes("html")) return FaHtml5;
-  if (n.includes("css")) return FaCss3Alt;
-  if (n.includes("flutter")) return SiFlutter;
+  if (n.includes("python") || n === "py") return FaPython;
   if (n.includes("dart")) return SiDart;
-  if (n.includes("android")) return FaAndroid;
+  if (n.includes("java") && !n.includes("javascript")) return FaJava;
+  if (n.includes("c++") || n.includes("cpp")) return SiCplusplus;
+  if (n.includes("c#") || n.includes("csharp")) return FaCode;
+  if (n.includes("rust")) return SiRust;
+  if (n.includes("golang") || n === "go" || n.startsWith("go ")) return SiGo;
+  if (n.includes("php")) return SiPhp;
+  if (n.includes("ruby") || n.includes("rails")) return SiRubyonrails;
   if (n.includes("kotlin")) return SiKotlin;
   if (n.includes("swift")) return SiSwift;
-  if (n.includes("node")) return FaNodeJs;
-  if (n.includes("express")) return SiExpress;
-  if (n.includes("mongo")) return SiMongodb;
-  if (n.includes("postgre") || n.includes("postgres")) return SiPostgresql;
-  if (n.includes("mysql")) return SiMysql;
-  if (n.includes("firebase")) return SiFirebase;
-  if (n.includes("supabase")) return SiSupabase;
-  if (n.includes("python")) return FaPython;
-  if (n.includes("django")) return SiDjango;
-  if (n.includes("fastapi")) return SiFastapi;
-  if (n.includes("flask")) return SiFlask;
-  if (n.includes("c++") || n.includes("cpp")) return SiCplusplus;
-  if (n.includes("c#") || n.includes("csharp") || n === "c") return FaCode;
-  if (n.includes("java") && !n.includes("javascript")) return FaJava;
-  if (n.includes("spring")) return SiSpringboot;
-  if (n.includes("git")) return FaGitAlt;
-  if (n.includes("postman")) return SiPostman;
-  if (n.includes("linux")) return FaLinux;
-  if (n.includes("docker")) return FaDocker;
-  if (n.includes("figma") || n.includes("ui/ux")) return FaFigma;
-  if (n.includes("tensor") || n.includes("keras")) return SiTensorflow;
-  if (n.includes("pytorch")) return SiPytorch;
-  if (n.includes("arduino")) return SiArduino;
-  if (n.includes("esp32") || n.includes("microchip") || n.includes("iot")) return FaMicrochip;
+  if (n.includes("html")) return FaHtml5;
+  if (n.includes("css")) return FaCss3Alt;
+
+  // 4. Frontend & Mobile
+  if (n.includes("react")) return FaReact;
+  if (n.includes("next")) return SiNextdotjs;
+  if (n.includes("flutter")) return SiFlutter;
+  if (n.includes("android")) return FaAndroid;
   if (n.includes("vue")) return SiVuedotjs;
   if (n.includes("angular")) return SiAngular;
   if (n.includes("svelte")) return SiSvelte;
-  if (n.includes("graphql")) return SiGraphql;
+  if (n.includes("tailwind")) return SiTailwindcss;
+  if (n.includes("bootstrap")) return SiBootstrap;
+  if (n.includes("sass") || n.includes("scss")) return SiSass;
   if (n.includes("redux")) return SiRedux;
+
+  // 5. Backend & Cloud DB
+  if (n.includes("node")) return FaNodeJs;
+  if (n.includes("express")) return SiExpress;
+  if (n.includes("fastapi")) return SiFastapi;
+  if (n.includes("django")) return SiDjango;
+  if (n.includes("flask")) return SiFlask;
+  if (n.includes("spring")) return SiSpringboot;
+  if (n.includes("graphql")) return SiGraphql;
+  if (n.includes("apollo")) return SiApollographql;
+  if (n.includes("socket")) return SiSocketdotio;
+  if (n.includes("postgre") || n.includes("postgres") || n.includes("psql")) return SiPostgresql;
+  if (n.includes("mongo")) return SiMongodb;
+  if (n.includes("mysql")) return SiMysql;
+  if (n.includes("sqlite")) return SiSqlite;
+  if (n.includes("mariadb")) return SiMariadb;
   if (n.includes("redis")) return SiRedis;
-  if (n.includes("nginx")) return SiNginx;
-  if (n.includes("kubern")) return SiKubernetes;
+  if (n.includes("supabase")) return SiSupabase;
+  if (n.includes("firebase")) return SiFirebase;
+
+  // 6. DevOps & Cloud
+  if (n.includes("github")) return FaGithub;
+  if (n.includes("gitlab")) return FaGitlab;
+  if (n.includes("bitbucket")) return FaBitbucket;
+  if (n.includes("git")) return FaGitAlt;
+  if (n.includes("docker")) return FaDocker;
+  if (n.includes("kubern") || n.includes("k8s")) return SiKubernetes;
   if (n.includes("aws")) return FaAws;
   if (n.includes("gcp") || n.includes("google cloud")) return SiGooglecloud;
   if (n.includes("vercel")) return SiVercel;
-  if (n.includes("rust")) return SiRust;
-  if (n.includes("go") || n.includes("golang")) return SiGo;
-  if (n.includes("php")) return SiPhp;
-  if (n.includes("ruby") || n.includes("rails")) return SiRubyonrails;
+  if (n.includes("netlify")) return SiNetlify;
+  if (n.includes("cloudflare")) return SiCloudflare;
+  if (n.includes("ubuntu")) return FaUbuntu;
+  if (n.includes("debian")) return SiDebian;
+  if (n.includes("arch")) return SiArchlinux;
+  if (n.includes("linux")) return FaLinux;
+  if (n.includes("nginx")) return SiNginx;
+
+  // 7. AI & Machine Learning
+  if (n.includes("openai") || n.includes("chatgpt") || n.includes("gpt")) return SiOpenai;
+  if (n.includes("hugging")) return SiHuggingface;
+  if (n.includes("jupyter")) return SiJupyter;
+  if (n.includes("tensor") || n.includes("keras")) return SiTensorflow;
+  if (n.includes("pytorch")) return SiPytorch;
+  if (n.includes("opencv")) return SiOpencv;
+  if (n.includes("scikit") || n.includes("sklearn")) return SiScikitlearn;
+  if (n.includes("pandas")) return SiPandas;
+  if (n.includes("numpy")) return SiNumpy;
+  if (n.includes("ai") || n.includes("ml") || n.includes("deep learning") || n.includes("neural")) return FaBrain;
+
+  // 8. IoT & Microcontrollers
+  if (n.includes("arduino")) return SiArduino;
+  if (n.includes("raspberry")) return SiRaspberrypi;
+  if (n.includes("esp32") || n.includes("espressif")) return SiEspressif;
+  if (n.includes("microchip") || n.includes("iot") || n.includes("sensor")) return FaMicrochip;
+
+  // 9. Testing & Linter
+  if (n.includes("jest")) return SiJest;
+  if (n.includes("cypress")) return SiCypress;
+  if (n.includes("vitest")) return SiVitest;
+  if (n.includes("eslint")) return SiEslint;
+  if (n.includes("prettier")) return SiPrettier;
+
+  // 10. Design, CMS, Collab & Payments
+  if (n.includes("figma") || n.includes("ui/ux")) return FaFigma;
+  if (n.includes("canva")) return SiCanva;
+  if (n.includes("notion")) return SiNotion;
+  if (n.includes("jira")) return SiJira;
+  if (n.includes("trello")) return FaTrello;
+  if (n.includes("slack")) return FaSlack;
+  if (n.includes("stripe")) return FaStripe;
+  if (n.includes("wordpress")) return FaWordpress;
+  if (n.includes("shopify")) return FaShopify;
+  if (n.includes("markdown")) return FaMarkdown;
 
   if (category) {
     return resolveCategoryIcon(category);

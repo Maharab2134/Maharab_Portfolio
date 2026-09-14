@@ -54,11 +54,9 @@ const ProjectCard: React.FC<{
 
   return (
     <motion.article
-      layout
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.3) }}
       whileHover={{ y: -6 }}
       onClick={handleOpenDetails}
       className={`relative flex flex-col justify-between overflow-hidden border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl hover:border-purple-500/40 hover:bg-white/[0.05] transition-all duration-300 cursor-pointer group shadow-xl shadow-black/20 ${
@@ -290,22 +288,32 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
           })}
         </div>
 
-        {/* Projects Grid */}
-        <motion.div
-          layout
-          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
-        >
-          <AnimatePresence>
-            {visibleProjects.map((project, index) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                index={index}
-                onSelectProject={onSelectProject}
-              />
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        {/* Projects Grid with Silky-Smooth Category Transition */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeFilter}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {visibleProjects.length === 0 ? (
+              <div className="col-span-full py-16 text-center text-slate-400 text-sm">
+                No projects found in this category.
+              </div>
+            ) : (
+              visibleProjects.map((project, index) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  index={index}
+                  onSelectProject={onSelectProject}
+                />
+              ))
+            )}
+          </motion.div>
+        </AnimatePresence>
 
         {/* View All / Show Less Toggle Button */}
         {filteredProjects.length > rowLimit && (

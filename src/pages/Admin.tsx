@@ -164,7 +164,7 @@ const PROJECT_CATEGORIES: ProjectCategoryDef[] = [
 
 interface TechSuggestion {
   name: string;
-  category: "frontend" | "backend" | "db_cloud" | "ai_ml" | "mobile" | "iot";
+  category: "frontend" | "backend" | "db_cloud" | "ai_ml" | "mobile" | "iot" | "tools";
   popular?: boolean;
 }
 
@@ -214,6 +214,7 @@ const TECH_SUGGESTIONS: TechSuggestion[] = [
   { name: "AWS", category: "db_cloud" },
   { name: "Vercel", category: "db_cloud" },
   { name: "Netlify", category: "db_cloud" },
+  { name: "Cloudflare", category: "db_cloud", popular: true },
 
   // AI & ML
   { name: "TensorFlow", category: "ai_ml", popular: true },
@@ -247,6 +248,17 @@ const TECH_SUGGESTIONS: TechSuggestion[] = [
   { name: "Sensors", category: "iot" },
   { name: "PlatformIO", category: "iot" },
   { name: "MicroPython", category: "iot" },
+
+  // Tools & DevOps
+  { name: "VS Code", category: "tools", popular: true },
+  { name: "Git", category: "tools", popular: true },
+  { name: "GitHub", category: "tools", popular: true },
+  { name: "Postman", category: "tools", popular: true },
+  { name: "Figma", category: "tools", popular: true },
+  { name: "Linux", category: "tools", popular: true },
+  { name: "Vim", category: "tools" },
+  { name: "NPM", category: "tools" },
+  { name: "Bun", category: "tools" },
 ];
 
 const STACK_PRESETS = [
@@ -438,6 +450,8 @@ const Admin: React.FC = () => {
   const [skillsList, setSkillsList] = useState<SkillItemData[]>(DEFAULT_SKILLS_DATA);
   const [skillSearch, setSkillSearch] = useState("");
   const [skillCategoryFilter, setSkillCategoryFilter] = useState("all");
+  const [skillIconSearch, setSkillIconSearch] = useState("");
+  const [skillIconCategory, setSkillIconCategory] = useState("all");
   const [skillSaving, setSkillSaving] = useState(false);
   const [skillToast, setSkillToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -3771,13 +3785,14 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           {/* Category Filter Pills */}
                           <div className="flex flex-wrap gap-1.5 pb-1">
                             {[
-                              { id: "all", label: "All (50+)" },
+                              { id: "all", label: "All" },
                               { id: "frontend", label: "Frontend" },
                               { id: "backend", label: "Backend" },
                               { id: "db_cloud", label: "DB & Cloud" },
                               { id: "ai_ml", label: "AI & ML" },
                               { id: "mobile", label: "Mobile" },
                               { id: "iot", label: "IoT & Hardware" },
+                              { id: "tools", label: "Tools & DevOps" },
                             ].map((f) => (
                               <button
                                 key={f.id}
@@ -4673,35 +4688,124 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           </div>
                         </div>
 
-                        {/* Row 4: Icon Selector */}
-                        <div className="space-y-2">
-                          <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
-                            Technology Icon
-                          </label>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <select
-                                value={skillForm.iconName || ""}
-                                onChange={(e) => setSkillForm({ ...skillForm, iconName: e.target.value })}
-                                className="w-full px-3.5 py-2.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-cyan-400 transition-all font-medium cursor-pointer"
-                              >
-                                <option value="">Auto-resolve from Skill Name (Recommended)</option>
-                                {AVAILABLE_SKILL_ICONS.map((ic) => (
-                                  <option key={ic.id} value={ic.id}>
-                                    {ic.label} ({ic.id})
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
+                        {/* Row 4: Comprehensive Icon Selector with Live Search & Categories */}
+                        <div className="space-y-3 pt-1 border-t border-white/[0.06]">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
+                              Technology Icon ({AVAILABLE_SKILL_ICONS.length}+ Curated Icons)
+                            </label>
                             <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                              <span>Currently resolved:</span>
-                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white font-mono">
+                              <span>Auto-resolved:</span>
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-white/[0.1] text-white font-mono text-xs">
                                 {renderIcon(resolveSkillIcon(skillForm.name, skillForm.iconName, skillForm.category), {
-                                  size: 14,
+                                  size: 15,
                                   style: { color: skillForm.color },
                                 })}
-                                <span>{skillForm.iconName || "Auto-detected"}</span>
+                                <span className="font-semibold text-cyan-300">
+                                  {skillForm.iconName || "Auto-Matched"}
+                                </span>
                               </div>
+                            </div>
+                          </div>
+
+                          {/* Quick Icon Search & Category Filter */}
+                          <div className="space-y-2.5 p-3.5 rounded-xl bg-[#090d16] border border-white/[0.08]">
+                            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
+                              <div className="relative flex-1">
+                                <span className="absolute left-3 top-2.5 text-slate-500">
+                                  {renderIcon(FaSearch, { size: 11 })}
+                                </span>
+                                <input
+                                  type="text"
+                                  value={skillIconSearch}
+                                  onChange={(e) => setSkillIconSearch(e.target.value)}
+                                  placeholder="Search icon (e.g., VS Code, Postman, Python, Docker, React)..."
+                                  className="w-full pl-8 pr-7 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400 placeholder:text-slate-500 transition-all font-sans"
+                                />
+                                {skillIconSearch && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSkillIconSearch("")}
+                                    className="absolute right-2 top-2 text-slate-400 hover:text-white cursor-pointer"
+                                  >
+                                    {renderIcon(FaTimes, { size: 10 })}
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Reset to Auto button */}
+                              <button
+                                type="button"
+                                onClick={() => setSkillForm({ ...skillForm, iconName: "" })}
+                                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap border ${
+                                  !skillForm.iconName
+                                    ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-semibold"
+                                    : "bg-white/[0.03] text-slate-400 border-white/[0.06] hover:text-white hover:bg-white/[0.06]"
+                                }`}
+                              >
+                                ✨ Auto from Name
+                              </button>
+                            </div>
+
+                            {/* Category Filter Pills for Icons */}
+                            <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px]">
+                              {[
+                                { id: "all", label: "All" },
+                                { id: "tools", label: "IDEs & Tools" },
+                                { id: "languages", label: "Languages" },
+                                { id: "frontend", label: "Frontend" },
+                                { id: "backend", label: "Backend" },
+                                { id: "database", label: "Database" },
+                                { id: "cloud", label: "Cloud & DevOps" },
+                                { id: "ai", label: "AI / ML" },
+                                { id: "iot", label: "IoT" },
+                              ].map((cat) => (
+                                <button
+                                  key={cat.id}
+                                  type="button"
+                                  onClick={() => setSkillIconCategory(cat.id)}
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+                                    skillIconCategory === cat.id
+                                      ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
+                                      : "text-slate-400 hover:text-slate-200 bg-white/[0.02]"
+                                  }`}
+                                >
+                                  {cat.label}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Scrollable Visual Icon Grid */}
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 max-h-48 overflow-y-auto pr-1 pt-1">
+                              {AVAILABLE_SKILL_ICONS.filter((ic) => {
+                                const matchesCat =
+                                  skillIconCategory === "all" || (ic as any).category === skillIconCategory;
+                                const matchesSearch =
+                                  !skillIconSearch ||
+                                  ic.label.toLowerCase().includes(skillIconSearch.toLowerCase()) ||
+                                  ic.id.toLowerCase().includes(skillIconSearch.toLowerCase());
+                                return matchesCat && matchesSearch;
+                              }).map((ic) => {
+                                const isSelected = skillForm.iconName === ic.id;
+                                return (
+                                  <button
+                                    key={ic.id}
+                                    type="button"
+                                    onClick={() => setSkillForm({ ...skillForm, iconName: ic.id })}
+                                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer text-center ${
+                                      isSelected
+                                        ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-md ring-1 ring-cyan-400/40 scale-95"
+                                        : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.06] text-slate-300 hover:text-white"
+                                    }`}
+                                    title={`${ic.label} (${ic.id})`}
+                                  >
+                                    <div className="text-base">{renderIcon(ic.icon, { size: 16 })}</div>
+                                    <span className="text-[9px] font-medium truncate max-w-[70px] leading-tight">
+                                      {ic.label.split(" ")[0]}
+                                    </span>
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
