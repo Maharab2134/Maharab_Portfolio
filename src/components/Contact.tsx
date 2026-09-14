@@ -11,7 +11,7 @@ import {
   FaExternalLinkAlt,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
-import { useLiveProfile } from "../lib/portfolioService";
+import { useLiveProfile, recordContactInquiry } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -66,6 +66,14 @@ const Contact: React.FC = () => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.message.trim()) return;
 
+    recordContactInquiry({
+      name: formData.name,
+      email: formData.email,
+      subject: `[WhatsApp] ${formData.subject || "General Inquiry"}`,
+      message: formData.message,
+      source: "whatsapp",
+    });
+
     const messageText = `Hi ${profile.shortName || profile.name || "Maharab"},%0A%0AMy name is ${encodeURIComponent(
       formData.name
     )} (${encodeURIComponent(formData.email || "No email provided")}).%0A%0ASubject: ${encodeURIComponent(
@@ -74,19 +82,27 @@ const Contact: React.FC = () => {
 
     const url = `https://wa.me/${whatsappNumber}?text=${messageText}`;
     window.open(url, "_blank", "noopener,noreferrer");
-    setSubmittedStatus("Opening WhatsApp chat with your pre-filled inquiry...");
+    setSubmittedStatus("Inquiry saved! Opening WhatsApp chat with your pre-filled message...");
   };
 
   const handleSubmitEmail = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.message.trim()) return;
 
+    recordContactInquiry({
+      name: formData.name,
+      email: formData.email,
+      subject: `[Email Client] ${formData.subject || `Inquiry from ${formData.name}`}`,
+      message: formData.message,
+      source: "email",
+    });
+
     const subject = encodeURIComponent(formData.subject || `Inquiry from ${formData.name}`);
     const body = encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
     );
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    setSubmittedStatus("Opening your default email client...");
+    setSubmittedStatus("Inquiry saved! Opening your default email client...");
   };
 
   return (
@@ -177,6 +193,15 @@ const Contact: React.FC = () => {
                       href={whatsappUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => {
+                        recordContactInquiry({
+                          name: "Direct WhatsApp Visitor",
+                          email: "whatsapp_visitor@direct.link",
+                          subject: "[WhatsApp Click] Direct Chat Initiated",
+                          message: "A visitor clicked the direct WhatsApp Chat link in the contact card.",
+                          source: "whatsapp",
+                        });
+                      }}
                       className="text-sm font-semibold text-white hover:text-emerald-300 transition-colors truncate block"
                     >
                       {phone}

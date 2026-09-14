@@ -18,6 +18,7 @@ export interface Project {
   sourceCodePrivate?: boolean;
   featured?: boolean;
   year?: string;
+  orderIndex?: number;
 }
 
 export const toProxyImageUrl = (url: string): string => {

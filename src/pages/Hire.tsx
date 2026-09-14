@@ -12,7 +12,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
-import { useLiveProfile } from "../lib/portfolioService";
+import { useLiveProfile, recordContactInquiry } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -99,6 +99,14 @@ const Hire: React.FC = () => {
       .filter(Boolean)
       .join(", ");
 
+    recordContactInquiry({
+      name: formData.name,
+      email: formData.email,
+      subject: `[Let's Collaborate - WhatsApp] ${formData.timeline} (${formData.budget})`,
+      message: `Company: ${formData.company || "Independent"}\nServices: ${servicesText || "General Engineering"}\nTimeline: ${formData.timeline}\nBudget: ${formData.budget}\n\nProject Scope:\n${formData.description}`,
+      source: "hire",
+    });
+
     const text = [
       `*New Project Inquiry via Portfolio*`,
       `*Name:* ${formData.name}`,
@@ -112,7 +120,7 @@ const Hire: React.FC = () => {
 
     const url = `https://wa.me/${whatsappNumber}?text=${text}`;
     window.open(url, "_blank", "noopener,noreferrer");
-    setSubmittedStatus("Redirecting to WhatsApp to send your detailed brief...");
+    setSubmittedStatus("Inquiry recorded! Redirecting to WhatsApp to send your brief...");
   };
 
   const handleSubmitEmail = (e: React.MouseEvent) => {
@@ -127,6 +135,14 @@ const Hire: React.FC = () => {
       .filter(Boolean)
       .join(", ");
 
+    recordContactInquiry({
+      name: formData.name,
+      email: formData.email,
+      subject: `[Let's Collaborate - Email] Project Proposal from ${formData.name}`,
+      message: `Company: ${formData.company || "Independent"}\nServices: ${servicesText || "General Engineering"}\nTimeline: ${formData.timeline}\nBudget: ${formData.budget}\n\nProject Scope:\n${formData.description}`,
+      source: "hire",
+    });
+
     const subject = encodeURIComponent(`Project Proposal from ${formData.name}`);
     const body = encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\nCompany: ${formData.company || "N/A"}\n` +
@@ -135,7 +151,7 @@ const Hire: React.FC = () => {
     );
 
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    setSubmittedStatus("Opening your email client with your prefilled proposal...");
+    setSubmittedStatus("Proposal recorded! Opening your email client with your prefilled brief...");
   };
 
   return (

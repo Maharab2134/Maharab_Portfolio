@@ -80,6 +80,20 @@ const STORAGE_VID_KEY = "maharab_visitor_id";
 const STORAGE_SID_KEY = "maharab_session_id";
 const STORAGE_VISITED_BEFORE_KEY = "maharab_has_visited_before";
 
+// Auto-purge any legacy fake seed data from localStorage
+if (typeof window !== "undefined") {
+  try {
+    const raw = localStorage.getItem(STORAGE_ANALYTICS_KEY);
+    if (raw && (raw.includes('"seed_') || raw.includes("seed-") || raw.includes("Bengaluru") || raw.includes("San Francisco"))) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const realOnly = parsed.filter((e: any) => e && e.id && !String(e.id).startsWith("seed_"));
+        localStorage.setItem(STORAGE_ANALYTICS_KEY, JSON.stringify(realOnly));
+      }
+    }
+  } catch (e) {}
+}
+
 // Generate clean anonymized UUID-like token
 const generateAnonToken = (prefix: string = "id"): string => {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -399,10 +413,6 @@ export const trackVisitorHit = async (
       }
     } catch (e) {}
 
-    if (cachedEvents.length === 0) {
-      cachedEvents = generateRealisticSeedAnalytics();
-    }
-
     cachedEvents.unshift(newEvent);
     // Keep last 600 events in local cache for speed
     if (cachedEvents.length > 600) {
@@ -457,14 +467,6 @@ export const getLiveAnalytics = async (
       }
     }
   } catch (e) {}
-
-  // If local cache is empty, seed it
-  if (allEvents.length === 0) {
-    allEvents = generateRealisticSeedAnalytics();
-    try {
-      localStorage.setItem(STORAGE_ANALYTICS_KEY, JSON.stringify(allEvents));
-    } catch (e) {}
-  }
 
   // Try fetching latest from Supabase if configured
   if (isSupabaseConfigured && supabase) {
@@ -536,7 +538,7 @@ export const getLiveAnalytics = async (
 
   const uniqueVisitors = uniqueVisitorSet.size;
   const avgDurationSeconds = totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0;
-  const bounceRate = totalVisits > 0 ? Math.round((filteredEvents.filter((e) => (e.durationSeconds || 0) < 30).length / totalVisits) * 100) : 24;
+  const bounceRate = totalVisits > 0 ? Math.round((filteredEvents.filter((e) => (e.durationSeconds || 0) < 30).length / totalVisits) * 100) : 0;
 
   // Daily Trends Grouping
   const trendsMap = new Map<string, { total: number; uniqueSet: Set<string> }>();
@@ -691,13 +693,26 @@ export const getLiveAnalytics = async (
   };
 };
 
-// Reset analytics seed data
-export const resetAnalyticsToSeed = async (): Promise<void> => {
-  const seed = generateRealisticSeedAnalytics();
+// Clear analytics history
+export const clearAnalyticsHistory = async (): Promise<void> => {
   try {
-    localStorage.setItem(STORAGE_ANALYTICS_KEY, JSON.stringify(seed));
+    localStorage.removeItem(STORAGE_ANALYTICS_KEY);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("portfolio_analytics_updated"));
     }
   } catch (e) {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from("portfolio_analytics")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+    } catch (e) {
+      console.warn("Failed to clear Supabase analytics:", e);
+    }
+  }
 };
+
+// Aliased for backwards compatibility with existing UI buttons
+export const resetAnalyticsToSeed = clearAnalyticsHistory;

@@ -135,6 +135,7 @@ export const mapSupabaseToProject = (raw: any): ExtendedProject => {
     github: raw.github_url || raw.github || "",
     featured: Boolean(raw.featured),
     year: raw.year || "2024",
+    orderIndex: raw.order_index !== undefined ? Number(raw.order_index) : (raw.orderIndex !== undefined ? Number(raw.orderIndex) : undefined),
   };
 };
 
@@ -178,7 +179,103 @@ export const getVideoEmbedUrl = (raw?: string | null): string => {
   return trimmed;
 };
 
-// Fetch live projects (Supabase + LocalStorage Smart Merge)
+// Category priority: Web Developer first, then Mobile, AI/ML, and IoT
+export const getCategoryPriority = (cat?: string): number => {
+  const c = (cat || "").toLowerCase();
+  if (c === "web") return 1;
+  if (c === "mobile") return 2;
+  if (c === "ml" || c === "ai") return 3;
+  if (c === "iot" || c === "hardware") return 4;
+  return 5;
+};
+
+// Sort projects respecting user's custom order, then category priority (Web First)
+export const sortProjectsWithPriority = (projects: ExtendedProject[]): ExtendedProject[] => {
+  // 1. Check if user has saved a manual order sequence
+  let customOrderIds: string[] = [];
+  try {
+    const raw = localStorage.getItem("maharab_projects_order");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        customOrderIds = parsed.map(String);
+      }
+    }
+  } catch (e) {}
+
+  if (customOrderIds.length > 0) {
+    return [...projects].sort((a, b) => {
+      const idA = a.id || (a as any).project_id;
+      const idB = b.id || (b as any).project_id;
+      const idxA = customOrderIds.indexOf(idA);
+      const idxB = customOrderIds.indexOf(idB);
+
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+
+      return getCategoryPriority(a.category) - getCategoryPriority(b.category);
+    });
+  }
+
+  // 2. Check if projects have an explicit orderIndex
+  const hasOrderIndex = projects.some((p) => p.orderIndex !== undefined || (p as any).order_index !== undefined);
+  if (hasOrderIndex) {
+    return [...projects].sort((a, b) => {
+      const ordA = a.orderIndex ?? (a as any).order_index ?? 9999;
+      const ordB = b.orderIndex ?? (b as any).order_index ?? 9999;
+      if (ordA !== ordB) return ordA - ordB;
+      return getCategoryPriority(a.category) - getCategoryPriority(b.category);
+    });
+  }
+
+  // 3. Default category priority: Web Developer first (Web -> Mobile -> AI/ML -> IoT)
+  return [...projects].sort((a, b) => {
+    const catDiff = getCategoryPriority(a.category) - getCategoryPriority(b.category);
+    if (catDiff !== 0) return catDiff;
+    if (a.featured && !b.featured) return -1;
+    if (!a.featured && b.featured) return 1;
+    return 0;
+  });
+};
+
+// Persist custom order and trigger live sync
+export const saveProjectOrder = async (orderedList: ExtendedProject[]): Promise<boolean> => {
+  try {
+    const ids = orderedList.map((p) => p.id || (p as any).project_id);
+    localStorage.setItem("maharab_projects_order", JSON.stringify(ids));
+
+    const updatedWithOrder = orderedList.map((p, idx) => ({
+      ...p,
+      orderIndex: idx,
+      _local_updated_at: Date.now(),
+    }));
+    localStorage.setItem("maharab_cached_projects", JSON.stringify(updatedWithOrder));
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_projects_updated"));
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      const client = supabase;
+      Promise.allSettled(
+        updatedWithOrder.map((proj, idx) =>
+          client
+            .from("projects")
+            .update({ order_index: idx })
+            .or(`project_id.eq.${proj.id},id.eq.${proj.id}`)
+        )
+      ).catch(() => {});
+    }
+
+    return true;
+  } catch (e) {
+    console.error("Failed to save project order:", e);
+    return false;
+  }
+};
+
+// Fetch live projects (Supabase + LocalStorage Smart Merge + Web First Priority)
 export const getLiveProjects = async (): Promise<ExtendedProject[]> => {
   let cachedList: ExtendedProject[] = [];
 
@@ -217,7 +314,6 @@ export const getLiveProjects = async (): Promise<ExtendedProject[]> => {
           );
 
           if (localMatch && localMatch._local_updated_at) {
-            // Local edit exists: prioritize the locally edited version
             merged.push(localMatch);
           } else {
             merged.push(sp);
@@ -233,11 +329,13 @@ export const getLiveProjects = async (): Promise<ExtendedProject[]> => {
           }
         }
 
+        const sortedMerged = sortProjectsWithPriority(merged);
+
         try {
-          localStorage.setItem("maharab_cached_projects", JSON.stringify(merged));
+          localStorage.setItem("maharab_cached_projects", JSON.stringify(sortedMerged));
         } catch (e) {}
 
-        return merged;
+        return sortedMerged;
       }
     } catch (err) {
       console.warn("Supabase fetch failed, falling back to local data:", err);
@@ -246,11 +344,11 @@ export const getLiveProjects = async (): Promise<ExtendedProject[]> => {
 
   // If Supabase is empty or failed, use cached list if available
   if (cachedList.length > 0) {
-    return cachedList;
+    return sortProjectsWithPriority(cachedList);
   }
 
   // Fallback to static PROJECTS data
-  return PROJECTS.map((p) => ({ ...p, _local_updated_at: 0 }));
+  return sortProjectsWithPriority(PROJECTS.map((p) => ({ ...p, _local_updated_at: 0 })));
 };
 
 // Save or Update a Project in Supabase and LocalStorage
@@ -429,6 +527,206 @@ export const deleteLiveProject = async (id: string): Promise<boolean> => {
     }
   }
 
+  return true;
+};
+
+// --- Contact Inquiries & Notification Service ---
+export interface ContactInquiry {
+  id: string;
+  name: string;
+  email: string;
+  subject?: string;
+  message: string;
+  source?: "whatsapp" | "email" | "form" | "hire";
+  created_at: string;
+  read?: boolean;
+}
+
+const STORAGE_MESSAGES_KEY = "maharab_contact_messages";
+const STORAGE_READ_MESSAGES_KEY = "maharab_read_messages";
+
+export const getReadMessageIds = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_READ_MESSAGES_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch (e) {}
+  return new Set();
+};
+
+export const markMessageAsRead = (id: string): void => {
+  try {
+    const ids = getReadMessageIds();
+    ids.add(id);
+    localStorage.setItem(STORAGE_READ_MESSAGES_KEY, JSON.stringify(Array.from(ids)));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_messages_updated"));
+    }
+  } catch (e) {}
+};
+
+export const markAllMessagesAsRead = (allIds: string[]): void => {
+  try {
+    const ids = getReadMessageIds();
+    allIds.forEach((id) => ids.add(id));
+    localStorage.setItem(STORAGE_READ_MESSAGES_KEY, JSON.stringify(Array.from(ids)));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_messages_updated"));
+    }
+  } catch (e) {}
+};
+
+export const recordContactInquiry = async (data: {
+  name: string;
+  email: string;
+  subject?: string;
+  message: string;
+  source?: "whatsapp" | "email" | "form" | "hire";
+}): Promise<{ success: boolean; id: string }> => {
+  const newId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const timestamp = new Date().toISOString();
+
+  const inquiryRecord: ContactInquiry = {
+    id: newId,
+    name: data.name.trim() || "Website Visitor",
+    email: data.email.trim() || "visitor@direct.contact",
+    subject:
+      data.subject?.trim() ||
+      (data.source === "whatsapp"
+        ? "WhatsApp Fast-Track Inquiry"
+        : data.source === "hire"
+        ? "Let's Collaborate Proposal"
+        : "Direct Email Inquiry"),
+    message: data.message.trim(),
+    source: data.source || "form",
+    created_at: timestamp,
+    read: false,
+  };
+
+  // 1. Immediately cache in localStorage for instant offline access
+  try {
+    const existingRaw = localStorage.getItem(STORAGE_MESSAGES_KEY);
+    const existingList: ContactInquiry[] = existingRaw ? JSON.parse(existingRaw) : [];
+    const updated = [inquiryRecord, ...existingList.filter((m) => m.id !== newId)];
+    localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(updated.slice(0, 100)));
+  } catch (e) {
+    console.warn("Failed to cache inquiry locally:", e);
+  }
+
+  // 2. Dispatch events for real-time notification in Admin navbar
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("portfolio_new_inquiry", { detail: inquiryRecord }));
+    window.dispatchEvent(new Event("portfolio_messages_updated"));
+  }
+
+  // 3. Persist into Supabase contact_messages table if configured
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from("contact_messages").insert([
+        {
+          name: inquiryRecord.name,
+          email: inquiryRecord.email,
+          subject: inquiryRecord.subject,
+          message: inquiryRecord.message,
+          created_at: timestamp,
+        },
+      ]);
+    } catch (err) {
+      console.warn("Supabase contact_messages insert failed (local backup active):", err);
+    }
+  }
+
+  return { success: true, id: newId };
+};
+
+export const getLiveMessages = async (): Promise<ContactInquiry[]> => {
+  let localList: ContactInquiry[] = [];
+  try {
+    const raw = localStorage.getItem(STORAGE_MESSAGES_KEY);
+    if (raw) localList = JSON.parse(raw);
+  } catch (e) {}
+
+  const readIds = getReadMessageIds();
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data } = await supabase
+        .from("contact_messages")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (data && data.length > 0) {
+        const mergedMap = new Map<string, ContactInquiry>();
+
+        // Add Supabase messages
+        data.forEach((row: any) => {
+          const rowId = String(row.id);
+          const subj = (row.subject || "").toLowerCase();
+          const body = (row.message || "").toLowerCase();
+          let detectedSource: "whatsapp" | "email" | "hire" | "form" = "form";
+          if (subj.includes("whatsapp") || body.includes("whatsapp")) detectedSource = "whatsapp";
+          else if (subj.includes("hire") || body.includes("collaborate")) detectedSource = "hire";
+          else if (subj.includes("email") || body.includes("email")) detectedSource = "email";
+
+          mergedMap.set(rowId, {
+            id: rowId,
+            name: row.name || "Anonymous Visitor",
+            email: row.email || "No Email",
+            subject: row.subject || "General Inquiry",
+            message: row.message || "",
+            created_at: row.created_at || new Date().toISOString(),
+            source: detectedSource,
+            read: readIds.has(rowId),
+          });
+        });
+
+        // Add any local messages not yet in Supabase
+        localList.forEach((local) => {
+          if (!mergedMap.has(local.id)) {
+            mergedMap.set(local.id, {
+              ...local,
+              read: readIds.has(local.id),
+            });
+          }
+        });
+
+        const sorted = Array.from(mergedMap.values()).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        try {
+          localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(sorted.slice(0, 100)));
+        } catch (e) {}
+
+        return sorted;
+      }
+    } catch (e) {
+      console.warn("Supabase messages fetch fallback:", e);
+    }
+  }
+
+  return localList.map((m) => ({ ...m, read: readIds.has(m.id) }));
+};
+
+export const deleteLiveMessage = async (id: string): Promise<boolean> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_MESSAGES_KEY);
+    if (raw) {
+      const list: ContactInquiry[] = JSON.parse(raw);
+      const filtered = list.filter((m) => m.id !== id);
+      localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(filtered));
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_messages_updated"));
+    }
+  } catch (e) {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from("contact_messages").delete().eq("id", id);
+    } catch (e) {
+      console.warn("Supabase message delete error:", e);
+    }
+  }
   return true;
 };
 

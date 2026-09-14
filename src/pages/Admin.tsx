@@ -53,11 +53,19 @@ import {
   FaPercentage,
   FaMapMarkerAlt,
   FaCrosshairs,
+  FaBell,
+  FaArrowUp,
+  FaArrowDown,
+  FaAngleDoubleUp,
+  FaSortAmountDown,
+  FaWhatsapp,
+  FaBriefcase,
+  FaInbox,
 } from "react-icons/fa";
 import { TypeAnimation } from "react-type-animation";
 import {
   getLiveAnalytics,
-  resetAnalyticsToSeed,
+  clearAnalyticsHistory,
   AnalyticsSummary,
   TimeRangeFilter,
 } from "../lib/analyticsService";
@@ -82,6 +90,12 @@ import {
   getLiveProjects,
   saveLiveProject,
   deleteLiveProject,
+  saveProjectOrder,
+  getCategoryPriority,
+  getLiveMessages,
+  markMessageAsRead,
+  markAllMessagesAsRead,
+  deleteLiveMessage,
   getLiveProfile,
   saveLiveProfile,
   saveLiveResumeUrl,
@@ -349,6 +363,9 @@ const Admin: React.FC = () => {
   const [projectSaving, setProjectSaving] = useState(false);
   const [projectToast, setProjectToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
+  // Notification popover state
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
     name: PORTFOLIO_INFO.name,
@@ -503,10 +520,10 @@ const Admin: React.FC = () => {
   }, [analyticsFilter, loadAnalyticsData]);
 
   const handleResetAnalytics = async () => {
-    if (window.confirm("Reset analytics dataset with a realistic 30-day traffic seed?")) {
-      await resetAnalyticsToSeed();
+    if (window.confirm("Clear all visitor analytics? System is running in 100% dynamic mode and will only track real visits.")) {
+      await clearAnalyticsHistory();
       await loadAnalyticsData(analyticsFilter);
-      showAnalyticsToast("Analytics reset to realistic 30-day baseline successfully!");
+      showAnalyticsToast("Analytics cleared! Only live, dynamic visitor events will be recorded.");
     }
   };
 
@@ -547,20 +564,96 @@ const Admin: React.FC = () => {
     );
   }, []);
 
-  // Fetch Messages from Supabase
+  // Fetch Messages from Supabase + Local Cache
   const fetchMessages = useCallback(async () => {
-    if (!isSupabaseConfigured || !supabase) return;
-    const { data } = await supabase
-      .from("contact_messages")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) {
-      setMessagesList(data);
-      if (data.length > 0 && !selectedMessage) {
-        setSelectedMessage(data[0]);
-      }
+    const list = await getLiveMessages();
+    setMessagesList(list);
+    if (list.length > 0 && !selectedMessage) {
+      setSelectedMessage(list[0]);
     }
   }, [selectedMessage]);
+
+  useEffect(() => {
+    fetchMessages();
+    window.addEventListener("portfolio_messages_updated", fetchMessages);
+    window.addEventListener("portfolio_new_inquiry", fetchMessages);
+    return () => {
+      window.removeEventListener("portfolio_messages_updated", fetchMessages);
+      window.removeEventListener("portfolio_new_inquiry", fetchMessages);
+    };
+  }, [fetchMessages]);
+
+  const unreadMessagesCount = messagesList.filter((m) => !m.read).length;
+
+  const handleSelectMessage = (msg: any) => {
+    setSelectedMessage(msg);
+    markMessageAsRead(msg.id);
+    setMessagesList((prev) =>
+      prev.map((m) => (m.id === msg.id ? { ...m, read: true } : m))
+    );
+  };
+
+  const handleMarkAllRead = () => {
+    const allIds = messagesList.map((m) => m.id);
+    markAllMessagesAsRead(allIds);
+    setMessagesList((prev) => prev.map((m) => ({ ...m, read: true })));
+  };
+
+  // Project Reordering Handlers (Task 1)
+  const handleMoveProject = async (id: string, direction: "up" | "down") => {
+    const currentIndex = projectsList.findIndex((p) => (p.id || p.project_id) === id);
+    if (currentIndex === -1) return;
+    if (direction === "up" && currentIndex === 0) return;
+    if (direction === "down" && currentIndex === projectsList.length - 1) return;
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    const copy = [...projectsList];
+    const [moved] = copy.splice(currentIndex, 1);
+    copy.splice(targetIndex, 0, moved);
+
+    setProjectsList(copy);
+    await saveProjectOrder(copy);
+    setProjectToast({
+      message: `"${moved.title}" moved to position #${targetIndex + 1}!`,
+      type: "success",
+    });
+    setTimeout(() => setProjectToast(null), 3000);
+  };
+
+  const handleMoveToTop = async (id: string) => {
+    const currentIndex = projectsList.findIndex((p) => (p.id || p.project_id) === id);
+    if (currentIndex <= 0) return;
+
+    const copy = [...projectsList];
+    const [moved] = copy.splice(currentIndex, 1);
+    copy.unshift(moved);
+
+    setProjectsList(copy);
+    await saveProjectOrder(copy);
+    setProjectToast({
+      message: `"${moved.title}" pinned to position #1 (Top of Portfolio)!`,
+      type: "success",
+    });
+    setTimeout(() => setProjectToast(null), 3000);
+  };
+
+  const handleSortWebFirst = async () => {
+    const sorted = [...projectsList].sort((a, b) => {
+      const diff = getCategoryPriority(a.category) - getCategoryPriority(b.category);
+      if (diff !== 0) return diff;
+      if (a.featured && !b.featured) return -1;
+      if (!a.featured && b.featured) return 1;
+      return 0;
+    });
+
+    setProjectsList(sorted);
+    await saveProjectOrder(sorted);
+    setProjectToast({
+      message: "Projects reorganized: Web Developer First ⭐",
+      type: "success",
+    });
+    setTimeout(() => setProjectToast(null), 3500);
+  };
 
   // Fetch Profile Live Data
   const fetchProfileData = useCallback(async () => {
@@ -1346,12 +1439,8 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
   // Delete message
   const handleDeleteMessage = async (id: string) => {
     if (!window.confirm("Delete this message?")) return;
-    if (supabase) {
-      await supabase.from("contact_messages").delete().eq("id", id);
-      fetchMessages();
-    } else {
-      setMessagesList((prev) => prev.filter((m) => m.id !== id));
-    }
+    await deleteLiveMessage(id);
+    fetchMessages();
     setSelectedMessage(null);
   };
 
@@ -2155,6 +2244,157 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Real-time Notification Bell & Popover */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsNotificationOpen((prev) => !prev)}
+              title={unreadMessagesCount > 0 ? `${unreadMessagesCount} unread contact inquiries` : "Notifications"}
+              className={`relative inline-flex items-center justify-center w-9 h-9 rounded-xl border transition-all cursor-pointer ${
+                isNotificationOpen
+                  ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
+                  : "bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.08] hover:border-white/20 text-slate-300 hover:text-white"
+              }`}
+            >
+              {renderIcon(FaBell, {
+                size: 13,
+                className: unreadMessagesCount > 0 ? "text-amber-400" : "text-slate-400",
+              })}
+              {unreadMessagesCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold text-white shadow-lg ring-2 ring-[#0c101d] animate-pulse">
+                  {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Dropdown Popover */}
+            <AnimatePresence>
+              {isNotificationOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsNotificationOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.18 }}
+                    className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-[#0f172a]/95 border border-white/10 backdrop-blur-2xl shadow-2xl p-4 space-y-3.5 z-50 overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-white tracking-wide uppercase">
+                          Notifications
+                        </span>
+                        {unreadMessagesCount > 0 && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            {unreadMessagesCount} new
+                          </span>
+                        )}
+                      </div>
+                      {unreadMessagesCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleMarkAllRead}
+                          className="text-[11px] font-medium text-indigo-400 hover:text-indigo-300 cursor-pointer"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Notification Messages List */}
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                      {messagesList.length === 0 ? (
+                        <div className="py-6 text-center text-slate-500 text-xs">
+                          {renderIcon(FaInbox, { size: 24, className: "mx-auto mb-2 text-slate-600" })}
+                          <p>No contact inquiries received yet</p>
+                        </div>
+                      ) : (
+                        messagesList.slice(0, 5).map((msg) => {
+                          const isWhatsApp =
+                            (msg.subject && msg.subject.toLowerCase().includes("whatsapp")) ||
+                            (msg.message && msg.message.toLowerCase().includes("whatsapp")) ||
+                            (msg.email && msg.email.includes("whatsapp"));
+                          const isHire =
+                            (msg.subject && msg.subject.toLowerCase().includes("collaborat")) ||
+                            (msg.message && msg.message.toLowerCase().includes("collaborat")) ||
+                            (msg.email && msg.email.includes("hire"));
+
+                          return (
+                            <div
+                              key={msg.id}
+                              onClick={() => {
+                                handleSelectMessage(msg);
+                                setActiveTab("messages");
+                                setIsNotificationOpen(false);
+                              }}
+                              className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
+                                !msg.read
+                                  ? "bg-indigo-500/10 border-indigo-500/30 hover:bg-indigo-500/15"
+                                  : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05]"
+                              }`}
+                            >
+                              <div
+                                className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                                  isWhatsApp
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : isHire
+                                    ? "bg-purple-500/20 text-purple-400"
+                                    : "bg-cyan-500/20 text-cyan-400"
+                                }`}
+                              >
+                                {renderIcon(
+                                  isWhatsApp
+                                    ? FaWhatsapp
+                                    : isHire
+                                    ? FaBriefcase
+                                    : FaEnvelope,
+                                  { size: 12 }
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="text-xs font-semibold text-white truncate">
+                                    {msg.name || "Anonymous Lead"}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-mono flex-shrink-0">
+                                    {new Date(msg.created_at).toLocaleDateString(undefined, {
+                                      month: "short",
+                                      day: "numeric",
+                                    })}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-300 truncate mt-0.5 font-medium">
+                                  {msg.subject || msg.message}
+                                </p>
+                              </div>
+                              {!msg.read && (
+                                <span className="w-2 h-2 rounded-full bg-indigo-400 mt-1 flex-shrink-0" />
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("messages");
+                        setIsNotificationOpen(false);
+                      }}
+                      className="w-full py-2 text-center text-xs font-semibold rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition-all cursor-pointer block"
+                    >
+                      View All in Contact Inquiries →
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
           <a
             href="/"
             onClick={(e) => {
@@ -2721,15 +2961,21 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     {renderIcon(FaSyncAlt, { className: `h-3.5 w-3.5 ${analyticsLoading ? "animate-spin text-cyan-400" : ""}` })}
                   </button>
 
-                  {/* Reset to Seed Button */}
+                  {/* 100% Real-Time Indicator Badge */}
+                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-cyan-500/20 bg-cyan-500/10 text-[11px] font-semibold text-cyan-300">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                    <span>100% Dynamic Traffic</span>
+                  </div>
+
+                  {/* Clear History Button */}
                   <button
                     type="button"
                     onClick={handleResetAnalytics}
-                    title="Reset with realistic 30-day baseline data"
-                    className="flex items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-xs font-semibold text-purple-300 transition-all hover:bg-purple-500/20 active:scale-95 cursor-pointer"
+                    title="Clear visitor analytics logs (keep only genuine dynamic data)"
+                    className="flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 transition-all hover:bg-rose-500/20 active:scale-95 cursor-pointer"
                   >
-                    {renderIcon(FaMagic, { className: "h-3 w-3" })}
-                    <span>Reset Seed Data</span>
+                    {renderIcon(FaTrash, { className: "h-3 w-3" })}
+                    <span>Clear History</span>
                   </button>
                 </div>
               </div>
@@ -2934,6 +3180,32 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     </div>
                   </div>
 
+                  {/* Project Reorder & Action Toast Notification */}
+                  {projectToast && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className={`p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between shadow-lg ${
+                        projectToast.type === "success"
+                          ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300"
+                          : "bg-red-500/15 border border-red-500/30 text-red-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {renderIcon(FaCheckCircle, { className: "h-4 w-4" })}
+                        <span>{projectToast.message}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setProjectToast(null)}
+                        className="text-slate-400 hover:text-white"
+                      >
+                        {renderIcon(FaTimes, { className: "h-3 w-3" })}
+                      </button>
+                    </motion.div>
+                  )}
+
                   {/* Search and Category Filters Toolbar */}
                   <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
                     <div className="relative w-full sm:w-80">
@@ -2958,7 +3230,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       )}
                     </div>
 
-                    {/* Category Filter Pills with Item Counts */}
+                    {/* Category Filter Pills with Item Counts & Web Dev First Preset */}
                     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
                       {[
                         { id: "all", label: "All", count: projectsList.length },
@@ -2981,6 +3253,17 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           <span className="text-[10px] font-mono opacity-70">({cat.count})</span>
                         </button>
                       ))}
+
+                      {/* Web Developer First Preset Button */}
+                      <button
+                        type="button"
+                        onClick={handleSortWebFirst}
+                        title="Prioritize Web Development projects to the top (#1, #2...) on your portfolio"
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500/20 via-indigo-500/20 to-cyan-500/20 hover:from-amber-500/30 hover:to-indigo-500/30 text-amber-300 border border-amber-500/40 hover:border-amber-400 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ml-1"
+                      >
+                        {renderIcon(FaSortAmountDown, { size: 11, className: "text-amber-400" })}
+                        <span>Web Dev First ⭐</span>
+                      </button>
                     </div>
                   </div>
 
@@ -3012,96 +3295,139 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   ) : (
                     /* Projects Table / In-Page Cards (Full Screen Grid) */
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-                      {filteredProjects.map((project) => (
-                        <div
-                          key={project.id || project.project_id}
-                          className="p-4 rounded-2xl border border-white/[0.08] bg-[#111726]/70 hover:border-indigo-500/30 flex flex-col justify-between hover:shadow-xl hover:shadow-indigo-500/5 transition-all space-y-4 group"
-                        >
-                          <div className="space-y-3">
-                            <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-900 border border-white/10">
-                              <img
-                                src={project.image_url || project.image}
-                                alt={project.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                onError={(e) => {
-                                  e.currentTarget.src = "https://placehold.co/600x400/0f172a/cbd5e1?text=Preview";
-                                }}
-                              />
-                              <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-                                {project.featured && (
-                                  <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-400 text-slate-950 shadow-md">
-                                    ★ FEATURED
+                      {filteredProjects.map((project) => {
+                        const pIndex = projectsList.findIndex(
+                          (p) => (p.id || p.project_id) === (project.id || project.project_id)
+                        );
+                        const pId = project.id || project.project_id;
+
+                        return (
+                          <div
+                            key={pId}
+                            className="p-4 rounded-2xl border border-white/[0.08] bg-[#111726]/70 hover:border-indigo-500/30 flex flex-col justify-between hover:shadow-xl hover:shadow-indigo-500/5 transition-all space-y-4 group"
+                          >
+                            <div className="space-y-3">
+                              <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-900 border border-white/10">
+                                <img
+                                  src={project.image_url || project.image}
+                                  alt={project.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "https://placehold.co/600x400/0f172a/cbd5e1?text=Preview";
+                                  }}
+                                />
+                                {/* Rank position badge at top-left */}
+                                <div className="absolute top-2.5 left-2.5 flex items-center gap-1">
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-black bg-slate-950/90 backdrop-blur-md border border-white/20 text-cyan-300 shadow-lg">
+                                    #{pIndex >= 0 ? pIndex + 1 : "?"}
                                   </span>
-                                )}
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-950/80 backdrop-blur-md border border-white/10 text-cyan-300 capitalize">
-                                  {project.category}
-                                </span>
+                                </div>
+                                <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                                  {project.featured && (
+                                    <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-400 text-slate-950 shadow-md">
+                                      ★ FEATURED
+                                    </span>
+                                  )}
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-950/80 backdrop-blur-md border border-white/10 text-cyan-300 capitalize">
+                                    {project.category}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="space-y-1">
+                                <h3 className="text-sm font-bold text-white truncate group-hover:text-indigo-300 transition-colors">
+                                  {project.title}
+                                </h3>
+                                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                                  {project.short_desc || project.shortDescription || project.description}
+                                </p>
+                              </div>
+
+                              {/* Tech stack tags */}
+                              {project.technologies && (
+                                <div className="flex flex-wrap gap-1 pt-1">
+                                  {getSelectedTechs(project.technologies).slice(0, 3).map((tech, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-white/[0.04] border border-white/[0.06] text-slate-300"
+                                    >
+                                      {tech}
+                                    </span>
+                                  ))}
+                                  {getSelectedTechs(project.technologies).length > 3 && (
+                                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono text-slate-500">
+                                      +{getSelectedTechs(project.technologies).length - 3}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2">
+                              {/* Sequence priority reorder controls */}
+                              <div className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06]">
+                                <button
+                                  type="button"
+                                  disabled={pIndex <= 0}
+                                  onClick={() => handleMoveToTop(pId)}
+                                  title="Pin directly to #1 (Top of Portfolio)"
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-amber-400/10 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 cursor-pointer"
+                                >
+                                  {renderIcon(FaAngleDoubleUp, { size: 11 })}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={pIndex <= 0}
+                                  onClick={() => handleMoveProject(pId, "up")}
+                                  title="Move Up (# Higher Priority)"
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-cyan-400/10 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 cursor-pointer"
+                                >
+                                  {renderIcon(FaArrowUp, { size: 11 })}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={pIndex < 0 || pIndex >= projectsList.length - 1}
+                                  onClick={() => handleMoveProject(pId, "down")}
+                                  title="Move Down (# Lower Priority)"
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-cyan-400/10 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 cursor-pointer"
+                                >
+                                  {renderIcon(FaArrowDown, { size: 11 })}
+                                </button>
+                              </div>
+
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleFeatured(project)}
+                                  className={`text-[11px] px-2 py-1 rounded-lg border transition-all cursor-pointer ${
+                                    project.featured
+                                      ? "border-amber-400/40 text-amber-300 bg-amber-400/10 font-medium"
+                                      : "border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
+                                  }`}
+                                >
+                                  {project.featured ? "★" : "Feature"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditProject(project)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  {renderIcon(FaEdit, { size: 11 })}
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteProject(pId)}
+                                  className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                  title="Delete Project"
+                                >
+                                  {renderIcon(FaTrash, { size: 11 })}
+                                </button>
                               </div>
                             </div>
-
-                            <div className="space-y-1">
-                              <h3 className="text-sm font-bold text-white truncate group-hover:text-indigo-300 transition-colors">
-                                {project.title}
-                              </h3>
-                              <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                                {project.short_desc || project.shortDescription || project.description}
-                              </p>
-                            </div>
-
-                            {/* Tech stack tags */}
-                            {project.technologies && (
-                              <div className="flex flex-wrap gap-1 pt-1">
-                                {getSelectedTechs(project.technologies).slice(0, 3).map((tech, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-white/[0.04] border border-white/[0.06] text-slate-300"
-                                  >
-                                    {tech}
-                                  </span>
-                                ))}
-                                {getSelectedTechs(project.technologies).length > 3 && (
-                                  <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono text-slate-500">
-                                    +{getSelectedTechs(project.technologies).length - 3}
-                                  </span>
-                                )}
-                              </div>
-                            )}
                           </div>
-
-                          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleFeatured(project)}
-                              className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-                                project.featured
-                                  ? "border-amber-400/40 text-amber-300 bg-amber-400/10 font-medium"
-                                  : "border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
-                              }`}
-                            >
-                              {project.featured ? "★ Featured" : "Set Featured"}
-                            </button>
-
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditProject(project)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-lg transition-colors cursor-pointer"
-                              >
-                                {renderIcon(FaEdit, { size: 11 })}
-                                <span>Edit</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteProject(project.id || project.project_id)}
-                                className="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
-                                title="Delete Project"
-                              >
-                                {renderIcon(FaTrash, { size: 11 })}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -6128,24 +6454,44 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
           {/* ============================================================== */}
           {activeTab === "messages" && (
             <div className="space-y-6">
-              <div className="pb-4 border-b border-white/[0.08] flex items-center justify-between">
+              <div className="pb-4 border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Contact Inquiries</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Contact Inquiries</h2>
+                    {unreadMessagesCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">
+                        {unreadMessagesCount} unread
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Messages submitted directly by recruiters and clients via your Contact form
+                    Messages submitted directly via WhatsApp, Direct Mail, Contact & Hire ("Let's Collaborate")
                   </p>
                 </div>
-                <button
-                  onClick={fetchMessages}
-                  className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white transition-all cursor-pointer"
-                >
-                  Refresh Inbox
-                </button>
+                <div className="flex items-center gap-2">
+                  {unreadMessagesCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllRead}
+                      className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 transition-all cursor-pointer"
+                    >
+                      Mark All as Read
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={fetchMessages}
+                    className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    {renderIcon(FaSyncAlt, { size: 10 })}
+                    <span>Refresh Inbox</span>
+                  </button>
+                </div>
               </div>
 
               {messagesList.length === 0 ? (
                 <div className="p-12 text-center rounded-2xl border border-white/[0.08] bg-[#111726]/50 text-slate-400 text-xs">
-                  No incoming messages found. Form submissions from visitors will automatically appear here.
+                  No incoming messages found. Form submissions and button inquiries from visitors will automatically appear here.
                 </div>
               ) : (
                 /* Split Inbox Layout: Messages List on Left, Selected Message Reader on Right */
@@ -6155,23 +6501,62 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   <div className="lg:col-span-5 space-y-2.5 max-h-[620px] overflow-y-auto pr-1">
                     {messagesList.map((msg) => {
                       const isSelected = selectedMessage?.id === msg.id;
+                      const isWhatsApp =
+                        (msg.subject && msg.subject.toLowerCase().includes("whatsapp")) ||
+                        (msg.message && msg.message.toLowerCase().includes("whatsapp")) ||
+                        (msg.email && msg.email.includes("whatsapp"));
+                      const isHire =
+                        (msg.subject && msg.subject.toLowerCase().includes("collaborat")) ||
+                        (msg.message && msg.message.toLowerCase().includes("collaborat")) ||
+                        (msg.email && msg.email.includes("hire"));
+
                       return (
                         <div
                           key={msg.id}
-                          onClick={() => setSelectedMessage(msg)}
+                          onClick={() => handleSelectMessage(msg)}
                           className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                             isSelected
                               ? "border-indigo-500/60 bg-indigo-500/10 text-white shadow-md ring-1 ring-indigo-500/30"
+                              : !msg.read
+                              ? "border-indigo-500/30 bg-[#111726]/90 hover:bg-[#111726] text-white shadow-sm"
                               : "border-white/[0.06] bg-[#111726]/75 hover:bg-[#111726] text-slate-300 hover:border-white/[0.12]"
                           }`}
                         >
-                          <div className="flex items-center justify-between text-xs font-bold">
-                            <span className="truncate text-white">{msg.name}</span>
-                            <span className="text-[10px] text-slate-500 font-mono">
+                          <div className="flex items-center justify-between text-xs font-bold gap-2">
+                            <div className="flex items-center gap-2 truncate">
+                              {!msg.read && (
+                                <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse flex-shrink-0" />
+                              )}
+                              <span className="truncate text-white">{msg.name || "Anonymous Lead"}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-mono flex-shrink-0">
                               {new Date(msg.created_at).toLocaleDateString()}
                             </span>
                           </div>
-                          <p className="text-[11px] text-cyan-300 truncate mt-0.5 font-medium">{msg.email}</p>
+
+                          <div className="flex items-center justify-between gap-2 mt-1">
+                            <p className="text-[11px] text-cyan-300 truncate font-medium">{msg.email}</p>
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-bold border flex items-center gap-1 flex-shrink-0 ${
+                                isWhatsApp
+                                  ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                                  : isHire
+                                  ? "bg-purple-500/15 text-purple-300 border-purple-500/30"
+                                  : "bg-blue-500/15 text-blue-300 border-blue-500/30"
+                              }`}
+                            >
+                              {renderIcon(
+                                isWhatsApp
+                                  ? FaWhatsapp
+                                  : isHire
+                                  ? FaBriefcase
+                                  : FaEnvelope,
+                                { size: 9 }
+                              )}
+                              <span>{isWhatsApp ? "WhatsApp" : isHire ? "Hire" : "Email"}</span>
+                            </span>
+                          </div>
+
                           <p className="text-xs text-slate-300 truncate mt-1.5 font-medium">
                             {msg.subject || "(No Subject)"}
                           </p>
