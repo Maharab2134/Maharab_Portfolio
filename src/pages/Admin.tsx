@@ -85,7 +85,12 @@ import {
   SkillCategory,
   SkillItemData,
 } from "../data/portfolioData";
-import { PROJECTS, toProxyImageUrl } from "../data/projectsData";
+import {
+  PROJECTS,
+  toProxyImageUrl,
+  extractGoogleDriveFileId,
+  toGoogleDriveDirectUrl,
+} from "../data/projectsData";
 import {
   getLiveProjects,
   saveLiveProject,
@@ -3323,10 +3328,15 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             <div className="space-y-3">
                               <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-900 border border-white/10">
                                 <img
-                                  src={project.image_url || project.image}
+                                  src={toProxyImageUrl(project.image_url || project.image)}
                                   alt={project.title}
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                   onError={(e) => {
+                                    const fileId = extractGoogleDriveFileId(project.image_url || project.image || "");
+                                    if (fileId && !e.currentTarget.src.includes("googleusercontent.com")) {
+                                      e.currentTarget.src = toGoogleDriveDirectUrl(project.image_url || project.image);
+                                      return;
+                                    }
                                     e.currentTarget.src = "https://placehold.co/600x400/0f172a/cbd5e1?text=Preview";
                                   }}
                                 />
@@ -3953,9 +3963,19 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             type="text"
                             value={projectForm.image_url}
                             onChange={(e) => setProjectForm({ ...projectForm, image_url: e.target.value })}
-                            placeholder="https://images.unsplash.com/... or pick preset below"
+                            placeholder="https://images.unsplash.com/... or Google Drive share link"
                             className="w-full px-4 py-2.5 text-xs text-white bg-[#0c101d] border border-white/[0.08] rounded-xl focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all placeholder:text-slate-500"
                           />
+
+                          {/* Google Drive Link Auto-Detection Helper Badge */}
+                          {extractGoogleDriveFileId(projectForm.image_url) && (
+                            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-[11px]">
+                              {renderIcon(FaCheckCircle, { size: 13, className: "text-emerald-400 shrink-0" })}
+                              <span>
+                                <strong>Google Drive Image detected:</strong> Automatically converted for instant live preview and portfolio display.
+                              </span>
+                            </div>
+                          )}
 
                           {/* Quick 1-click Preset Cover Images */}
                           <div className="p-3 rounded-xl border border-white/[0.06] bg-[#0c101d]/60 space-y-2">
@@ -4093,10 +4113,18 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           {/* Image preview */}
                           <div className="aspect-video rounded-xl overflow-hidden bg-[#0c101d] relative border border-white/[0.08] shadow-inner">
                             <img
-                              src={projectForm.image_url || "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80"}
+                              src={
+                                toProxyImageUrl(projectForm.image_url) ||
+                                "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80"
+                              }
                               alt="Preview"
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               onError={(e) => {
+                                const fileId = extractGoogleDriveFileId(projectForm.image_url);
+                                if (fileId && !e.currentTarget.src.includes("googleusercontent.com")) {
+                                  e.currentTarget.src = toGoogleDriveDirectUrl(projectForm.image_url);
+                                  return;
+                                }
                                 e.currentTarget.src = "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80";
                               }}
                             />
@@ -4184,9 +4212,20 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           {/* Case Study Image */}
                           <div className="aspect-video rounded-xl overflow-hidden bg-[#0c101d] relative border border-white/[0.08]">
                             <img
-                              src={projectForm.image_url || "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80"}
+                              src={
+                                toProxyImageUrl(projectForm.image_url) ||
+                                "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80"
+                              }
                               alt="Case study"
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const fileId = extractGoogleDriveFileId(projectForm.image_url);
+                                if (fileId && !e.currentTarget.src.includes("googleusercontent.com")) {
+                                  e.currentTarget.src = toGoogleDriveDirectUrl(projectForm.image_url);
+                                  return;
+                                }
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80";
+                              }}
                             />
                           </div>
 

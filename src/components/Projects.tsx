@@ -18,6 +18,8 @@ import {
   PROJECTS,
   Project,
   toProxyImageUrl,
+  extractGoogleDriveFileId,
+  toGoogleDriveDirectUrl,
   createProjectSvgFallback,
 } from "../data/projectsData";
 import { getLiveProjects } from "../lib/portfolioService";
@@ -37,11 +39,24 @@ const ProjectCard: React.FC<{
 }> = ({ project, index, onSelectProject }) => {
   const [imgSrc, setImgSrc] = useState(toProxyImageUrl(project.image));
 
+  useEffect(() => {
+    setImgSrc(toProxyImageUrl(project.image));
+  }, [project.image]);
+
   const fallback = createProjectSvgFallback(
     project.title,
     project.categoryLabel,
     project.technologies[0] || "Code"
   );
+
+  const handleImageError = () => {
+    const fileId = extractGoogleDriveFileId(project.image);
+    if (fileId && !imgSrc.includes("googleusercontent.com")) {
+      setImgSrc(toGoogleDriveDirectUrl(project.image));
+      return;
+    }
+    setImgSrc(fallback);
+  };
 
   const handleOpenDetails = () => {
     if (onSelectProject) {
@@ -69,7 +84,7 @@ const ProjectCard: React.FC<{
           src={imgSrc}
           alt={project.title}
           loading="lazy"
-          onError={() => setImgSrc(fallback)}
+          onError={handleImageError}
           className="object-cover object-top w-full h-full transition-transform duration-700 group-hover:scale-105"
         />
 

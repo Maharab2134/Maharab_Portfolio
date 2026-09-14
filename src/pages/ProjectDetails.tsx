@@ -13,6 +13,8 @@ import {
   Project,
   getProjectById,
   toProxyImageUrl,
+  extractGoogleDriveFileId,
+  toGoogleDriveDirectUrl,
   createProjectSvgFallback,
 } from "../data/projectsData";
 
@@ -78,11 +80,13 @@ const resolveProject = (): Project | null => {
 const ProjectDetails: React.FC = () => {
   const [project, setProject] = useState<Project | null>(() => resolveProject());
   const [imageError, setImageError] = useState(false);
+  const [directFallbackTried, setDirectFallbackTried] = useState(false);
 
   useEffect(() => {
     const proj = resolveProject();
     setProject(proj);
     setImageError(false);
+    setDirectFallbackTried(false);
 
     if (proj) {
       document.title = `${proj.title} | Case Study — Md. Maharab Hosen`;
@@ -136,7 +140,12 @@ const ProjectDetails: React.FC = () => {
     project.categoryLabel,
     project.technologies[0] || "Code"
   );
-  const heroImage = imageError || !project.image ? fallbackSvg : toProxyImageUrl(project.image);
+  const heroImage =
+    imageError || !project.image
+      ? fallbackSvg
+      : directFallbackTried
+      ? toGoogleDriveDirectUrl(project.image)
+      : toProxyImageUrl(project.image);
 
   return (
     <main className="relative min-h-screen py-10 sm:py-16 bg-[#030014] text-white overflow-x-hidden">
@@ -200,7 +209,14 @@ const ProjectDetails: React.FC = () => {
           <img
             src={heroImage}
             alt={project.title}
-            onError={() => setImageError(true)}
+            onError={() => {
+              const fileId = extractGoogleDriveFileId(project.image);
+              if (fileId && !directFallbackTried) {
+                setDirectFallbackTried(true);
+                return;
+              }
+              setImageError(true);
+            }}
             className="object-cover object-top w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent opacity-60 pointer-events-none" />

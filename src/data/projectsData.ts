@@ -21,24 +21,46 @@ export interface Project {
   orderIndex?: number;
 }
 
-export const toProxyImageUrl = (url: string): string => {
-  if (!url || typeof url !== "string") return url;
-  if (url.startsWith("data:") || url.startsWith("/")) return url;
-  if (url.includes("images.weserv.nl/?url=")) return url;
+export const extractGoogleDriveFileId = (url?: string | null): string | null => {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
 
-  const driveShareMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
-  if (driveShareMatch?.[1]) {
-    const fileId = driveShareMatch[1];
+  // Pattern 1: drive.google.com/file/d/{id} (handles /view, /edit, ?usp=sharing, etc.)
+  const fileDMatch = trimmed.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+  if (fileDMatch?.[1]) return fileDMatch[1];
+
+  // Pattern 2: id=... in query string (drive.google.com/uc?id=..., drive.google.com/open?id=..., drive.google.com/thumbnail?id=...)
+  const idMatch = trimmed.match(/(?:drive|docs)\.google\.com\/[^?]*[?&]id=([a-zA-Z0-9_-]+)/i);
+  if (idMatch?.[1]) return idMatch[1];
+
+  // Pattern 3: googleusercontent.com/d/{id}
+  const lh3Match = trimmed.match(/googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/i);
+  if (lh3Match?.[1]) return lh3Match[1];
+
+  return null;
+};
+
+export const toProxyImageUrl = (url?: string | null): string => {
+  if (!url || typeof url !== "string") return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("data:") || trimmed.startsWith("/")) return trimmed;
+  if (trimmed.includes("images.weserv.nl/?url=")) return trimmed;
+
+  const fileId = extractGoogleDriveFileId(trimmed);
+  if (fileId) {
     return `https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=${fileId}`;
   }
 
-  const driveUcMatch = url.match(/drive\.google\.com\/uc\?[^\s]*id=([^&]+)/);
-  if (driveUcMatch?.[1]) {
-    const fileId = driveUcMatch[1];
-    return `https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=${fileId}`;
-  }
+  return trimmed;
+};
 
-  return url;
+export const toGoogleDriveDirectUrl = (url?: string | null): string => {
+  const fileId = extractGoogleDriveFileId(url);
+  if (fileId) {
+    return `https://lh3.googleusercontent.com/d/${fileId}`;
+  }
+  return url || "";
 };
 
 export const createProjectSvgFallback = (title: string, category: string, primaryTech: string): string => {
