@@ -74,6 +74,34 @@ function App() {
     };
   }, [syncViewFromLocation]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+
+      const raf = requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
+
+      const timer = setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 50);
+
+      return () => {
+        cancelAnimationFrame(raf);
+        clearTimeout(timer);
+      };
+    }
+  }, [activeView]);
+
   const handleNavigatePage = (page: "home" | "hire" | "journey") => {
     if (page === "home") {
       window.location.hash = "";
@@ -81,24 +109,32 @@ function App() {
       url.searchParams.delete("project");
       window.history.pushState({}, "", url.pathname);
       setActiveView("home");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
     } else if (page === "hire") {
       window.location.hash = "#hire";
       setActiveView("hire");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
     } else if (page === "journey") {
       window.location.hash = "#journey";
       setActiveView("journey");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
     }
   };
 
   const handleSelectProject = (project: Project) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("project", project.id);
-    window.history.pushState({}, "", url.toString());
-    setActiveView("project");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+      const url = new URL(window.location.href);
+      url.hash = "";
+      url.searchParams.set("project", project.id);
+      window.history.pushState({}, "", url.toString());
+      setActiveView("project");
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
   };
 
   if (activeView === "project") {

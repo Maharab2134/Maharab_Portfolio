@@ -83,6 +83,15 @@ const ProjectDetails: React.FC = () => {
   const [directFallbackTried, setDirectFallbackTried] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+
     const proj = resolveProject();
     setProject(proj);
     setImageError(false);
@@ -94,7 +103,22 @@ const ProjectDetails: React.FC = () => {
       document.title = "Project Not Found | Md. Maharab Hosen";
     }
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const rafId = requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 60);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timer);
+    };
   }, []);
 
   const handleReturnHome = (e: React.MouseEvent) => {
@@ -365,9 +389,19 @@ const ProjectDetails: React.FC = () => {
                 {prevProject && (
                   <a
                     href={`?project=${prevProject.id}`}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       setProject(prevProject);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      setImageError(false);
+                      setDirectFallbackTried(false);
+                      const url = new URL(window.location.href);
+                      url.hash = "";
+                      url.searchParams.set("project", prevProject.id);
+                      window.history.pushState({}, "", url.toString());
+                      document.title = `${prevProject.title} | Case Study — Md. Maharab Hosen`;
+                      window.scrollTo(0, 0);
+                      document.documentElement.scrollTop = 0;
+                      document.body.scrollTop = 0;
                     }}
                     className="block p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all group"
                   >
@@ -380,9 +414,19 @@ const ProjectDetails: React.FC = () => {
                 {nextProject && (
                   <a
                     href={`?project=${nextProject.id}`}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       setProject(nextProject);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      setImageError(false);
+                      setDirectFallbackTried(false);
+                      const url = new URL(window.location.href);
+                      url.hash = "";
+                      url.searchParams.set("project", nextProject.id);
+                      window.history.pushState({}, "", url.toString());
+                      document.title = `${nextProject.title} | Case Study — Md. Maharab Hosen`;
+                      window.scrollTo(0, 0);
+                      document.documentElement.scrollTop = 0;
+                      document.body.scrollTop = 0;
                     }}
                     className="block p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all group text-right"
                   >
