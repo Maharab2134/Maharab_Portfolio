@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   motion,
   useMotionValue,
@@ -28,7 +28,6 @@ const renderIcon = (Icon: any, props: any = {}) => {
 const Hero: React.FC = () => {
   const profile = useLiveProfile();
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAllTech, setShowAllTech] = useState(false);
 
   // Dynamic Animated Typewriter Configuration from Admin
@@ -110,13 +109,6 @@ const Hero: React.FC = () => {
     [mouseX, mouseY]
   );
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const techBadges = useMemo(
     () => [
@@ -538,21 +530,7 @@ const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Global Floating Scroll to Top button */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            aria-label="Scroll back to top"
-            className="fixed z-40 p-3 text-white transition-all duration-300 border rounded-full shadow-lg bottom-6 right-6 bg-slate-900/80 border-white/20 backdrop-blur-xl hover:bg-purple-600/30 hover:border-purple-400 hover:scale-110 active:scale-95"
-          >
-            {renderIcon(FaArrowDown, { size: 14, className: "rotate-180" })}
-          </motion.button>
-        )}
-      </AnimatePresence>
+
     </section>
   );
 };

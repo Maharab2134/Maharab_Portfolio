@@ -12,6 +12,7 @@ import ProjectDetails from "./pages/ProjectDetails";
 import MyJourney from "./pages/MyJourney";
 import Hire from "./pages/Hire";
 import Admin from "./pages/Admin";
+import SmartScrollButton from "./components/SmartScrollButton";
 import { Project } from "./data/projectsData";
 import { trackVisitorHit } from "./lib/analyticsService";
 
@@ -137,40 +138,36 @@ function App() {
     }
   };
 
-  if (activeView === "project") {
-    return <ProjectDetails />;
-  }
-
-  if (activeView === "hire") {
-    return <Hire />;
-  }
-
-  if (activeView === "journey") {
-    return <MyJourney />;
-  }
-
   if (activeView === "admin") {
     return <Admin />;
   }
 
   return (
-    <div className="min-h-screen bg-[#030014] text-slate-100 flex flex-col selection:bg-purple-500/30 selection:text-white">
-      <Navbar
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-        onNavigatePage={handleNavigatePage}
-      />
-      <main className="flex-1">
-        <Hero />
-        <About />
-        <Education />
-        <Certificates />
-        <Skills />
-        <Projects onSelectProject={handleSelectProject} />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
+    <>
+      {activeView === "project" && <ProjectDetails />}
+      {activeView === "hire" && <Hire />}
+      {activeView === "journey" && <MyJourney />}
+      {activeView === "home" && (
+        <div className="min-h-screen bg-[#030014] text-slate-100 flex flex-col selection:bg-purple-500/30 selection:text-white">
+          <Navbar
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+            onNavigatePage={handleNavigatePage}
+          />
+          <main className="flex-1">
+            <Hero />
+            <About />
+            <Education />
+            <Certificates />
+            <Skills />
+            <Projects onSelectProject={handleSelectProject} />
+            <Contact />
+          </main>
+          <Footer />
+        </div>
+      )}
+      <SmartScrollButton />
+    </>
   );
 }
 
