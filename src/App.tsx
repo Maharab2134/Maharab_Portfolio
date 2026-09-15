@@ -22,6 +22,8 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeView, setActiveView] = useState<ActiveView>("home");
 
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
   // Track telemetry hit when visitor navigates across views
   useEffect(() => {
     if (activeView !== "admin") {
@@ -44,6 +46,8 @@ function App() {
     if (params.get("project")) {
       setActiveView("project");
       return;
+    } else {
+      setSelectedProject(null);
     }
 
     if (hash === "#hire" || path === "/hire" || params.get("hire")) {
@@ -104,6 +108,7 @@ function App() {
   }, [activeView]);
 
   const handleNavigatePage = (page: "home" | "hire" | "journey") => {
+    setSelectedProject(null);
     if (page === "home") {
       window.location.hash = "";
       const url = new URL(window.location.href);
@@ -127,6 +132,7 @@ function App() {
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
       }
+      setSelectedProject(project);
       const url = new URL(window.location.href);
       url.hash = "";
       url.searchParams.set("project", project.id);
@@ -138,13 +144,29 @@ function App() {
     }
   };
 
+  const handleBackFromProject = () => {
+    setSelectedProject(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("project");
+    window.history.pushState({}, "", url.pathname);
+    setActiveView("home");
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+
   if (activeView === "admin") {
     return <Admin />;
   }
 
   return (
     <>
-      {activeView === "project" && <ProjectDetails />}
+      {activeView === "project" && (
+        <ProjectDetails
+          initialProject={selectedProject}
+          onBack={handleBackFromProject}
+        />
+      )}
       {activeView === "hire" && <Hire />}
       {activeView === "journey" && <MyJourney />}
       {activeView === "home" && (

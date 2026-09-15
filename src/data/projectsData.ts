@@ -575,15 +575,185 @@ export const PROJECTS: Project[] = [
   },
 ];
 
-export const getProjectById = (id: string): Project | undefined => {
-  return PROJECTS.find((p) => p.id.toLowerCase() === id.toLowerCase());
+export const getAllProjectsSync = (): Project[] => {
+  if (typeof window === "undefined") return PROJECTS;
+  try {
+    const cached = localStorage.getItem("maharab_cached_projects");
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const mergedList: Project[] = [];
+        const seenKeys = new Set<string>();
+
+        for (const item of parsed) {
+          if (!item || !item.title) continue;
+          const id =
+            item.id ||
+            item.project_id ||
+            item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          const normKey = id.toLowerCase().trim();
+          if (seenKeys.has(normKey)) continue;
+          seenKeys.add(normKey);
+
+          mergedList.push({
+            id: id,
+            title: item.title,
+            subtitle: item.subtitle || item.short_desc || item.description || "",
+            category: item.category || "web",
+            categoryLabel: item.categoryLabel || "Web App",
+            description: item.description || item.short_desc || "",
+            longDescription:
+              item.longDescription ||
+              item.full_desc ||
+              item.description ||
+              "",
+            problem: item.problem || "",
+            solution: item.solution || "",
+            features: Array.isArray(item.features)
+              ? item.features
+              : typeof item.features === "string"
+              ? item.features
+                  .split("\n")
+                  .map((f: string) => f.trim())
+                  .filter(Boolean)
+              : [],
+            results: Array.isArray(item.results)
+              ? item.results
+              : typeof item.results === "string"
+              ? item.results
+                  .split("\n")
+                  .map((r: string) => r.trim())
+                  .filter(Boolean)
+              : ["100% responsive", "Production ready"],
+            technologies: Array.isArray(item.technologies)
+              ? item.technologies
+              : typeof item.technologies === "string"
+              ? item.technologies
+                  .split(",")
+                  .map((t: string) => t.trim())
+                  .filter(Boolean)
+              : ["React"],
+            image: item.image || item.image_url || "",
+            fallbackGradient:
+              item.fallbackGradient || "from-purple-600/30 to-blue-600/30",
+            link: item.link || item.live_url || "",
+            github: item.github || item.github_url || "",
+            sourceCodePrivate: Boolean(item.sourceCodePrivate),
+            featured: Boolean(item.featured),
+            year: item.year || "2024",
+            orderIndex:
+              item.orderIndex !== undefined
+                ? Number(item.orderIndex)
+                : undefined,
+          });
+        }
+
+        // Add static projects if not already present in the list
+        for (const sp of PROJECTS) {
+          const spKey = (sp.id || sp.title).toLowerCase().trim();
+          if (!seenKeys.has(spKey)) {
+            mergedList.push(sp);
+            seenKeys.add(spKey);
+          }
+        }
+
+        return mergedList;
+      }
+    }
+  } catch (e) {
+    // Ignore localStorage parse error
+  }
+  return PROJECTS;
+};
+
+export const getProjectById = (id?: string | null): Project | undefined => {
+  if (!id || typeof id !== "string") return undefined;
+  const rawClean = id.trim();
+  let decoded = rawClean;
+  try {
+    decoded = decodeURIComponent(rawClean).trim();
+  } catch (e) {}
+
+  const cleanId = decoded.toLowerCase();
+  const normalizedSearchSlug = cleanId
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const allProjects = getAllProjectsSync();
+
+  // 1. Exact match (id, project_id, title)
+  let found = allProjects.find((p) => {
+    if (!p) return false;
+    const pId = (p.id || "").trim().toLowerCase();
+    const pSlug = ((p as any).project_id || "").trim().toLowerCase();
+    const pTitle = (p.title || "").trim().toLowerCase();
+
+    return (
+      pId === cleanId ||
+      pSlug === cleanId ||
+      pTitle === cleanId ||
+      pId === rawClean.toLowerCase() ||
+      pTitle === rawClean.toLowerCase()
+    );
+  });
+
+  if (found) return found;
+
+  // 2. Slug normalized match
+  found = allProjects.find((p) => {
+    if (!p) return false;
+    const pId = (p.id || "").trim().toLowerCase();
+    const pSlug = ((p as any).project_id || "").trim().toLowerCase();
+    const pTitle = (p.title || "").trim().toLowerCase();
+
+    const pIdSlug = pId.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const pSlugSlug = pSlug.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const pTitleSlug = pTitle
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    return (
+      (pIdSlug && pIdSlug === normalizedSearchSlug) ||
+      (pSlugSlug && pSlugSlug === normalizedSearchSlug) ||
+      (pTitleSlug && pTitleSlug === normalizedSearchSlug)
+    );
+  });
+
+  if (found) return found;
+
+  // 3. Partial/contains match
+  if (normalizedSearchSlug.length >= 4) {
+    found = allProjects.find((p) => {
+      if (!p) return false;
+      const pTitleSlug = (p.title || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      const pIdSlug = (p.id || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      return (
+        (pTitleSlug &&
+          (pTitleSlug.includes(normalizedSearchSlug) ||
+            normalizedSearchSlug.includes(pTitleSlug))) ||
+        (pIdSlug &&
+          (pIdSlug.includes(normalizedSearchSlug) ||
+            normalizedSearchSlug.includes(pIdSlug)))
+      );
+    });
+  }
+
+  return found;
 };
 
 export const getFeaturedProjects = (): Project[] => {
-  return PROJECTS.filter((p) => p.featured);
+  return getAllProjectsSync().filter((p) => p.featured);
 };
 
 export const getProjectsByCategory = (category: string): Project[] => {
-  if (!category || category === "all") return PROJECTS;
-  return PROJECTS.filter((p) => p.category === category);
+  const list = getAllProjectsSync();
+  if (!category || category === "all") return list;
+  return list.filter((p) => p.category === category);
 };
+

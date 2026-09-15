@@ -9,47 +9,111 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import {
-  PROJECTS,
   Project,
   getProjectById,
+  getAllProjectsSync,
   toProxyImageUrl,
   extractGoogleDriveFileId,
   toGoogleDriveDirectUrl,
   createProjectSvgFallback,
 } from "../data/projectsData";
+import { getLiveProjects } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
-const resolveProject = (): Project | null => {
+interface ProjectDetailsProps {
+  initialProject?: Project | null;
+  onBack?: () => void;
+}
+
+const resolveProjectSync = (initial?: Project | null): Project | null => {
+  if (initial) return initial;
   if (typeof window === "undefined") return null;
 
   const params = new URLSearchParams(window.location.search);
   const param = params.get("project");
   if (!param) return null;
 
-  // Try matching by slug/id first
+  // 1. Try matching by slug, id, or title via enhanced getProjectById
   const matched = getProjectById(param);
   if (matched) return matched;
 
-  // Fallback: Check if it's JSON encoded
+  // 2. Direct lookup in localStorage "maharab_cached_projects"
+  try {
+    const cached = localStorage.getItem("maharab_cached_projects");
+    if (cached) {
+      const parsedList: any[] = JSON.parse(cached);
+      if (Array.isArray(parsedList)) {
+        const cleanParam = decodeURIComponent(param).toLowerCase().trim();
+        const cleanSlug = cleanParam.replace(/[^a-z0-9]+/g, "-");
+        const found = parsedList.find((p) => {
+          const id = (p.id || p.project_id || "").toLowerCase().trim();
+          const title = (p.title || "").toLowerCase().trim();
+          return (
+            id === cleanParam ||
+            title === cleanParam ||
+            id.replace(/[^a-z0-9]+/g, "-") === cleanSlug ||
+            title.replace(/[^a-z0-9]+/g, "-") === cleanSlug
+          );
+        });
+        if (found) {
+          return {
+            id: found.id || found.project_id || cleanSlug,
+            title: found.title,
+            subtitle: found.subtitle || found.short_desc || found.description || "",
+            category: found.category || "web",
+            categoryLabel: found.categoryLabel || "Web App",
+            description: found.description || found.short_desc || "",
+            longDescription:
+              found.longDescription || found.full_desc || found.description || "",
+            problem: found.problem || "",
+            solution: found.solution || "",
+            features: Array.isArray(found.features)
+              ? found.features
+              : typeof found.features === "string"
+              ? found.features.split("\n").map((f: string) => f.trim()).filter(Boolean)
+              : [],
+            results: Array.isArray(found.results)
+              ? found.results
+              : typeof found.results === "string"
+              ? found.results.split("\n").map((r: string) => r.trim()).filter(Boolean)
+              : ["100% responsive", "Production ready"],
+            technologies: Array.isArray(found.technologies)
+              ? found.technologies
+              : typeof found.technologies === "string"
+              ? found.technologies.split(",").map((t: string) => t.trim()).filter(Boolean)
+              : ["React"],
+            image: found.image || found.image_url || "",
+            fallbackGradient: found.fallbackGradient || "from-purple-600/30 to-blue-600/30",
+            link: found.link || found.live_url || "",
+            github: found.github || found.github_url || "",
+            sourceCodePrivate: Boolean(found.sourceCodePrivate),
+            featured: Boolean(found.featured),
+            year: found.year || "2024",
+          };
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore error
+  }
+
+  // 3. Fallback: Check if it's JSON encoded
   try {
     const parsed = JSON.parse(param);
     if (parsed && typeof parsed === "object") {
-      // If parsed has id or title, find it
       if (parsed.id) {
         const found = getProjectById(parsed.id);
         if (found) return found;
       }
       if (parsed.title) {
-        const foundByTitle = PROJECTS.find(
-          (p) => p.title.toLowerCase() === String(parsed.title).toLowerCase()
-        );
+        const foundByTitle = getProjectById(parsed.title);
         if (foundByTitle) return foundByTitle;
       }
       return {
-        id: "custom-project",
+        id: parsed.id || "custom-project",
         title: parsed.title || "Project Case Study",
         subtitle: parsed.subtitle || "Full-Stack Project Details",
         category: parsed.category || "web",
@@ -77,8 +141,21 @@ const resolveProject = (): Project | null => {
   return null;
 };
 
-const ProjectDetails: React.FC = () => {
-  const [project, setProject] = useState<Project | null>(() => resolveProject());
+const ProjectDetails: React.FC<ProjectDetailsProps> = ({
+  initialProject,
+  onBack,
+}) => {
+  const [project, setProject] = useState<Project | null>(() =>
+    resolveProjectSync(initialProject)
+  );
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (initialProject || resolveProjectSync(initialProject)) return false;
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return Boolean(params.get("project"));
+    }
+    return false;
+  });
   const [imageError, setImageError] = useState(false);
   const [directFallbackTried, setDirectFallbackTried] = useState(false);
 
@@ -92,15 +169,52 @@ const ProjectDetails: React.FC = () => {
       document.body.scrollTop = 0;
     }
 
-    const proj = resolveProject();
-    setProject(proj);
-    setImageError(false);
-    setDirectFallbackTried(false);
-
+    const proj = resolveProjectSync(initialProject);
     if (proj) {
+      setProject(proj);
+      setIsLoading(false);
+      setImageError(false);
+      setDirectFallbackTried(false);
       document.title = `${proj.title} | Case Study — Md. Maharab Hosen`;
     } else {
-      document.title = "Project Not Found | Md. Maharab Hosen";
+      // If not resolved locally, attempt live database lookup
+      const params = new URLSearchParams(window.location.search);
+      const param = params.get("project");
+      if (param) {
+        setIsLoading(true);
+        getLiveProjects()
+          .then((liveList) => {
+            const cleanParam = decodeURIComponent(param).toLowerCase().trim();
+            const cleanSlug = cleanParam.replace(/[^a-z0-9]+/g, "-");
+
+            const found = liveList.find((p) => {
+              const pId = (p.id || (p as any).project_id || "").toLowerCase().trim();
+              const pTitle = (p.title || "").toLowerCase().trim();
+              return (
+                pId === cleanParam ||
+                pTitle === cleanParam ||
+                pId.replace(/[^a-z0-9]+/g, "-") === cleanSlug ||
+                pTitle.replace(/[^a-z0-9]+/g, "-") === cleanSlug
+              );
+            });
+
+            if (found) {
+              setProject(found);
+              document.title = `${found.title} | Case Study — Md. Maharab Hosen`;
+            } else {
+              document.title = "Project Not Found | Md. Maharab Hosen";
+            }
+          })
+          .catch(() => {
+            document.title = "Project Not Found | Md. Maharab Hosen";
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      } else {
+        setIsLoading(false);
+        document.title = "Project Not Found | Md. Maharab Hosen";
+      }
     }
 
     const rafId = requestAnimationFrame(() => {
@@ -119,14 +233,33 @@ const ProjectDetails: React.FC = () => {
       cancelAnimationFrame(rafId);
       clearTimeout(timer);
     };
-  }, []);
+  }, [initialProject]);
 
   const handleReturnHome = (e: React.MouseEvent) => {
     e.preventDefault();
-    const url = new URL(window.location.href);
-    url.searchParams.delete("project");
-    window.location.href = url.pathname;
+    if (onBack) {
+      onBack();
+    } else {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("project");
+      window.history.pushState({}, "", url.pathname);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      window.scrollTo(0, 0);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <main className="relative min-h-screen flex flex-col items-center justify-center p-4 bg-[#030014] text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+          <p className="text-sm font-medium text-slate-400 animate-pulse">
+            Loading project case study...
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   if (!project) {
     return (
@@ -154,15 +287,54 @@ const ProjectDetails: React.FC = () => {
     );
   }
 
-  // Next and Previous project navigation
-  const currentIndex = PROJECTS.findIndex((p) => p.id === project.id);
-  const prevProject = currentIndex > 0 ? PROJECTS[currentIndex - 1] : PROJECTS[PROJECTS.length - 1];
-  const nextProject = currentIndex < PROJECTS.length - 1 ? PROJECTS[currentIndex + 1] : PROJECTS[0];
+  // Safe normalized lists
+  const technologiesList: string[] = Array.isArray(project.technologies)
+    ? project.technologies
+    : typeof project.technologies === "string"
+    ? (project.technologies as string)
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : ["Full-Stack"];
+
+  const featuresList: string[] = Array.isArray(project.features)
+    ? project.features
+    : typeof project.features === "string"
+    ? (project.features as string)
+        .split("\n")
+        .map((f) => f.trim())
+        .filter(Boolean)
+    : [];
+
+  const resultsList: string[] = Array.isArray(project.results)
+    ? project.results
+    : typeof project.results === "string"
+    ? (project.results as string)
+        .split("\n")
+        .map((r) => r.trim())
+        .filter(Boolean)
+    : [];
+
+  // Next and Previous project navigation across all live & static projects
+  const allProjects = getAllProjectsSync();
+  const currentIndex = allProjects.findIndex(
+    (p) =>
+      p.id.toLowerCase() === project.id.toLowerCase() ||
+      p.title.toLowerCase() === project.title.toLowerCase()
+  );
+  const prevProject =
+    currentIndex > 0
+      ? allProjects[currentIndex - 1]
+      : allProjects[allProjects.length - 1];
+  const nextProject =
+    currentIndex >= 0 && currentIndex < allProjects.length - 1
+      ? allProjects[currentIndex + 1]
+      : allProjects[0];
 
   const fallbackSvg = createProjectSvgFallback(
     project.title,
-    project.categoryLabel,
-    project.technologies[0] || "Code"
+    project.categoryLabel || "Project",
+    technologiesList[0] || "Code"
   );
   const heroImage =
     imageError || !project.image
@@ -194,7 +366,9 @@ const ProjectDetails: React.FC = () => {
           <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
             <span>Portfolio</span>
             <span>/</span>
-            <span className="text-cyan-400 capitalize">{project.categoryLabel}</span>
+            <span className="text-cyan-400 capitalize">
+              {project.categoryLabel || "Project"}
+            </span>
           </div>
         </div>
 
@@ -202,7 +376,7 @@ const ProjectDetails: React.FC = () => {
         <header className="mb-10 space-y-4">
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="px-3 py-1 text-xs font-semibold uppercase tracking-wider rounded-full bg-white/5 border border-white/10 text-cyan-300">
-              {project.categoryLabel}
+              {project.categoryLabel || "Web App"}
             </span>
             {project.featured && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300">
@@ -256,7 +430,7 @@ const ProjectDetails: React.FC = () => {
                 <span>📋</span>
                 <span>Project Overview</span>
               </h2>
-              <p className="text-base leading-relaxed text-slate-300">
+              <p className="text-base leading-relaxed text-slate-300 whitespace-pre-line">
                 {project.longDescription || project.description}
               </p>
             </section>
@@ -288,16 +462,22 @@ const ProjectDetails: React.FC = () => {
             )}
 
             {/* Key Features */}
-            {project.features && project.features.length > 0 && (
+            {featuresList.length > 0 && (
               <section className="p-6 sm:p-8 border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <span>⚡</span>
                   <span>Key Architectural Features</span>
                 </h2>
                 <ul className="space-y-3">
-                  {project.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm leading-relaxed text-slate-300">
-                      {renderIcon(FaCheckCircle, { size: 15, className: "text-purple-400 mt-0.5 flex-shrink-0" })}
+                  {featuresList.map((feature, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 text-sm leading-relaxed text-slate-300"
+                    >
+                      {renderIcon(FaCheckCircle, {
+                        size: 15,
+                        className: "text-purple-400 mt-0.5 flex-shrink-0",
+                      })}
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -306,15 +486,18 @@ const ProjectDetails: React.FC = () => {
             )}
 
             {/* Results / Impact */}
-            {project.results && project.results.length > 0 && (
+            {resultsList.length > 0 && (
               <section className="p-6 sm:p-8 border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <span>🏆</span>
                   <span>Results &amp; Impact</span>
                 </h2>
                 <ul className="space-y-2.5">
-                  {project.results.map((res, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm text-slate-300">
+                  {resultsList.map((res, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-3 text-sm text-slate-300"
+                    >
                       <span className="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0" />
                       <span>{res}</span>
                     </li>
@@ -369,7 +552,7 @@ const ProjectDetails: React.FC = () => {
                 <span>Technologies Used</span>
               </h3>
               <div className="flex flex-wrap gap-2">
-                {project.technologies.map((tech) => (
+                {technologiesList.map((tech) => (
                   <span
                     key={tech}
                     className="px-3 py-1 text-xs font-medium rounded-lg bg-white/5 border border-white/10 text-slate-300"
@@ -405,7 +588,9 @@ const ProjectDetails: React.FC = () => {
                     }}
                     className="block p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all group"
                   >
-                    <span className="text-slate-500 block">← Previous Project</span>
+                    <span className="text-slate-500 block">
+                      ← Previous Project
+                    </span>
                     <span className="text-sm font-semibold text-white group-hover:text-purple-300 transition-colors">
                       {prevProject.title}
                     </span>
@@ -430,7 +615,9 @@ const ProjectDetails: React.FC = () => {
                     }}
                     className="block p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all group text-right"
                   >
-                    <span className="text-slate-500 block">Next Project →</span>
+                    <span className="text-slate-500 block">
+                      Next Project →
+                    </span>
                     <span className="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors">
                       {nextProject.title}
                     </span>
