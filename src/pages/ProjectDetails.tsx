@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef, useCallback } from "react";
 import {
   FaArrowLeft,
   FaExternalLinkAlt,
@@ -161,15 +161,15 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   const [imageError, setImageError] = useState(false);
   const [directFallbackTried, setDirectFallbackTried] = useState(false);
 
-  // Whether we arrived via a review anchor (e.g. from testimonial click)
-  const hasHashAnchor =
+  // Captured once on mount — reflects whether the URL had a hash when the page opened
+  const hasHashAnchorRef = useRef(
     typeof window !== "undefined" &&
-    window.location.hash &&
-    window.location.hash.length > 1;
+    window.location.hash.length > 1
+  );
 
-  const executeInstantTopScroll = () => {
+  const executeInstantTopScroll = useCallback(() => {
     // If a hash anchor is present, do NOT jump to top — let the hash effect handle it
-    if (hasHashAnchor) return;
+    if (hasHashAnchorRef.current) return;
     if (typeof window !== "undefined") {
       document.documentElement.style.scrollBehavior = "auto";
       document.body.style.scrollBehavior = "auto";
@@ -180,13 +180,12 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
     }
-  };
+  }, []);
 
   // Scroll to hash anchor once project content is ready — single attempt, no retries
   useEffect(() => {
-    if (!hasHashAnchor || isLoading || !project) return;
+    if (!hasHashAnchorRef.current || isLoading || !project) return;
     const targetId = window.location.hash.substring(1);
-    // Short delay to let the DOM render the reviews section
     const timer = setTimeout(() => {
       const el =
         document.getElementById(targetId) ||
@@ -201,7 +200,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 
   useLayoutEffect(() => {
     executeInstantTopScroll();
-  }, [project?.id, initialProject]);
+  }, [project?.id, initialProject, executeInstantTopScroll]);
 
   useEffect(() => {
     executeInstantTopScroll();
@@ -260,7 +259,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [initialProject]);
+  }, [initialProject, executeInstantTopScroll]);
 
   const handleReturnHome = (e: React.MouseEvent) => {
     e.preventDefault();
