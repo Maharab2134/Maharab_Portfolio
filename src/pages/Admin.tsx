@@ -661,7 +661,7 @@ const Admin: React.FC = () => {
   }, [fetchReviews]);
 
   // New reviews = reviews not yet seen in notification panel
-  const newReviews = reviewsList.filter((r) => !seenReviewIds.has(r.id)).slice(0, 5);
+  const newReviews = reviewsList.filter((r) => !seenReviewIds.has(r.id));
   const newReviewsCount = newReviews.length;
   const totalNotifications = unreadMessagesCount + newReviewsCount;
 
@@ -2505,7 +2505,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             {newReviews.length}
                           </span>
                         </div>
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                           {newReviews.map((rev) => (
                             <div
                               key={rev.id}
