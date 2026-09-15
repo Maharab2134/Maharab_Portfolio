@@ -390,6 +390,13 @@ const Admin: React.FC = () => {
 
   // Notification popover state
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  // Track which review IDs admin has already seen in notifications
+  const [seenReviewIds, setSeenReviewIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("admin_seen_review_ids");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -611,6 +618,18 @@ const Admin: React.FC = () => {
   }, [fetchMessages]);
 
   const unreadMessagesCount = messagesList.filter((m) => !m.read).length;
+  // New reviews = reviews not yet seen in notification panel
+  const newReviews = reviewsList.filter((r) => !seenReviewIds.has(r.id)).slice(0, 5);
+  const newReviewsCount = newReviews.length;
+  const totalNotifications = unreadMessagesCount + newReviewsCount;
+
+  // Mark all current reviews as seen when notification panel opens
+  const handleMarkReviewsSeen = () => {
+    const allIds = reviewsList.map((r) => r.id);
+    const updated = new Set([...seenReviewIds, ...allIds]);
+    setSeenReviewIds(updated);
+    try { localStorage.setItem("admin_seen_review_ids", JSON.stringify([...updated])); } catch {}
+  };
 
   const handleSelectMessage = (msg: any) => {
     setSelectedMessage(msg);
@@ -2343,7 +2362,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
             <button
               type="button"
               onClick={() => setIsNotificationOpen((prev) => !prev)}
-              title={unreadMessagesCount > 0 ? `${unreadMessagesCount} unread contact inquiries` : "Notifications"}
+              title={totalNotifications > 0 ? `${totalNotifications} new notifications` : "Notifications"}
               className={`relative inline-flex items-center justify-center w-9 h-9 rounded-xl border transition-all cursor-pointer ${
                 isNotificationOpen
                   ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
@@ -2352,11 +2371,11 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
             >
               {renderIcon(FaBell, {
                 size: 13,
-                className: unreadMessagesCount > 0 ? "text-amber-400" : "text-slate-400",
+                className: totalNotifications > 0 ? "text-amber-400" : "text-slate-400",
               })}
-              {unreadMessagesCount > 0 && (
+              {totalNotifications > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold text-white shadow-lg ring-2 ring-[#0c101d] animate-pulse">
-                  {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
+                  {totalNotifications > 9 ? "9+" : totalNotifications}
                 </span>
               )}
             </button>
@@ -2381,16 +2400,16 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         <span className="text-xs font-bold text-white tracking-wide uppercase">
                           Notifications
                         </span>
-                        {unreadMessagesCount > 0 && (
+                      {totalNotifications > 0 && (
                           <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                            {unreadMessagesCount} new
+                            {totalNotifications} new
                           </span>
                         )}
                       </div>
-                      {unreadMessagesCount > 0 && (
+                      {(unreadMessagesCount > 0 || newReviewsCount > 0) && (
                         <button
                           type="button"
-                          onClick={handleMarkAllRead}
+                          onClick={() => { handleMarkAllRead(); handleMarkReviewsSeen(); }}
                           className="text-[11px] font-medium text-indigo-400 hover:text-indigo-300 cursor-pointer"
                         >
                           Mark all read
@@ -2472,6 +2491,49 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         })
                       )}
                     </div>
+
+                    {/* New Reviews Section */}
+                    {newReviews.length > 0 && (
+                      <div className="pt-2 border-t border-white/[0.06]">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          {renderIcon(FaStar, { size: 10, className: "text-amber-400" })}
+                          <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">New Reviews</span>
+                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            {newReviews.length}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {newReviews.map((rev) => (
+                            <div
+                              key={rev.id}
+                              onClick={() => {
+                                handleMarkReviewsSeen();
+                                setActiveTab("reviews");
+                                setIsNotificationOpen(false);
+                              }}
+                              className="p-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-all cursor-pointer flex items-start gap-2.5"
+                            >
+                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-amber-500/20 text-amber-400">
+                                {renderIcon(FaStar, { size: 11 })}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="text-xs font-semibold text-white truncate">{rev.name}</span>
+                                  <span className="text-[10px] text-slate-500 font-mono flex-shrink-0">
+                                    {new Date(rev.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                                  {"★".repeat(rev.rating || 5)} · {rev.project_id}
+                                </p>
+                                <p className="text-[11px] text-slate-300 truncate font-light">{rev.message}</p>
+                              </div>
+                              <span className="w-2 h-2 rounded-full bg-amber-400 mt-1 flex-shrink-0" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <button
                       type="button"
