@@ -28,6 +28,7 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
   const [reviews, setReviews] = useState<ProjectReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [isPaused, setIsPaused] = useState(false);
   const allProjects = useMemo(() => getAllProjectsSync(), []);
 
@@ -90,6 +91,7 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
     if (!config.autoplay || isPaused || reviews.length <= itemsPerPage) return;
 
     const timer = setInterval(() => {
+      setDirection(1);
       setCurrentIndex((prev) => (prev + 1) % totalPages);
     }, 5500);
 
@@ -97,10 +99,12 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
   }, [config.autoplay, isPaused, reviews.length, itemsPerPage, totalPages]);
 
   const handlePrev = () => {
+    setDirection(-1);
     setCurrentIndex((prev) => (prev === 0 ? totalPages - 1 : prev - 1));
   };
 
   const handleNext = () => {
+    setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % totalPages);
   };
 
@@ -172,14 +176,20 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
         </div>
 
         {/* Testimonials Slider Grid */}
-        <div className="relative min-h-[340px]">
-          <AnimatePresence mode="wait">
+        <div className="relative min-h-[360px] sm:min-h-[320px]">
+          <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={currentIndex}
-              initial={{ opacity: 0, x: 25 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -25 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
+              custom={direction}
+              variants={{
+                enter: (d: number) => ({ opacity: 0, x: d > 0 ? 48 : -48 }),
+                center: { opacity: 1, x: 0 },
+                exit:  (d: number) => ({ opacity: 0, x: d > 0 ? -48 : 48 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {visibleReviews.map((item) => {

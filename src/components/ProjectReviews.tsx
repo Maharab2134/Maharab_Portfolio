@@ -448,16 +448,17 @@ export const ProjectReviews: React.FC<ProjectReviewsProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
               onClick={() => setShowModal(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
             />
 
             {/* Modal Dialog Window */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 20 }}
-              transition={{ duration: 0.25 }}
+              exit={{ opacity: 0, scale: 0.96, y: 16 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-full max-w-xl my-8 p-6 sm:p-8 rounded-3xl bg-[#0c111e] border border-white/15 shadow-2xl shadow-black/80 z-10 space-y-5 overflow-hidden text-left"
             >
               {/* Modal Close Button */}
