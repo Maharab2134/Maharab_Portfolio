@@ -59,6 +59,13 @@ const ProjectCard: React.FC<{
   };
 
   const handleOpenDetails = () => {
+    if (typeof window !== "undefined") {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
     if (onSelectProject) {
       onSelectProject(project);
     } else {

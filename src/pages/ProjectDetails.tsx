@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import {
   FaArrowLeft,
   FaExternalLinkAlt,
@@ -145,6 +145,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   initialProject,
   onBack,
 }) => {
+  const topRef = useRef<HTMLDivElement>(null);
   const [project, setProject] = useState<Project | null>(() =>
     resolveProjectSync(initialProject)
   );
@@ -159,15 +160,26 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   const [imageError, setImageError] = useState(false);
   const [directFallbackTried, setDirectFallbackTried] = useState(false);
 
-  useEffect(() => {
+  const executeInstantTopScroll = () => {
     if (typeof window !== "undefined") {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
       }
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      topRef.current?.scrollIntoView({ behavior: "instant" as any, block: "start" });
     }
+  };
+
+  useLayoutEffect(() => {
+    executeInstantTopScroll();
+  }, [project?.id, initialProject]);
+
+  useEffect(() => {
+    executeInstantTopScroll();
 
     const proj = resolveProjectSync(initialProject);
     if (proj) {
@@ -210,6 +222,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           })
           .finally(() => {
             setIsLoading(false);
+            executeInstantTopScroll();
           });
       } else {
         setIsLoading(false);
@@ -217,21 +230,16 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       }
     }
 
-    const rafId = requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    });
-
-    const timer = setTimeout(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    }, 60);
+    const rafId = requestAnimationFrame(executeInstantTopScroll);
+    const timer1 = setTimeout(executeInstantTopScroll, 20);
+    const timer2 = setTimeout(executeInstantTopScroll, 80);
+    const timer3 = setTimeout(executeInstantTopScroll, 200);
 
     return () => {
       cancelAnimationFrame(rafId);
-      clearTimeout(timer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
     };
   }, [initialProject]);
 
@@ -344,7 +352,15 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       : toProxyImageUrl(project.image);
 
   return (
-    <main className="relative min-h-screen py-10 sm:py-16 bg-[#030014] text-white overflow-x-hidden">
+    <main
+      ref={topRef}
+      id="project-details-root"
+      className="relative min-h-screen py-10 sm:py-16 bg-[#030014] text-white overflow-x-hidden"
+    >
+      <div
+        id="project-details-top-anchor"
+        className="absolute top-0 left-0 w-0 h-0 pointer-events-none"
+      />
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none opacity-20 -z-0">
         <div className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full bg-purple-600/15 blur-[150px]" />
@@ -582,9 +598,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                       url.searchParams.set("project", prevProject.id);
                       window.history.pushState({}, "", url.toString());
                       document.title = `${prevProject.title} | Case Study — Md. Maharab Hosen`;
-                      window.scrollTo(0, 0);
-                      document.documentElement.scrollTop = 0;
-                      document.body.scrollTop = 0;
+                      executeInstantTopScroll();
                     }}
                     className="block p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all group"
                   >
@@ -609,9 +623,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                       url.searchParams.set("project", nextProject.id);
                       window.history.pushState({}, "", url.toString());
                       document.title = `${nextProject.title} | Case Study — Md. Maharab Hosen`;
-                      window.scrollTo(0, 0);
-                      document.documentElement.scrollTop = 0;
-                      document.body.scrollTop = 0;
+                      executeInstantTopScroll();
                     }}
                     className="block p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all group text-right"
                   >

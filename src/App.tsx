@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useLayoutEffect, useCallback } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -79,80 +79,99 @@ function App() {
     };
   }, [syncViewFromLocation]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window !== "undefined") {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
       }
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
 
       const raf = requestAnimationFrame(() => {
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
       });
 
-      const timer = setTimeout(() => {
-        window.scrollTo(0, 0);
+      const timer1 = setTimeout(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
-      }, 50);
+      }, 30);
+
+      const timer2 = setTimeout(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 120);
 
       return () => {
         cancelAnimationFrame(raf);
-        clearTimeout(timer);
+        clearTimeout(timer1);
+        clearTimeout(timer2);
       };
     }
   }, [activeView]);
 
   const handleNavigatePage = (page: "home" | "hire" | "journey") => {
     setSelectedProject(null);
+    if (typeof window !== "undefined") {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
     if (page === "home") {
       window.location.hash = "";
       const url = new URL(window.location.href);
       url.searchParams.delete("project");
       window.history.pushState({}, "", url.pathname);
       setActiveView("home");
-      window.scrollTo(0, 0);
     } else if (page === "hire") {
       window.location.hash = "#hire";
       setActiveView("hire");
-      window.scrollTo(0, 0);
     } else if (page === "journey") {
       window.location.hash = "#journey";
       setActiveView("journey");
-      window.scrollTo(0, 0);
     }
   };
 
   const handleSelectProject = (project: Project) => {
     if (typeof window !== "undefined") {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
       }
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       setSelectedProject(project);
       const url = new URL(window.location.href);
       url.hash = "";
       url.searchParams.set("project", project.id);
       window.history.pushState({}, "", url.toString());
       setActiveView("project");
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
     }
   };
 
   const handleBackFromProject = () => {
     setSelectedProject(null);
-    const url = new URL(window.location.href);
-    url.searchParams.delete("project");
-    window.history.pushState({}, "", url.pathname);
-    setActiveView("home");
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    if (typeof window !== "undefined") {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("project");
+      window.history.pushState({}, "", url.pathname);
+      setActiveView("home");
+    }
   };
 
   if (activeView === "admin") {
