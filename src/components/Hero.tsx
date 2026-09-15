@@ -272,6 +272,7 @@ const Hero: React.FC = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
+                  window.history.replaceState(null, "", window.location.pathname + window.location.search + "#projects");
                 }}
                 className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-white transition-all duration-300 rounded-full shadow-lg bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 active:scale-95"
               >

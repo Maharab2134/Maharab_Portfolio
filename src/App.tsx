@@ -13,7 +13,8 @@ import MyJourney from "./pages/MyJourney";
 import Hire from "./pages/Hire";
 import Admin from "./pages/Admin";
 import SmartScrollButton from "./components/SmartScrollButton";
-import { Project } from "./data/projectsData";
+import Testimonials from "./components/Testimonials";
+import { Project, getAllProjectsSync } from "./data/projectsData";
 import { trackVisitorHit } from "./lib/analyticsService";
 
 type ActiveView = "home" | "hire" | "journey" | "project" | "admin";
@@ -120,10 +121,34 @@ function App() {
         };
       }
 
-      // Default: Reset scroll to top for other view changes
+      // If there's an anchor hash (e.g. #projects, #about, #skills, #contact), check if target element exists
+      const currentHash = window.location.hash;
+      if (activeView === "home" && currentHash && currentHash.startsWith("#") && currentHash.length > 1) {
+        const targetId = currentHash.substring(1);
+        if (!["admin", "hire", "journey"].includes(targetId)) {
+          if (targetId === "home") {
+            window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            return;
+          }
+          const targetEl = document.getElementById(targetId);
+          if (targetEl) {
+            const targetTop = targetEl.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({ top: Math.max(0, targetTop - 70), left: 0, behavior: "instant" as any });
+            return;
+          }
+        }
+      }
+
+      // Default: Reset scroll to top for other view changes and ensure Hero URL is clean
       window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      if (activeView === "home" && window.location.hash && !["#admin", "#hire", "#journey"].includes(window.location.hash)) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
 
       const raf = requestAnimationFrame(() => {
         window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
@@ -200,6 +225,43 @@ function App() {
     }
   };
 
+  const handleSelectProjectReview = (
+    projectId: string,
+    reviewAnchor?: string
+  ) => {
+    if (typeof window !== "undefined") {
+      const currentScrollY =
+        window.scrollY || document.documentElement.scrollTop || 0;
+      sessionStorage.setItem("portfolio_home_scroll_y", String(currentScrollY));
+
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+
+      const allProjects = getAllProjectsSync();
+      const matched = allProjects.find(
+        (p) =>
+          p.id.toLowerCase() === projectId.toLowerCase() ||
+          p.title.toLowerCase() === projectId.toLowerCase() ||
+          p.id.toLowerCase().replace(/[^a-z0-9]+/g, "-") ===
+            projectId.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+      );
+      if (matched) {
+        setSelectedProject(matched);
+      }
+      const anchor =
+        reviewAnchor ||
+        (projectId === "saytica" ? "saytica-review" : `${projectId}-review`);
+      const url = new URL(window.location.href);
+      url.searchParams.set("project", projectId);
+      url.hash = anchor;
+      window.history.pushState({}, "", url.toString());
+      setActiveView("project");
+    }
+  };
+
   const handleBackFromProject = () => {
     setSelectedProject(null);
     if (typeof window !== "undefined") {
@@ -241,6 +303,7 @@ function App() {
             <Certificates />
             <Skills />
             <Projects onSelectProject={handleSelectProject} />
+            <Testimonials onSelectProjectReview={handleSelectProjectReview} />
             <Contact />
           </main>
           <Footer />

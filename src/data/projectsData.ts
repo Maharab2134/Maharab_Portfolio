@@ -108,6 +108,35 @@ export const createProjectSvgFallback = (title: string, category: string, primar
 export const PROJECTS: Project[] = [
   // --- WEB PROJECTS ---
   {
+    id: "saytica",
+    title: "Saytica - Web Platform & Admin Dashboard",
+    subtitle: "Enterprise Management & High-Performance Web Platform",
+    category: "web",
+    categoryLabel: "Web App",
+    description: "Enterprise-grade web platform and administrative control suite featuring real-time telemetry, role-based dashboards, secure data pipelines, and responsive UX.",
+    longDescription: "Saytica is an advanced web management suite and administrative portal engineered for mission-critical client operations, dynamic reporting, workflow automation, and granular permission access.",
+    problem: "Enterprise teams often experience fragmented administrative views, slow query response times, and clunky user delegation interfaces.",
+    solution: "Architected a responsive dashboard interface with modular React widgets, fast TypeScript data mapping, role-based access control, and low-latency API communication.",
+    features: [
+      "Real-time administrative telemetry dashboard with data export utilities",
+      "Granular role-based access control (RBAC) with fine-grained permissions",
+      "Low-latency state synchronization with automated query invalidation",
+      "Sleek dark-mode interface built with Tailwind CSS and Framer Motion micro-interactions",
+    ],
+    results: [
+      "Sub-100ms dashboard widget load times and 99.9% uptime in production evaluation",
+      "Praised by enterprise clients for clarity, speed, and intuitive workflow navigation",
+    ],
+    technologies: ["React", "TypeScript", "Tailwind CSS", "Node.js", "PostgreSQL", "RESTful API"],
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
+    fallbackGradient: "from-purple-600/30 via-indigo-600/30 to-blue-600/30",
+    link: "https://saytica.com",
+    github: "https://github.com/Maharab2134",
+    sourceCodePrivate: false,
+    featured: true,
+    year: "2024",
+  },
+  {
     id: "purchifyshop",
     title: "PurchifyShop",
     subtitle: "Modern Full-Stack E-commerce Platform",

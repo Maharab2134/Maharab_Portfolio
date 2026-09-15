@@ -593,6 +593,8 @@ export interface ContactInquiry {
 
 const STORAGE_MESSAGES_KEY = "maharab_contact_messages";
 const STORAGE_READ_MESSAGES_KEY = "maharab_read_messages";
+const STORAGE_DELETED_MESSAGES_KEY = "maharab_deleted_messages";
+const STORAGE_DELETED_FINGERPRINTS_KEY = "maharab_deleted_fingerprints";
 
 export const getReadMessageIds = (): Set<string> => {
   try {
@@ -600,6 +602,35 @@ export const getReadMessageIds = (): Set<string> => {
     if (raw) return new Set(JSON.parse(raw));
   } catch (e) {}
   return new Set();
+};
+
+export const getDeletedMessageIds = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_DELETED_MESSAGES_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch (e) {}
+  return new Set();
+};
+
+export const getDeletedMessageFingerprints = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_DELETED_FINGERPRINTS_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch (e) {}
+  return new Set();
+};
+
+// Computes a consistent signature for identifying duplicates and tombstones
+export const getMessageFingerprint = (msg: {
+  email?: string;
+  message?: string;
+  subject?: string;
+  name?: string;
+}): string => {
+  const normEmail = (msg.email || "").toLowerCase().trim();
+  const normMsg = (msg.message || "").toLowerCase().trim().replace(/\s+/g, " ").slice(0, 120);
+  const normSubj = (msg.subject || "").toLowerCase().trim().replace(/\s+/g, " ").slice(0, 50);
+  return `${normEmail}___${normSubj}___${normMsg}`;
 };
 
 export const markMessageAsRead = (id: string): void => {
@@ -624,6 +655,9 @@ export const markAllMessagesAsRead = (allIds: string[]): void => {
   } catch (e) {}
 };
 
+let lastSubmissionTimestamp = 0;
+let lastSubmissionFingerprint = "";
+
 export const recordContactInquiry = async (data: {
   name: string;
   email: string;
@@ -631,11 +665,20 @@ export const recordContactInquiry = async (data: {
   message: string;
   source?: "whatsapp" | "email" | "form" | "hire";
 }): Promise<{ success: boolean; id: string }> => {
-  const newId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const currentFingerprint = getMessageFingerprint(data);
+  const now = Date.now();
+  // Prevent duplicate accidental double-clicks or rapid calls within 3 seconds
+  if (currentFingerprint === lastSubmissionFingerprint && now - lastSubmissionTimestamp < 3000) {
+    return { success: true, id: "debounced" };
+  }
+  lastSubmissionTimestamp = now;
+  lastSubmissionFingerprint = currentFingerprint;
+
+  let assignedId = `msg_${now}_${Math.random().toString(36).substring(2, 7)}`;
   const timestamp = new Date().toISOString();
 
   const inquiryRecord: ContactInquiry = {
-    id: newId,
+    id: assignedId,
     name: data.name.trim() || "Website Visitor",
     email: data.email.trim() || "visitor@direct.contact",
     subject:
@@ -651,40 +694,52 @@ export const recordContactInquiry = async (data: {
     read: false,
   };
 
-  // 1. Immediately cache in localStorage for instant offline access
+  // 1. Persist into Supabase contact_messages table first if configured to get authoritative DB ID
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: insertedData } = await supabase
+        .from("contact_messages")
+        .insert([
+          {
+            name: inquiryRecord.name,
+            email: inquiryRecord.email,
+            subject: inquiryRecord.subject,
+            message: inquiryRecord.message,
+            created_at: timestamp,
+          },
+        ])
+        .select("id");
+
+      if (insertedData && insertedData[0]?.id) {
+        assignedId = String(insertedData[0].id);
+        inquiryRecord.id = assignedId;
+      }
+    } catch (err) {
+      console.warn("Supabase contact_messages insert note (local backup active):", err);
+    }
+  }
+
+  // 2. Cache in localStorage for instant offline access and deduplication
   try {
     const existingRaw = localStorage.getItem(STORAGE_MESSAGES_KEY);
     const existingList: ContactInquiry[] = existingRaw ? JSON.parse(existingRaw) : [];
-    const updated = [inquiryRecord, ...existingList.filter((m) => m.id !== newId)];
+    // Ensure no existing item with same fingerprint or ID is kept duplicated
+    const filtered = existingList.filter(
+      (m) => m.id !== assignedId && getMessageFingerprint(m) !== currentFingerprint
+    );
+    const updated = [inquiryRecord, ...filtered];
     localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(updated.slice(0, 100)));
   } catch (e) {
     console.warn("Failed to cache inquiry locally:", e);
   }
 
-  // 2. Dispatch events for real-time notification in Admin navbar
+  // 3. Dispatch events for real-time notification in Admin navbar and inbox
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("portfolio_new_inquiry", { detail: inquiryRecord }));
     window.dispatchEvent(new Event("portfolio_messages_updated"));
   }
 
-  // 3. Persist into Supabase contact_messages table if configured
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from("contact_messages").insert([
-        {
-          name: inquiryRecord.name,
-          email: inquiryRecord.email,
-          subject: inquiryRecord.subject,
-          message: inquiryRecord.message,
-          created_at: timestamp,
-        },
-      ]);
-    } catch (err) {
-      console.warn("Supabase contact_messages insert failed (local backup active):", err);
-    }
-  }
-
-  return { success: true, id: newId };
+  return { success: true, id: assignedId };
 };
 
 export const getLiveMessages = async (): Promise<ContactInquiry[]> => {
@@ -695,25 +750,46 @@ export const getLiveMessages = async (): Promise<ContactInquiry[]> => {
   } catch (e) {}
 
   const readIds = getReadMessageIds();
+  const deletedIds = getDeletedMessageIds();
+  const deletedFingerprints = getDeletedMessageFingerprints();
+
+  // Filter out any tombstoned messages from local list
+  localList = localList.filter(
+    (m) => !deletedIds.has(m.id) && !deletedFingerprints.has(getMessageFingerprint(m))
+  );
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("contact_messages")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (data && data.length > 0) {
+      if (!error && data) {
         const mergedMap = new Map<string, ContactInquiry>();
+        const seenFingerprints = new Set<string>();
 
-        // Add Supabase messages
+        // 1. Process Supabase messages first (authoritative database IDs)
         data.forEach((row: any) => {
           const rowId = String(row.id);
+          const fp = getMessageFingerprint(row);
+
+          // If this message was deleted by the user, skip it!
+          if (deletedIds.has(rowId) || deletedFingerprints.has(fp)) {
+            return;
+          }
+
+          // If exact duplicate content already seen in Supabase, skip duplicate
+          if (seenFingerprints.has(fp)) {
+            return;
+          }
+          seenFingerprints.add(fp);
+
           const subj = (row.subject || "").toLowerCase();
           const body = (row.message || "").toLowerCase();
           let detectedSource: "whatsapp" | "email" | "hire" | "form" = "form";
           if (subj.includes("whatsapp") || body.includes("whatsapp")) detectedSource = "whatsapp";
-          else if (subj.includes("hire") || body.includes("collaborate")) detectedSource = "hire";
+          else if (subj.includes("hire") || body.includes("collaborat")) detectedSource = "hire";
           else if (subj.includes("email") || body.includes("email")) detectedSource = "email";
 
           mergedMap.set(rowId, {
@@ -728,20 +804,29 @@ export const getLiveMessages = async (): Promise<ContactInquiry[]> => {
           });
         });
 
-        // Add any local messages not yet in Supabase
+        // 2. Merge local messages ONLY if not already in Supabase (by ID and by content fingerprint)
         localList.forEach((local) => {
-          if (!mergedMap.has(local.id)) {
-            mergedMap.set(local.id, {
-              ...local,
-              read: readIds.has(local.id),
-            });
+          const localFp = getMessageFingerprint(local);
+          if (deletedIds.has(local.id) || deletedFingerprints.has(localFp)) {
+            return;
           }
+          if (mergedMap.has(local.id) || seenFingerprints.has(localFp)) {
+            // Already present from Supabase, discard local copy to prevent duplicate 2x display
+            return;
+          }
+
+          seenFingerprints.add(localFp);
+          mergedMap.set(local.id, {
+            ...local,
+            read: readIds.has(local.id),
+          });
         });
 
         const sorted = Array.from(mergedMap.values()).sort(
           (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
 
+        // Re-persist clean, deduplicated, non-deleted list back to localStorage
         try {
           localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(sorted.slice(0, 100)));
         } catch (e) {}
@@ -753,25 +838,74 @@ export const getLiveMessages = async (): Promise<ContactInquiry[]> => {
     }
   }
 
-  return localList.map((m) => ({ ...m, read: readIds.has(m.id) }));
+  // Fallback when Supabase is not configured or offline: deduplicate local list
+  const seenFp = new Set<string>();
+  const deduplicatedLocal: ContactInquiry[] = [];
+  for (const m of localList) {
+    const fp = getMessageFingerprint(m);
+    if (!deletedIds.has(m.id) && !deletedFingerprints.has(fp) && !seenFp.has(fp)) {
+      seenFp.add(fp);
+      deduplicatedLocal.push({ ...m, read: readIds.has(m.id) });
+    }
+  }
+
+  try {
+    localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(deduplicatedLocal.slice(0, 100)));
+  } catch (e) {}
+
+  return deduplicatedLocal;
 };
 
-export const deleteLiveMessage = async (id: string): Promise<boolean> => {
+export const deleteLiveMessage = async (
+  id: string,
+  messageObj?: Partial<ContactInquiry>
+): Promise<boolean> => {
+  let targetFingerprint = messageObj ? getMessageFingerprint(messageObj) : "";
+
+  // 1. Delete from localStorage and record tombstone so it can never resurrect
   try {
     const raw = localStorage.getItem(STORAGE_MESSAGES_KEY);
     if (raw) {
       const list: ContactInquiry[] = JSON.parse(raw);
-      const filtered = list.filter((m) => m.id !== id);
+      if (!targetFingerprint) {
+        const found = list.find((m) => m.id === id);
+        if (found) targetFingerprint = getMessageFingerprint(found);
+      }
+      const filtered = list.filter(
+        (m) =>
+          m.id !== id &&
+          (targetFingerprint ? getMessageFingerprint(m) !== targetFingerprint : true)
+      );
       localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(filtered));
     }
+
+    // Add to tombstone sets
+    const deletedIds = getDeletedMessageIds();
+    deletedIds.add(id);
+    localStorage.setItem(STORAGE_DELETED_MESSAGES_KEY, JSON.stringify(Array.from(deletedIds)));
+
+    if (targetFingerprint) {
+      const deletedFp = getDeletedMessageFingerprints();
+      deletedFp.add(targetFingerprint);
+      localStorage.setItem(
+        STORAGE_DELETED_FINGERPRINTS_KEY,
+        JSON.stringify(Array.from(deletedFp))
+      );
+    }
+
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("portfolio_messages_updated"));
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn("Local storage delete error:", e);
+  }
 
+  // 2. Attempt Supabase delete
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase.from("contact_messages").delete().eq("id", id);
+      if (!id.startsWith("msg_")) {
+        await supabase.from("contact_messages").delete().eq("id", id);
+      }
     } catch (e) {
       console.warn("Supabase message delete error:", e);
     }
@@ -2045,4 +2179,597 @@ export const useLiveSkills = (): SkillItemData[] => {
 
   return skills;
 };
+
+// ============================================================================
+// Project Reviews & Gender Detection Service
+// ============================================================================
+
+export interface ProjectReview {
+  id: string;
+  project_id: string;
+  name: string;
+  email: string;
+  gender: "male" | "female" | "unspecified";
+  rating: number; // 1 to 5
+  message: string;
+  created_at: string;
+  likes?: number;
+}
+
+const STORAGE_PROJECT_REVIEWS_KEY = "maharab_project_reviews";
+const STORAGE_LIKED_REVIEWS_KEY = "maharab_liked_reviews";
+const STORAGE_DELETED_REVIEWS_KEY = "maharab_deleted_review_ids";
+const STORAGE_DELETED_REVIEW_FPS_KEY = "maharab_deleted_review_fingerprints";
+
+export const getReviewFingerprint = (r: Partial<ProjectReview>): string => {
+  const pId = (r.project_id || "").trim();
+  const name = (r.name || "").trim().toLowerCase();
+  const msg = (r.message || "").trim().toLowerCase().slice(0, 100);
+  return `${pId}_${name}_${msg}`;
+};
+
+export const getDeletedReviewIds = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_DELETED_REVIEWS_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch (e) {}
+  return new Set();
+};
+
+export const getDeletedReviewFingerprints = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_DELETED_REVIEW_FPS_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch (e) {}
+  return new Set();
+};
+
+// Safe email masker for privacy on user-facing panels (e.g. saytica.ceo@gmail.com -> say***o@gmail.com)
+export const maskEmail = (email?: string): string => {
+  if (!email || typeof email !== "string") return "";
+  const trimmed = email.trim();
+  const atIndex = trimmed.indexOf("@");
+  if (atIndex <= 0) return "";
+  const username = trimmed.slice(0, atIndex);
+  const domain = trimmed.slice(atIndex);
+
+  if (username.length <= 2) {
+    return `${username[0]}***${domain}`;
+  }
+  if (username.length <= 4) {
+    return `${username.slice(0, 2)}***${domain}`;
+  }
+  const prefix = username.slice(0, 3);
+  const suffix = username.slice(-1);
+  return `${prefix}***${suffix}${domain}`;
+};
+
+// Comprehensive intelligent name-to-gender detector
+export const detectGenderFromName = (
+  rawName: string
+): "male" | "female" | "unspecified" => {
+  if (!rawName || typeof rawName !== "string") return "unspecified";
+
+  const clean = rawName
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, " ")
+    .trim();
+  if (!clean) return "unspecified";
+
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "unspecified";
+
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+
+  // Explicit title / salutation checks
+  if (["mrs", "miss", "ms", "madam", "lady", "begum", "sultana", "khatun", "bibi"].includes(first)) {
+    return "female";
+  }
+  if (["mr", "md", "mohammad", "mohammed", "muhammad", "sir", "sheikh", "syed", "kazi"].includes(first)) {
+    return "male";
+  }
+  if (["begum", "sultana", "khatun", "akhtar", "bibi", "akter"].includes(last)) {
+    return "female";
+  }
+
+  // Common female names dictionary (South Asian, Islamic & Western)
+  const femaleNames = new Set([
+    "fatima", "fatema", "ayesha", "aisha", "sadia", "nusrat", "jannat", "jannatul", "anika",
+    "mim", "riya", "sneha", "sumaiya", "mariam", "maryam", "nadia", "afsana", "farhana",
+    "tanjina", "tasnim", "samia", "sanjida", "lamia", "shanta", "bristy", "bristi", "puja",
+    "priya", "mou", "ritu", "munira", "shirin", "nasrin", "parvin", "tamanna", "sharmin",
+    "sabrina", "jesmin", "ruma", "sonia", "sathi", "keya", "mithila", "laboni", "pori",
+    "nitu", "marufa", "suraiya", "naznin", "shaila", "mahfuza", "tahmina", "tania", "lima",
+    "bithi", "papia", "shampa", "monira", "rubina", "salma", "rokshana", "shikha", "lata",
+    "champa", "rehana", "farida", "ananya", "ishita", "deepika", "shraddha", "alia", "kriti",
+    "katrina", "kareena", "kareen", "rashmika", "kiara", "trisha", "nayanthara", "anushka",
+    "sarah", "sara", "emily", "emma", "olivia", "sophia", "sofia", "isabella", "isabelle",
+    "mia", "charlotte", "amelia", "harper", "evelyn", "abigail", "elizabeth", "avery",
+    "ella", "scarlett", "grace", "chloe", "victoria", "riley", "aria", "lily", "aubrey",
+    "zoey", "zoe", "hannah", "layla", "nora", "maya", "elena", "lucy", "anna", "alice",
+    "jessica", "jennifer", "ashley", "amanda", "stephanie", "nicole", "samantha", "lauren",
+    "megan", "rachel", "kelly", "laura", "amber", "danielle", "heather", "melissa", "rebecca",
+    "michelle", "tiffany", "chelsea", "taylor", "jasmine", "kimberly", "amy", "angela",
+    "brenda", "pamela", "christine", "maria", "katherine", "catherine", "helen", "nancy",
+    "lisa", "diana", "jenny", "tina", "claire", "julia", "steph", "paula", "clara", "elise"
+  ]);
+
+  // Common male names dictionary
+  const maleNames = new Set([
+    "maharab", "mahir", "shakil", "tanvir", "rakib", "sabbir", "hasan", "hassan", "hossain",
+    "hussein", "hosen", "ali", "rahman", "ahmed", "mahmud", "arif", "rayhan", "sohel", "rubel",
+    "jahid", "imran", "faisal", "nayeem", "fahim", "ashik", "nahid", "sakib", "shakib", "tamim",
+    "soumya", "mushfiq", "taskin", "shoriful", "mustafiz", "shanto", "liton", "ebadot", "mehidy",
+    "miraz", "shorif", "rony", "anik", "joy", "dipu", "sourav", "amit", "rahul", "rohan",
+    "rohit", "virat", "sachin", "asif", "saif", "shahid", "rashed", "mamun", "kamrul", "babor",
+    "tareq", "tariq", "salman", "shahrukh", "aamir", "zaheer", "mashrafe", "nasir", "belal",
+    "abir", "siyam", "arafat", "towhid", "habib", "faruk", "zia", "monir", "saiful", "ashraful",
+    "john", "james", "robert", "michael", "william", "david", "richard", "joseph", "thomas",
+    "charles", "christopher", "daniel", "matthew", "anthony", "mark", "donald", "steven", "paul",
+    "andrew", "joshua", "kenneth", "kevin", "brian", "george", "edward", "ronald", "timothy",
+    "jason", "jeffrey", "ryan", "jacob", "gary", "nicholas", "eric", "jonathan", "stephen",
+    "larry", "justin", "scott", "brandon", "benjamin", "samuel", "gregory", "alexander", "alex",
+    "frank", "patrick", "raymond", "jack", "dennis", "jerry", "tyler", "aaron", "jose", "adam",
+    "nathan", "henry", "douglas", "zachary", "peter", "kyle", "walter", "ethan", "jeremy",
+    "harold", "keith", "christian", "roger", "noah", "gerald", "carl", "terry", "sean", "austin",
+    "arthur", "lawrence", "jesse", "dylan", "bryan", "joe", "jordan", "billy", "bruce", "albert",
+    "willie", "gabriel", "logan", "alan", "juan", "wayne", "roy", "ralph", "randy", "eugene",
+    "vincent", "russell", "elijah", "louis", "bobby", "philip", "johnny", "liam", "oliver", "lucas"
+  ]);
+
+  // Check any part in names set
+  for (const p of parts) {
+    if (femaleNames.has(p)) return "female";
+    if (maleNames.has(p)) return "male";
+  }
+
+  // Morphological / Suffix heuristics
+  const target = parts[0];
+  if (
+    target.endsWith("a") ||
+    target.endsWith("ia") ||
+    target.endsWith("ya") ||
+    target.endsWith("na") ||
+    target.endsWith("ka") ||
+    target.endsWith("ta") ||
+    target.endsWith("ti") ||
+    target.endsWith("ly") ||
+    target.endsWith("ette") ||
+    target.endsWith("ina") ||
+    target.endsWith("een")
+  ) {
+    return "female";
+  }
+
+  if (
+    target.endsWith("el") ||
+    target.endsWith("an") ||
+    target.endsWith("on") ||
+    target.endsWith("in") ||
+    target.endsWith("er") ||
+    target.endsWith("or") ||
+    target.endsWith("ck") ||
+    target.endsWith("rd") ||
+    target.endsWith("ld") ||
+    target.endsWith("rt")
+  ) {
+    return "male";
+  }
+
+  return "unspecified";
+};
+
+export const getProjectReviews = async (
+  projectId?: string
+): Promise<ProjectReview[]> => {
+  const deletedIds = getDeletedReviewIds();
+  const deletedFps = getDeletedReviewFingerprints();
+
+  const isTombstoned = (r: Partial<ProjectReview>): boolean => {
+    if (r.id && deletedIds.has(String(r.id))) return true;
+    const fp = getReviewFingerprint(r);
+    if (deletedFps.has(fp)) return true;
+    return false;
+  };
+
+  let localList: ProjectReview[] = [];
+  try {
+    const raw = localStorage.getItem(STORAGE_PROJECT_REVIEWS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        // Sanitize: dynamically strip legacy dummy/seed reviews, saytica-tanvir-eval, and tombstoned reviews
+        localList = parsed.filter(
+          (r: any) =>
+            r &&
+            r.id &&
+            !String(r.id).startsWith("rev-seed") &&
+            !String(r.id).startsWith("saytica-tanvir-eval") &&
+            r.project_id !== "default" &&
+            !isTombstoned(r)
+        );
+        if (localList.length !== parsed.length) {
+          localStorage.setItem(STORAGE_PROJECT_REVIEWS_KEY, JSON.stringify(localList));
+        }
+      }
+    }
+  } catch (e) {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      let query = supabase
+        .from("project_reviews")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (projectId) {
+        query = query.eq("project_id", projectId);
+      }
+
+      const { data, error } = await query;
+      if (!error && data) {
+        const mergedMap = new Map<string, ProjectReview>();
+
+        data.forEach((row: any) => {
+          const id = String(row.id);
+          // Skip legacy seed/default records
+          if (id.startsWith("rev-seed") || row.project_id === "default") return;
+
+          const revItem: ProjectReview = {
+            id,
+            project_id: row.project_id,
+            name: row.name || "Anonymous Reviewer",
+            email: row.email || "",
+            gender: row.gender || detectGenderFromName(row.name),
+            rating: Number(row.rating) || 5,
+            message: row.message || "",
+            created_at: row.created_at || new Date().toISOString(),
+            likes: Number(row.likes) || 0,
+          };
+
+          if (isTombstoned(revItem)) return;
+
+          mergedMap.set(id, revItem);
+        });
+
+        // Merge local reviews (strictly non-dummy and not tombstoned)
+        localList.forEach((local) => {
+          if (
+            !mergedMap.has(local.id) &&
+            !local.id.startsWith("rev-seed") &&
+            local.project_id !== "default" &&
+            !isTombstoned(local)
+          ) {
+            mergedMap.set(local.id, local);
+          }
+        });
+
+        const sorted = Array.from(mergedMap.values()).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        try {
+          localStorage.setItem(STORAGE_PROJECT_REVIEWS_KEY, JSON.stringify(sorted.slice(0, 200)));
+        } catch (e) {}
+
+        if (projectId) {
+          return sorted.filter((r) => r.project_id === projectId);
+        }
+        return sorted;
+      }
+    } catch (e) {
+      console.warn("Supabase reviews fetch note:", e);
+    }
+  }
+
+  if (projectId) {
+    const targetClean = projectId.toLowerCase().trim();
+    const targetSlug = targetClean.replace(/[^a-z0-9]+/g, "-");
+    const results = localList.filter((r) => {
+      if (!r.project_id) return false;
+      const rClean = r.project_id.toLowerCase().trim();
+      const rSlug = rClean.replace(/[^a-z0-9]+/g, "-");
+      return (
+        rClean === targetClean ||
+        rSlug === targetSlug ||
+        rClean.includes(targetClean) ||
+        targetClean.includes(rClean)
+      );
+    });
+    return results;
+  }
+  return localList;
+};
+
+export const submitProjectReview = async (
+  review: Omit<ProjectReview, "id" | "created_at">
+): Promise<{ success: boolean; review: ProjectReview; error?: string }> => {
+  const newId = `rev_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const timestamp = new Date().toISOString();
+
+  const detectedGender =
+    review.gender && review.gender !== "unspecified"
+      ? review.gender
+      : detectGenderFromName(review.name);
+
+  const reviewRecord: ProjectReview = {
+    id: newId,
+    project_id: review.project_id,
+    name: review.name.trim() || "Verified Client",
+    email: review.email.trim(),
+    gender: detectedGender,
+    rating: Math.min(5, Math.max(1, review.rating || 5)),
+    message: review.message.trim(),
+    created_at: timestamp,
+    likes: 0,
+  };
+
+  // 1. Immediately cache in localStorage for instant feedback
+  try {
+    const raw = localStorage.getItem(STORAGE_PROJECT_REVIEWS_KEY);
+    const list: ProjectReview[] = raw ? JSON.parse(raw) : [];
+    const updated = [reviewRecord, ...list.filter((r) => r.id !== newId)];
+    localStorage.setItem(STORAGE_PROJECT_REVIEWS_KEY, JSON.stringify(updated.slice(0, 200)));
+  } catch (e) {}
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("portfolio_reviews_updated", { detail: reviewRecord }));
+  }
+
+  // 2. Persist in Supabase if configured
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("project_reviews")
+        .insert([
+          {
+            project_id: reviewRecord.project_id,
+            name: reviewRecord.name,
+            email: reviewRecord.email,
+            gender: reviewRecord.gender,
+            rating: reviewRecord.rating,
+            message: reviewRecord.message,
+            created_at: timestamp,
+            likes: 0,
+          },
+        ])
+        .select("id");
+
+      if (data && data[0]?.id) {
+        const dbId = String(data[0].id);
+        const oldId = reviewRecord.id;
+        reviewRecord.id = dbId;
+
+        // Keep local cache in sync with authoritative database UUID
+        try {
+          const raw = localStorage.getItem(STORAGE_PROJECT_REVIEWS_KEY);
+          if (raw) {
+            const list: ProjectReview[] = JSON.parse(raw);
+            const updated = list.map((r) => (r.id === oldId ? { ...r, id: dbId } : r));
+            localStorage.setItem(STORAGE_PROJECT_REVIEWS_KEY, JSON.stringify(updated.slice(0, 200)));
+          }
+        } catch (e) {}
+      }
+      if (error) {
+        console.warn("Supabase project review insert note:", error);
+      }
+    } catch (e) {}
+  }
+
+  return { success: true, review: reviewRecord };
+};
+
+export const deleteProjectReview = async (
+  id: string,
+  reviewObj?: Partial<ProjectReview>
+): Promise<boolean> => {
+  let targetFp = reviewObj ? getReviewFingerprint(reviewObj) : "";
+
+  // 1. Delete from localStorage and record tombstone so it can NEVER resurrect
+  try {
+    const raw = localStorage.getItem(STORAGE_PROJECT_REVIEWS_KEY);
+    if (raw) {
+      const list: ProjectReview[] = JSON.parse(raw);
+      if (!targetFp) {
+        const found = list.find((r) => r.id === id);
+        if (found) targetFp = getReviewFingerprint(found);
+      }
+      const filtered = list.filter(
+        (r) => r.id !== id && (targetFp ? getReviewFingerprint(r) !== targetFp : true)
+      );
+      localStorage.setItem(STORAGE_PROJECT_REVIEWS_KEY, JSON.stringify(filtered));
+    }
+
+    // Record ID in permanent tombstone set
+    const deletedIds = getDeletedReviewIds();
+    deletedIds.add(id);
+    localStorage.setItem(STORAGE_DELETED_REVIEWS_KEY, JSON.stringify(Array.from(deletedIds)));
+
+    // Record fingerprint in permanent tombstone set
+    if (targetFp) {
+      const deletedFps = getDeletedReviewFingerprints();
+      deletedFps.add(targetFp);
+      localStorage.setItem(
+        STORAGE_DELETED_REVIEW_FPS_KEY,
+        JSON.stringify(Array.from(deletedFps))
+      );
+    }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_reviews_updated"));
+    }
+  } catch (e) {
+    console.warn("Local review delete error:", e);
+  }
+
+  // 2. Attempt Supabase delete (both by ID and by field match if available)
+  if (isSupabaseConfigured && supabase) {
+    try {
+      // Direct delete by ID
+      await supabase.from("project_reviews").delete().eq("id", id);
+
+      // If review object provided, also delete by matching fields in case DB ID differs from local ID
+      if (reviewObj && reviewObj.project_id && reviewObj.name && reviewObj.message) {
+        await supabase
+          .from("project_reviews")
+          .delete()
+          .eq("project_id", reviewObj.project_id)
+          .eq("name", reviewObj.name)
+          .eq("message", reviewObj.message);
+      }
+    } catch (e) {
+      console.warn("Supabase review delete error:", e);
+    }
+  }
+  return true;
+};
+
+export const likeProjectReview = async (id: string): Promise<number> => {
+  let newLikes = 1;
+  try {
+    const likedRaw = localStorage.getItem(STORAGE_LIKED_REVIEWS_KEY);
+    const likedSet = new Set(likedRaw ? JSON.parse(likedRaw) : []);
+    if (likedSet.has(id)) return -1; // already liked
+
+    likedSet.add(id);
+    localStorage.setItem(STORAGE_LIKED_REVIEWS_KEY, JSON.stringify(Array.from(likedSet)));
+
+    const raw = localStorage.getItem(STORAGE_PROJECT_REVIEWS_KEY);
+    if (raw) {
+      const list: ProjectReview[] = JSON.parse(raw);
+      const updated = list.map((r) => {
+        if (r.id === id) {
+          newLikes = (r.likes || 0) + 1;
+          return { ...r, likes: newLikes };
+        }
+        return r;
+      });
+      localStorage.setItem(STORAGE_PROJECT_REVIEWS_KEY, JSON.stringify(updated));
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_reviews_updated"));
+    }
+  } catch (e) {}
+
+  if (isSupabaseConfigured && supabase) {
+    const client = supabase;
+    try {
+      if (!id.startsWith("rev_")) {
+        const { error } = await client.rpc("increment_review_likes", { review_id: id });
+        if (error) {
+          await client.from("project_reviews").update({ likes: newLikes }).eq("id", id);
+        }
+      }
+    } catch (e) {}
+  }
+
+  return newLikes;
+};
+
+// ============================================================================
+// Testimonials Slider System (Home Page Dynamic Showcase)
+// ============================================================================
+
+export const STORAGE_TESTIMONIALS_CONFIG_KEY = "maharab_testimonials_config";
+
+export interface TestimonialsConfig {
+  enabled: boolean;
+  minRating: number;
+  maxItems: number;
+  autoplay: boolean;
+}
+
+export const getTestimonialsConfig = (): TestimonialsConfig => {
+  try {
+    const raw = localStorage.getItem(STORAGE_TESTIMONIALS_CONFIG_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        enabled: parsed.enabled !== undefined ? Boolean(parsed.enabled) : true,
+        minRating: Number(parsed.minRating) || 4,
+        maxItems: Number(parsed.maxItems) || 12,
+        autoplay: parsed.autoplay !== undefined ? Boolean(parsed.autoplay) : true,
+      };
+    }
+  } catch (e) {}
+  return {
+    enabled: true,
+    minRating: 4,
+    maxItems: 12,
+    autoplay: true,
+  };
+};
+
+export const saveTestimonialsConfig = async (
+  partial: Partial<TestimonialsConfig>
+): Promise<TestimonialsConfig> => {
+  const current = getTestimonialsConfig();
+  const updated: TestimonialsConfig = { ...current, ...partial };
+  try {
+    localStorage.setItem(STORAGE_TESTIMONIALS_CONFIG_KEY, JSON.stringify(updated));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("portfolio_testimonials_config_updated", { detail: updated })
+      );
+    }
+  } catch (e) {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: existing } = await supabase.from("profile_info").select("id").limit(1);
+      if (existing && existing.length > 0) {
+        await supabase
+          .from("profile_info")
+          .update({ testimonials_enabled: updated.enabled } as any)
+          .eq("id", existing[0].id);
+      }
+    } catch (e) {}
+  }
+  return updated;
+};
+
+export const useTestimonialsConfig = (): TestimonialsConfig => {
+  const [config, setConfig] = useState<TestimonialsConfig>(getTestimonialsConfig);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setConfig(getTestimonialsConfig());
+    };
+    window.addEventListener("portfolio_testimonials_config_updated", handleUpdate);
+    return () => {
+      window.removeEventListener("portfolio_testimonials_config_updated", handleUpdate);
+    };
+  }, []);
+
+  return config;
+};
+
+export const getBestProjectReviews = async (
+  minRating = 4,
+  limit = 12
+): Promise<ProjectReview[]> => {
+  const allReviews = await getProjectReviews();
+  if (!allReviews || allReviews.length === 0) return [];
+
+  // 1. Prioritize dynamic reviews with rating >= minRating (default 4+)
+  let candidates = allReviews.filter((r) => (r.rating || 5) >= minRating);
+
+  // If no reviews meet minRating, fall back to all available dynamic reviews
+  if (candidates.length === 0) {
+    candidates = allReviews;
+  }
+
+  // 2. Sort by rating descending (5 stars first), then by likes descending, then newest first
+  const sorted = [...candidates].sort((a, b) => {
+    const ratingDiff = (b.rating || 5) - (a.rating || 5);
+    if (ratingDiff !== 0) return ratingDiff;
+    const likesDiff = (b.likes || 0) - (a.likes || 0);
+    if (likesDiff !== 0) return likesDiff;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  return sorted.slice(0, limit);
+};
+
 

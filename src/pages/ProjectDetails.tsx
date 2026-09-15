@@ -18,6 +18,7 @@ import {
   createProjectSvgFallback,
 } from "../data/projectsData";
 import { getLiveProjects } from "../lib/portfolioService";
+import ProjectReviews, { openProjectReviewModal } from "../components/ProjectReviews";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -162,6 +163,17 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 
   const executeInstantTopScroll = () => {
     if (typeof window !== "undefined") {
+      if (window.location.hash && window.location.hash.length > 1) {
+        const targetId = window.location.hash.substring(1);
+        const el =
+          document.getElementById(targetId) ||
+          document.getElementById("saytica-review") ||
+          document.getElementById("project-reviews-section");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+      }
       document.documentElement.style.scrollBehavior = "auto";
       document.body.style.scrollBehavior = "auto";
       if ("scrollRestoration" in window.history) {
@@ -173,6 +185,29 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       topRef.current?.scrollIntoView({ behavior: "instant" as any, block: "start" });
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash && !isLoading && project) {
+      const targetId = window.location.hash.substring(1);
+      const scrollToHash = () => {
+        const el =
+          document.getElementById(targetId) ||
+          document.getElementById("saytica-review") ||
+          document.getElementById("project-reviews-section");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      };
+      const t1 = setTimeout(scrollToHash, 60);
+      const t2 = setTimeout(scrollToHash, 250);
+      const t3 = setTimeout(scrollToHash, 600);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
+    }
+  }, [isLoading, project]);
 
   useLayoutEffect(() => {
     executeInstantTopScroll();
@@ -400,6 +435,16 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                 Featured System
               </span>
             )}
+            <button
+              type="button"
+              onClick={() => openProjectReviewModal(project.id)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 transition-all hover:scale-105 cursor-pointer shadow-sm"
+              title="Click to write a review for this project"
+            >
+              {renderIcon(FaStar, { size: 11, className: "text-amber-400" })}
+              <span>Client Reviews</span>
+              <span className="text-[10px] text-amber-300/80 underline ml-0.5">• Rate Project</span>
+            </button>
             {project.year && (
               <span className="px-3 py-1 text-xs font-medium text-slate-400 rounded-full bg-white/5 border border-white/5">
                 Year: {project.year}
@@ -521,6 +566,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                 </ul>
               </section>
             )}
+
+            {/* Client & Peer Reviews Section */}
+            <div id="saytica-review" className="scroll-mt-24">
+              <div id={`${project.id}-review`} className="scroll-mt-24">
+                <ProjectReviews projectId={project.id} projectTitle={project.title} />
+              </div>
+            </div>
           </div>
 
           {/* Sidebar Info & Action Links */}
@@ -559,6 +611,27 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                   <span>Private Enterprise Repository</span>
                 </div>
               ) : null}
+
+              {/* Instant Review Trigger in Sticky Sidebar */}
+              <button
+                type="button"
+                onClick={() => openProjectReviewModal(project.id)}
+                className="flex items-center justify-center gap-2 w-full py-3 px-4 font-semibold text-sm text-white rounded-xl shadow-lg bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              >
+                {renderIcon(FaStar, { size: 14, className: "text-white" })}
+                <span>Write a Review</span>
+              </button>
+
+              <a
+                href="#project-reviews-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("project-reviews-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="block text-center text-xs text-slate-400 hover:text-cyan-300 transition-colors pt-0.5"
+              >
+                Read client evaluations ↓
+              </a>
             </div>
 
             {/* Tech Stack Breakdown */}

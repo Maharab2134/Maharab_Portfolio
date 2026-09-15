@@ -67,6 +67,19 @@ CREATE TABLE IF NOT EXISTS public.contact_messages (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 3b. Create Project Reviews Table (stores user ratings and peer reviews)
+CREATE TABLE IF NOT EXISTS public.project_reviews (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  project_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  gender TEXT DEFAULT 'unspecified',
+  rating INTEGER DEFAULT 5,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  likes INTEGER DEFAULT 0
+);
+
 -- 4. Create Education Table
 CREATE TABLE IF NOT EXISTS public.education (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -125,6 +138,7 @@ CREATE TABLE IF NOT EXISTS public.skills (
 ALTER TABLE public.projects DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profile_info DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_messages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_reviews DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.education DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.certificates DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.skill_categories DISABLE ROW LEVEL SECURITY;

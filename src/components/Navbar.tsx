@@ -40,7 +40,17 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      setScrolled(scrollY > 30);
+
+      // When scrolled near the top in Hero section, automatically remove section hash
+      if (scrollY < 120) {
+        setActiveSection("home");
+        const hash = window.location.hash;
+        if (hash && !["#admin", "#hire", "#journey"].includes(hash)) {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -56,7 +66,23 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
+            const sectionId = entry.target.id;
+            setActiveSection(sectionId);
+
+            // Sync URL hash with the section currently in viewport
+            const currentHash = window.location.hash;
+            if (["#admin", "#hire", "#journey"].includes(currentHash)) return;
+
+            if (sectionId === "home") {
+              if (currentHash && currentHash !== "#home") {
+                window.history.replaceState(null, "", window.location.pathname + window.location.search);
+              }
+            } else {
+              const targetHash = `#${sectionId}`;
+              if (currentHash !== targetHash) {
+                window.history.replaceState(null, "", window.location.pathname + window.location.search + targetHash);
+              }
+            }
           }
         });
       },
@@ -93,6 +119,14 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
       const element = document.getElementById(targetId);
       if (element) {
         element.scrollIntoView({ behavior: "smooth" });
+      }
+
+      if (targetId === "home") {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        setActiveSection("home");
+      } else {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search + href);
+        setActiveSection(targetId);
       }
       setIsMenuOpen(false);
     }
