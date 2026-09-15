@@ -161,19 +161,16 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   const [imageError, setImageError] = useState(false);
   const [directFallbackTried, setDirectFallbackTried] = useState(false);
 
+  // Whether we arrived via a review anchor (e.g. from testimonial click)
+  const hasHashAnchor =
+    typeof window !== "undefined" &&
+    window.location.hash &&
+    window.location.hash.length > 1;
+
   const executeInstantTopScroll = () => {
+    // If a hash anchor is present, do NOT jump to top — let the hash effect handle it
+    if (hasHashAnchor) return;
     if (typeof window !== "undefined") {
-      if (window.location.hash && window.location.hash.length > 1) {
-        const targetId = window.location.hash.substring(1);
-        const el =
-          document.getElementById(targetId) ||
-          document.getElementById("saytica-review") ||
-          document.getElementById("project-reviews-section");
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-          return;
-        }
-      }
       document.documentElement.style.scrollBehavior = "auto";
       document.body.style.scrollBehavior = "auto";
       if ("scrollRestoration" in window.history) {
@@ -182,31 +179,24 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      topRef.current?.scrollIntoView({ behavior: "instant" as any, block: "start" });
     }
   };
 
+  // Scroll to hash anchor once project content is ready — single attempt, no retries
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.hash && !isLoading && project) {
-      const targetId = window.location.hash.substring(1);
-      const scrollToHash = () => {
-        const el =
-          document.getElementById(targetId) ||
-          document.getElementById("saytica-review") ||
-          document.getElementById("project-reviews-section");
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      };
-      const t1 = setTimeout(scrollToHash, 60);
-      const t2 = setTimeout(scrollToHash, 250);
-      const t3 = setTimeout(scrollToHash, 600);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-      };
-    }
+    if (!hasHashAnchor || isLoading || !project) return;
+    const targetId = window.location.hash.substring(1);
+    // Short delay to let the DOM render the reviews section
+    const timer = setTimeout(() => {
+      const el =
+        document.getElementById(targetId) ||
+        document.getElementById(`${project.id}-review`) ||
+        document.getElementById("project-reviews-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 180);
+    return () => clearTimeout(timer);
   }, [isLoading, project]);
 
   useLayoutEffect(() => {
@@ -266,15 +256,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     }
 
     const rafId = requestAnimationFrame(executeInstantTopScroll);
-    const timer1 = setTimeout(executeInstantTopScroll, 20);
-    const timer2 = setTimeout(executeInstantTopScroll, 80);
-    const timer3 = setTimeout(executeInstantTopScroll, 200);
 
     return () => {
       cancelAnimationFrame(rafId);
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
     };
   }, [initialProject]);
 
