@@ -618,18 +618,7 @@ const Admin: React.FC = () => {
   }, [fetchMessages]);
 
   const unreadMessagesCount = messagesList.filter((m) => !m.read).length;
-  // New reviews = reviews not yet seen in notification panel
-  const newReviews = reviewsList.filter((r) => !seenReviewIds.has(r.id)).slice(0, 5);
-  const newReviewsCount = newReviews.length;
-  const totalNotifications = unreadMessagesCount + newReviewsCount;
 
-  // Mark all current reviews as seen when notification panel opens
-  const handleMarkReviewsSeen = () => {
-    const allIds = reviewsList.map((r) => r.id);
-    const updated = new Set([...seenReviewIds, ...allIds]);
-    setSeenReviewIds(updated);
-    try { localStorage.setItem("admin_seen_review_ids", JSON.stringify([...updated])); } catch {}
-  };
 
   const handleSelectMessage = (msg: any) => {
     setSelectedMessage(msg);
@@ -670,6 +659,20 @@ const Admin: React.FC = () => {
       window.removeEventListener("portfolio_reviews_updated", fetchReviews);
     };
   }, [fetchReviews]);
+
+  // New reviews = reviews not yet seen in notification panel
+  const newReviews = reviewsList.filter((r) => !seenReviewIds.has(r.id)).slice(0, 5);
+  const newReviewsCount = newReviews.length;
+  const totalNotifications = unreadMessagesCount + newReviewsCount;
+
+  // Mark all current reviews as seen — uses Array.from for TS compat
+  const handleMarkReviewsSeen = () => {
+    const allIds = reviewsList.map((r) => r.id);
+    const merged = Array.from(seenReviewIds).concat(allIds);
+    const updated = new Set(merged);
+    setSeenReviewIds(updated);
+    try { localStorage.setItem("admin_seen_review_ids", JSON.stringify(Array.from(updated))); } catch {}
+  };
 
   const handleDeleteReview = async (id: string) => {
     const target = reviewsList.find((r) => r.id === id);
