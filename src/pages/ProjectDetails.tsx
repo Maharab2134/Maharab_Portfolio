@@ -250,9 +250,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     } else {
       const url = new URL(window.location.href);
       url.searchParams.delete("project");
-      window.history.pushState({}, "", url.pathname);
+      url.hash = "projects";
+      window.history.pushState({}, "", url.toString());
       window.dispatchEvent(new PopStateEvent("popstate"));
-      window.scrollTo(0, 0);
     }
   };
 

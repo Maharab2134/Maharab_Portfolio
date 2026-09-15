@@ -86,6 +86,41 @@ function App() {
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
       }
+
+      // Check if returning from a project back to homepage
+      const savedY = sessionStorage.getItem("portfolio_home_scroll_y");
+      if (activeView === "home" && savedY !== null) {
+        sessionStorage.removeItem("portfolio_home_scroll_y");
+        const targetY = parseFloat(savedY);
+
+        const restoreProjectsScroll = () => {
+          const projectsEl = document.getElementById("projects");
+          if (projectsEl) {
+            const projectsTop =
+              projectsEl.getBoundingClientRect().top + window.scrollY;
+            const finalY =
+              targetY > 300 ? targetY : Math.max(0, projectsTop - 60);
+            window.scrollTo({ top: finalY, left: 0, behavior: "instant" as any });
+          } else if (targetY > 0) {
+            window.scrollTo({ top: targetY, left: 0, behavior: "instant" as any });
+          }
+        };
+
+        restoreProjectsScroll();
+        const raf = requestAnimationFrame(restoreProjectsScroll);
+        const timer1 = setTimeout(restoreProjectsScroll, 20);
+        const timer2 = setTimeout(restoreProjectsScroll, 80);
+        const timer3 = setTimeout(restoreProjectsScroll, 200);
+
+        return () => {
+          cancelAnimationFrame(raf);
+          clearTimeout(timer1);
+          clearTimeout(timer2);
+          clearTimeout(timer3);
+        };
+      }
+
+      // Default: Reset scroll to top for other view changes
       window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
@@ -119,6 +154,7 @@ function App() {
   const handleNavigatePage = (page: "home" | "hire" | "journey") => {
     setSelectedProject(null);
     if (typeof window !== "undefined") {
+      sessionStorage.removeItem("portfolio_home_scroll_y");
       document.documentElement.style.scrollBehavior = "auto";
       document.body.style.scrollBehavior = "auto";
       window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
@@ -142,6 +178,11 @@ function App() {
 
   const handleSelectProject = (project: Project) => {
     if (typeof window !== "undefined") {
+      // 1. Save current homepage scroll position so returning lands right back in the Projects section
+      const currentScrollY =
+        window.scrollY || document.documentElement.scrollTop || 0;
+      sessionStorage.setItem("portfolio_home_scroll_y", String(currentScrollY));
+
       document.documentElement.style.scrollBehavior = "auto";
       document.body.style.scrollBehavior = "auto";
       if ("scrollRestoration" in window.history) {
@@ -164,12 +205,10 @@ function App() {
     if (typeof window !== "undefined") {
       document.documentElement.style.scrollBehavior = "auto";
       document.body.style.scrollBehavior = "auto";
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
       const url = new URL(window.location.href);
       url.searchParams.delete("project");
-      window.history.pushState({}, "", url.pathname);
+      url.hash = "projects";
+      window.history.pushState({}, "", url.toString());
       setActiveView("home");
     }
   };
