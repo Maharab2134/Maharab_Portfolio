@@ -251,6 +251,12 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
     return p.category === activeFilter;
   });
 
+  const getCategoryCount = (filterId: string) => {
+    if (filterId === "all") return projectsList.length;
+    if (filterId === "featured") return projectsList.filter((p) => p.featured).length;
+    return projectsList.filter((p) => p.category === filterId).length;
+  };
+
   const rowLimit = columns * 4; // Exactly 4 rows based on current active grid columns
   const visibleProjects = !showAllProjects
     ? filteredProjects.slice(0, rowLimit)
@@ -275,8 +281,10 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
           transition={{ duration: 0.5 }}
           className="mb-10 sm:mb-12 text-center"
         >
-          <span className="text-xs font-semibold tracking-widest uppercase text-cyan-400">
-            Portfolio Showcase
+          <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-cyan-400">
+            <span>Portfolio Showcase</span>
+            <span className="w-1 h-1 rounded-full bg-cyan-400" />
+            <span className="font-mono text-cyan-300 font-bold">{projectsList.length}</span>
           </span>
           <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
             Featured Projects &amp; Case Studies
@@ -291,18 +299,28 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
         <div className="flex flex-wrap items-center justify-center gap-2 mb-12">
           {filterTabs.map((tab) => {
             const isActive = activeFilter === tab.id;
+            const count = getCategoryCount(tab.id);
             return (
               <button
                 key={tab.id}
                 onClick={() => handleFilterChange(tab.id)}
-                className={`inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 ${
+                className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 cursor-pointer ${
                   isActive
                     ? "bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white shadow-lg shadow-purple-500/20 scale-105"
                     : "bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/10"
                 }`}
               >
                 {renderIcon(tab.icon, { size: 12 })}
-                {tab.label}
+                <span>{tab.label}</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none transition-colors ${
+                    isActive
+                      ? "bg-white/25 text-white"
+                      : "bg-white/[0.08] text-slate-400"
+                  }`}
+                >
+                  {count}
+                </span>
               </button>
             );
           })}
