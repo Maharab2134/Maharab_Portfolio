@@ -138,12 +138,12 @@ const About: React.FC = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.35, delay: idx * 0.05 }}
                     whileHover={{ y: -3 }}
-                    className="p-3 sm:p-3.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-purple-500/30 transition-all text-center flex flex-col justify-center items-center backdrop-blur-sm group shadow-sm shadow-black/20"
+                    className="p-2.5 sm:p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-purple-500/30 transition-all text-center flex flex-col justify-center items-center backdrop-blur-sm group shadow-sm shadow-black/20"
                   >
-                    <span className="text-xl sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 group-hover:scale-105 transition-transform">
+                    <span className="text-base sm:text-lg font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 group-hover:scale-105 transition-transform">
                       {stat.value}
                     </span>
-                    <span className="text-[11px] sm:text-xs font-medium text-slate-400 mt-1 line-clamp-1 group-hover:text-slate-200 transition-colors">
+                    <span className="text-[10px] sm:text-[11px] font-medium text-slate-400 mt-1 leading-snug group-hover:text-slate-200 transition-colors text-center">
                       {stat.label}
                     </span>
                   </motion.div>
