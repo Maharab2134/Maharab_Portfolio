@@ -2704,6 +2704,7 @@ export interface TestimonialsConfig {
   minRating: number;
   maxItems: number;
   autoplay: boolean;
+  pinnedReviewIds: string[];
 }
 
 export const getTestimonialsConfig = (): TestimonialsConfig => {
@@ -2716,6 +2717,7 @@ export const getTestimonialsConfig = (): TestimonialsConfig => {
         minRating: Number(parsed.minRating) || 4,
         maxItems: Number(parsed.maxItems) || 12,
         autoplay: parsed.autoplay !== undefined ? Boolean(parsed.autoplay) : true,
+        pinnedReviewIds: Array.isArray(parsed.pinnedReviewIds) ? parsed.pinnedReviewIds : [],
       };
     }
   } catch (e) {}
@@ -2724,6 +2726,7 @@ export const getTestimonialsConfig = (): TestimonialsConfig => {
     minRating: 4,
     maxItems: 12,
     autoplay: true,
+    pinnedReviewIds: [],
   };
 };
 
@@ -2738,6 +2741,7 @@ export const saveTestimonialsConfig = async (
       window.dispatchEvent(
         new CustomEvent("portfolio_testimonials_config_updated", { detail: updated })
       );
+      window.dispatchEvent(new Event("portfolio_reviews_updated"));
     }
   } catch (e) {}
 
@@ -2753,6 +2757,40 @@ export const saveTestimonialsConfig = async (
     } catch (e) {}
   }
   return updated;
+};
+
+export const togglePinReview = async (reviewId: string): Promise<TestimonialsConfig> => {
+  const current = getTestimonialsConfig();
+  const existingPins = current.pinnedReviewIds || [];
+  let updatedPins: string[];
+  if (existingPins.includes(reviewId)) {
+    updatedPins = existingPins.filter((id) => id !== reviewId);
+  } else {
+    updatedPins = [...existingPins, reviewId];
+  }
+  return saveTestimonialsConfig({ pinnedReviewIds: updatedPins });
+};
+
+export const movePinnedReview = async (
+  reviewId: string,
+  direction: "up" | "down"
+): Promise<TestimonialsConfig> => {
+  const current = getTestimonialsConfig();
+  const pins = [...(current.pinnedReviewIds || [])];
+  const idx = pins.indexOf(reviewId);
+  if (idx === -1) return current;
+
+  if (direction === "up" && idx > 0) {
+    const temp = pins[idx - 1];
+    pins[idx - 1] = pins[idx];
+    pins[idx] = temp;
+  } else if (direction === "down" && idx < pins.length - 1) {
+    const temp = pins[idx + 1];
+    pins[idx + 1] = pins[idx];
+    pins[idx] = temp;
+  }
+
+  return saveTestimonialsConfig({ pinnedReviewIds: pins });
 };
 
 export const useTestimonialsConfig = (): TestimonialsConfig => {
@@ -2778,16 +2816,27 @@ export const getBestProjectReviews = async (
   const allReviews = await getProjectReviews();
   if (!allReviews || allReviews.length === 0) return [];
 
-  // 1. Prioritize dynamic reviews with rating >= minRating (default 4+)
-  let candidates = allReviews.filter((r) => (r.rating || 5) >= minRating);
+  const config = getTestimonialsConfig();
+  const pinnedIds = config.pinnedReviewIds || [];
 
-  // If no reviews meet minRating, fall back to all available dynamic reviews
+  // 1. Extract reviews explicitly pinned to the TOP in designated priority order
+  const pinnedReviews: ProjectReview[] = [];
+  pinnedIds.forEach((id) => {
+    const match = allReviews.find((r) => r.id === id);
+    if (match) {
+      pinnedReviews.push(match);
+    }
+  });
+
+  // 2. Unpinned candidates
+  const unpinned = allReviews.filter((r) => !pinnedIds.includes(r.id));
+  let candidates = unpinned.filter((r) => (r.rating || 5) >= minRating);
   if (candidates.length === 0) {
-    candidates = allReviews;
+    candidates = unpinned;
   }
 
-  // 2. Sort by rating descending (5 stars first), then by likes descending, then newest first
-  const sorted = [...candidates].sort((a, b) => {
+  // 3. Sort unpinned by rating descending, then likes descending, then newest first
+  const sortedUnpinned = [...candidates].sort((a, b) => {
     const ratingDiff = (b.rating || 5) - (a.rating || 5);
     if (ratingDiff !== 0) return ratingDiff;
     const likesDiff = (b.likes || 0) - (a.likes || 0);
@@ -2795,7 +2844,7 @@ export const getBestProjectReviews = async (
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
-  return sorted.slice(0, limit);
+  return [...pinnedReviews, ...sortedUnpinned].slice(0, limit);
 };
 
 

@@ -123,6 +123,8 @@ import {
   deleteProjectReview,
   useTestimonialsConfig,
   saveTestimonialsConfig,
+  togglePinReview,
+  movePinnedReview,
 } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
@@ -697,6 +699,7 @@ const Admin: React.FC = () => {
 
   const testimonialsConfig = useTestimonialsConfig();
   const [testimonialsToggling, setTestimonialsToggling] = useState(false);
+  const [pinActionLoading, setPinActionLoading] = useState<string | null>(null);
 
   const handleToggleTestimonials = async (enable: boolean) => {
     setTestimonialsToggling(true);
@@ -706,6 +709,28 @@ const Admin: React.FC = () => {
       console.warn("Failed to toggle testimonials:", e);
     } finally {
       setTestimonialsToggling(false);
+    }
+  };
+
+  const handleTogglePin = async (id: string) => {
+    setPinActionLoading(id);
+    try {
+      await togglePinReview(id);
+    } catch (e) {
+      console.warn("Failed to toggle pin review:", e);
+    } finally {
+      setPinActionLoading(null);
+    }
+  };
+
+  const handleMovePin = async (id: string, direction: "up" | "down") => {
+    setPinActionLoading(`${id}-${direction}`);
+    try {
+      await movePinnedReview(id, direction);
+    } catch (e) {
+      console.warn("Failed to move pinned review:", e);
+    } finally {
+      setPinActionLoading(null);
     }
   };
 
@@ -7165,6 +7190,140 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                 </div>
               </div>
 
+              {/* Top Showcase Order & Priority Manager */}
+              <div className="p-5 sm:p-6 rounded-2xl border border-amber-500/30 bg-gradient-to-b from-[#12192e] to-[#0c1120] backdrop-blur-md space-y-4 shadow-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                      {renderIcon(FaStar, { size: 16, className: "text-amber-400" })}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-white">Top Showcase Testimonials (Priority Sequence)</h3>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                          {(testimonialsConfig.pinnedReviewIds || []).length} Pinned
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        These reviews appear at the top / front of the Homepage slider in this exact sequence. Reorder them using the arrows.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pinned Reviews List */}
+                {(() => {
+                  const pinnedIds = testimonialsConfig.pinnedReviewIds || [];
+                  if (pinnedIds.length === 0) {
+                    return (
+                      <div className="p-6 text-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-xs text-slate-400">
+                        <p className="font-medium text-slate-300">No testimonials pinned to the top yet.</p>
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          Click <strong>"⭐ Pin to Top"</strong> on any review card below to place it at the front of the Homepage showcase.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-2.5">
+                      {pinnedIds.map((pinId, index) => {
+                        const review = reviewsList.find((r) => r.id === pinId);
+                        if (!review) return null;
+                        const projectMatch = projectsList.find((p) => (p.id || p.project_id) === review.project_id);
+                        const isFemale = review.gender === "female";
+                        const isMale = review.gender === "male";
+                        const isFirst = index === 0;
+                        const isLast = index === pinnedIds.length - 1;
+
+                        return (
+                          <div
+                            key={pinId}
+                            className="p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              {/* Priority Rank Badge */}
+                              <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm">
+                                #{index + 1}
+                              </div>
+
+                              <div
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs flex-shrink-0 border ${
+                                  isFemale
+                                    ? "bg-pink-500/20 text-pink-300 border-pink-500/30"
+                                    : isMale
+                                    ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                                    : "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                                }`}
+                              >
+                                {renderIcon(isFemale ? FaFemale : isMale ? FaMale : FaUser, { size: 13 })}
+                              </div>
+
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="text-xs font-bold text-white truncate">{review.name}</h4>
+                                  <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-0.5">
+                                    ★ {review.rating || 5}.0
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 truncate hidden md:inline">
+                                    • {projectMatch ? projectMatch.title : review.project_id}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-300 truncate max-w-lg font-light mt-0.5">
+                                  "{review.message}"
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Action Buttons: Move Up, Move Down, Unpin */}
+                            <div className="flex items-center gap-1.5 self-end sm:self-center flex-shrink-0">
+                              <button
+                                type="button"
+                                disabled={isFirst || pinActionLoading === `${pinId}-up`}
+                                onClick={() => handleMovePin(pinId, "up")}
+                                className={`p-1.5 rounded-lg border text-xs transition-all ${
+                                  isFirst
+                                    ? "opacity-30 cursor-not-allowed border-white/5 text-slate-600"
+                                    : "border-white/10 bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white cursor-pointer active:scale-95"
+                                }`}
+                                title="Move Up in Priority (Left on Homepage Slider)"
+                              >
+                                {renderIcon(FaArrowUp, { size: 10 })}
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isLast || pinActionLoading === `${pinId}-down`}
+                                onClick={() => handleMovePin(pinId, "down")}
+                                className={`p-1.5 rounded-lg border text-xs transition-all ${
+                                  isLast
+                                    ? "opacity-30 cursor-not-allowed border-white/5 text-slate-600"
+                                    : "border-white/10 bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white cursor-pointer active:scale-95"
+                                }`}
+                                title="Move Down in Priority (Right on Homepage Slider)"
+                              >
+                                {renderIcon(FaArrowDown, { size: 10 })}
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={pinActionLoading === pinId}
+                                onClick={() => handleTogglePin(pinId)}
+                                className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 transition-all cursor-pointer flex items-center gap-1 active:scale-95 ml-1"
+                                title="Remove from Top Priority"
+                              >
+                                {renderIcon(FaTimes, { size: 10 })}
+                                <span>Unpin</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* Filters & Search Row */}
               <div className="p-4 rounded-2xl border border-white/[0.08] bg-[#111726]/60 backdrop-blur-md flex flex-col sm:flex-row items-center gap-3">
                 <div className="relative flex-1 w-full">
@@ -7222,17 +7381,25 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   );
                 }
 
+                const pinnedIds = testimonialsConfig.pinnedReviewIds || [];
+
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filtered.map((r) => {
                       const isFemale = r.gender === "female";
                       const isMale = r.gender === "male";
                       const projectMatch = projectsList.find((p) => (p.id || p.project_id) === r.project_id);
+                      const pinIndex = pinnedIds.indexOf(r.id);
+                      const isPinned = pinIndex !== -1;
 
                       return (
                         <div
                           key={r.id}
-                          className="p-5 rounded-2xl border border-white/[0.08] bg-[#111726]/75 hover:bg-[#111726] backdrop-blur-sm transition-all space-y-3.5 shadow-lg group relative"
+                          className={`p-5 rounded-2xl border ${
+                            isPinned
+                              ? "border-amber-500/40 bg-[#131b2e]/90 shadow-[0_0_25px_rgba(245,158,11,0.12)]"
+                              : "border-white/[0.08] bg-[#111726]/75 hover:bg-[#111726]"
+                          } backdrop-blur-sm transition-all space-y-3.5 shadow-lg group relative`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
@@ -7269,15 +7436,35 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                               </div>
                             </div>
 
-                            {/* Delete Review Button */}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteReview(r.id)}
-                              className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors"
-                              title="Delete this review"
-                            >
-                              {renderIcon(FaTrash, { size: 12 })}
-                            </button>
+                            {/* Actions: Pin / Unpin & Delete Review Buttons */}
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <button
+                                type="button"
+                                disabled={pinActionLoading === r.id}
+                                onClick={() => handleTogglePin(r.id)}
+                                className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 ${
+                                  isPinned
+                                    ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 shadow-sm"
+                                    : "bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10"
+                                }`}
+                                title={isPinned ? "Click to remove from Top Priority" : "Click to pin to Homepage Top Showcase"}
+                              >
+                                {renderIcon(FaStar, {
+                                  size: 10,
+                                  className: isPinned ? "text-amber-400" : "text-slate-400",
+                                })}
+                                <span>{isPinned ? `Top #${pinIndex + 1}` : "Pin to Top"}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteReview(r.id)}
+                                className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                title="Delete this review"
+                              >
+                                {renderIcon(FaTrash, { size: 12 })}
+                              </button>
+                            </div>
                           </div>
 
                           {/* Target Project and Rating */}

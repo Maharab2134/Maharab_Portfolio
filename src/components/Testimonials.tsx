@@ -212,6 +212,8 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
                     ? "saytica-review"
                     : `${projectSlug}-review`;
 
+                const isPinned = Boolean(config.pinnedReviewIds?.includes(item.id));
+
                 return (
                   <TestimonialCard
                     key={item.id}
@@ -222,6 +224,7 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
                     projectSlug={projectSlug}
                     reviewAnchor={reviewAnchor}
                     gender={item.gender}
+                    isPinned={isPinned}
                     onClick={(e) => {
                       if (onSelectProjectReview) {
                         e.preventDefault();
