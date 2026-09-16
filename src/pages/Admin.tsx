@@ -487,7 +487,7 @@ const Admin: React.FC = () => {
   }>({
     name: "",
     category: "frontend",
-    level: "Core Production",
+    level: "Core",
     color: "#61DAFB",
     iconName: "FaReact",
   });
@@ -1760,9 +1760,9 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
   // ==========================================================================
   const PROFICIENCY_OPTIONS = [
     {
-      value: "Core Production",
-      label: "Core Production",
-      bengaliTag: "বেশি ভালো (Expert)",
+      value: "Core",
+      label: "Core",
+      bengaliTag: "Core (বেশি ভালো)",
       desc: "Primary production stack, architectural mastery, battle-tested in real systems",
       badgeColor: "border-purple-500/40 bg-purple-500/10 text-purple-300",
       borderActive: "border-purple-400 ring-2 ring-purple-500/30 bg-purple-500/10",
@@ -1770,16 +1770,24 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
     {
       value: "Advanced",
       label: "Advanced",
-      bengaliTag: "ভালো (High Proficiency)",
+      bengaliTag: "Advanced (ভালো)",
       desc: "Strong daily engineering, clean production code, robust understanding",
       badgeColor: "border-cyan-500/40 bg-cyan-500/10 text-cyan-300",
       borderActive: "border-cyan-400 ring-2 ring-cyan-500/30 bg-cyan-500/10",
     },
     {
-      value: "Proficient",
-      label: "Proficient",
-      bengaliTag: "মিডিয়াম (Working Knowledge)",
+      value: "Working Knowledge",
+      label: "Working Knowledge",
+      bengaliTag: "Working Knowledge (মিডিয়াম)",
       desc: "Comfortable implementation, working integration knowledge, expanding",
+      badgeColor: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+      borderActive: "border-emerald-400 ring-2 ring-emerald-500/30 bg-emerald-500/10",
+    },
+    {
+      value: "Familiar",
+      label: "Familiar",
+      bengaliTag: "Familiar (পরিচিত)",
+      desc: "Foundational concepts, explored in practical environments and prototypes",
       badgeColor: "border-amber-500/40 bg-amber-500/10 text-amber-300",
       borderActive: "border-amber-400 ring-2 ring-amber-500/30 bg-amber-500/10",
     },
@@ -1930,7 +1938,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
     setSkillForm({
       name: "",
       category: skillCategoriesList[0]?.id || "frontend",
-      level: "Core Production",
+      level: "Core",
       color: "#61DAFB",
       iconName: "FaReact",
     });
@@ -1942,7 +1950,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
     setSkillForm({
       name: skill.name || "",
       category: skill.category || "frontend",
-      level: skill.level || "Core Production",
+      level: skill.level || "Core",
       color: skill.color || "#a855f7",
       iconName: skill.iconName || "",
     });
@@ -1964,7 +1972,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
           .replace(/^-|-$/g, "")}-${Date.now()}`,
       name: skillForm.name.trim(),
       category: skillForm.category || "frontend",
-      level: skillForm.level.trim() || "Core Production",
+      level: skillForm.level.trim() || "Core",
       color: skillForm.color || "#a855f7",
       iconName: skillForm.iconName || "",
     };
@@ -4769,16 +4777,16 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           </div>
                         </div>
 
-                        {/* Row 2: Proficiency Level Tier (USER REQUEST: "valo, beshi valo naki medium") */}
+                        {/* Row 2: Proficiency Level Tier (Core / Advanced / Working Knowledge / Familiar) */}
                         <div className="space-y-2">
                           <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
-                            Proficiency Level Tier (কেমন পারি: বেশি ভালো / ভালো / মিডিয়াম) *
+                            Proficiency Level Tier (Core / Advanced / Working Knowledge / Familiar) *
                           </label>
                           <p className="text-[11px] text-slate-400">
                             Select how well you know this skill. It controls the glowing badge on your live portfolio.
                           </p>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
                             {PROFICIENCY_OPTIONS.map((opt) => {
                               const isSelected = skillForm.level === opt.value;
 
@@ -4819,7 +4827,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                             <span className="text-[10px] text-slate-400 font-mono">Custom Level:</span>
                             <input
                               type="text"
-                              placeholder="Or type custom level (e.g. Specialist, In Production)"
+                              placeholder="Or type custom level (e.g. Core, Advanced, Working Knowledge, Familiar)"
                               value={skillForm.level}
                               onChange={(e) => setSkillForm({ ...skillForm, level: e.target.value })}
                               className="flex-1 px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400 transition-all font-mono"
@@ -5044,6 +5052,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
                           <span
                             className={`inline-block mt-2 px-2.5 py-0.5 text-[10px] font-semibold rounded-full border ${
+                              skillForm.level === "Core" ||
                               skillForm.level === "Core Production" ||
                               skillForm.level.toLowerCase().includes("core") ||
                               skillForm.level.toLowerCase().includes("beshi")
@@ -5052,10 +5061,15 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                                   skillForm.level.toLowerCase().includes("adv") ||
                                   skillForm.level.toLowerCase().includes("valo")
                                 ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-300"
+                                : skillForm.level === "Working Knowledge" ||
+                                  skillForm.level === "Proficient" ||
+                                  skillForm.level.toLowerCase().includes("working") ||
+                                  skillForm.level.toLowerCase().includes("medium")
+                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
                                 : "bg-amber-500/10 border-amber-500/30 text-amber-300"
                             }`}
                           >
-                            {skillForm.level || "Core Production"}
+                            {skillForm.level || "Core"}
                           </span>
                         </div>
 
@@ -5160,7 +5174,8 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
                     {filteredAdminSkills.map((skill) => {
                       const skillIcon = resolveSkillIcon(skill.name, skill.iconName, skill.category);
-                      const isExpert =
+                      const isCore =
+                        skill.level === "Core" ||
                         skill.level === "Core Production" ||
                         skill.level.toLowerCase().includes("core") ||
                         skill.level.toLowerCase().includes("beshi");
@@ -5168,6 +5183,11 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         skill.level === "Advanced" ||
                         skill.level.toLowerCase().includes("adv") ||
                         skill.level.toLowerCase().includes("valo");
+                      const isWorkingKnowledge =
+                        skill.level === "Working Knowledge" ||
+                        skill.level === "Proficient" ||
+                        skill.level.toLowerCase().includes("working") ||
+                        skill.level.toLowerCase().includes("medium");
 
                       return (
                         <div
@@ -5218,10 +5238,12 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                           {/* Level Tag */}
                           <span
                             className={`inline-block mt-2 px-2.5 py-0.5 text-[10px] font-semibold rounded-full border ${
-                              isExpert
+                              isCore
                                 ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                                 : isAdvanced
                                 ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-300"
+                                : isWorkingKnowledge
+                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
                                 : "bg-amber-500/10 border-amber-500/30 text-amber-300"
                             }`}
                           >

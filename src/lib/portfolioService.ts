@@ -2092,7 +2092,7 @@ export const getLiveSkills = async (): Promise<SkillItemData[]> => {
           id: s.skill_id || s.id || `skill-${s.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
           name: s.name || "",
           category: s.category || "frontend",
-          level: s.level || "Core Production",
+          level: s.level || "Core",
           color: s.color || "#a855f7",
           iconName: s.icon_name || s.iconName || "",
           order_index: s.order_index ?? 0,

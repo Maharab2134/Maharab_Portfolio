@@ -231,7 +231,7 @@ export interface SkillItemData {
   id: string;
   name: string;
   category: string; // references SkillCategory.id
-  level: "Core Production" | "Advanced" | "Proficient" | string;
+  level: "Core" | "Advanced" | "Working Knowledge" | "Familiar" | string;
   color: string;
   iconName?: string;
   order_index?: number;
@@ -248,39 +248,39 @@ export const DEFAULT_SKILL_CATEGORIES: SkillCategory[] = [
 
 export const DEFAULT_SKILLS_DATA: SkillItemData[] = [
   // Frontend & Full Stack
-  { id: "skill-react", name: "React.js", category: "frontend", level: "Core Production", color: "#61DAFB", iconName: "FaReact" },
-  { id: "skill-nextjs", name: "Next.js", category: "frontend", level: "Core Production", color: "#ffffff", iconName: "SiNextdotjs" },
-  { id: "skill-typescript", name: "TypeScript", category: "frontend", level: "Core Production", color: "#3178C6", iconName: "SiTypescript" },
-  { id: "skill-tailwind", name: "Tailwind CSS", category: "frontend", level: "Core Production", color: "#06B6D4", iconName: "SiTailwindcss" },
+  { id: "skill-react", name: "React.js", category: "frontend", level: "Core", color: "#61DAFB", iconName: "FaReact" },
+  { id: "skill-nextjs", name: "Next.js", category: "frontend", level: "Core", color: "#ffffff", iconName: "SiNextdotjs" },
+  { id: "skill-typescript", name: "TypeScript", category: "frontend", level: "Core", color: "#3178C6", iconName: "SiTypescript" },
+  { id: "skill-tailwind", name: "Tailwind CSS", category: "frontend", level: "Core", color: "#06B6D4", iconName: "SiTailwindcss" },
   { id: "skill-html5", name: "HTML5 / Semantic Web", category: "frontend", level: "Advanced", color: "#E34F26", iconName: "FaHtml5" },
   { id: "skill-css3", name: "Modern CSS3", category: "frontend", level: "Advanced", color: "#1572B6", iconName: "FaCss3Alt" },
 
   // Mobile
-  { id: "skill-flutter", name: "Flutter", category: "mobile", level: "Core Production", color: "#02569B", iconName: "SiFlutter" },
+  { id: "skill-flutter", name: "Flutter", category: "mobile", level: "Core", color: "#02569B", iconName: "SiFlutter" },
   { id: "skill-android", name: "Android Native", category: "mobile", level: "Advanced", color: "#3DDC84", iconName: "FaAndroid" },
   { id: "skill-kotlin", name: "Kotlin", category: "mobile", level: "Advanced", color: "#7F52FF", iconName: "SiKotlin" },
   { id: "skill-java-android", name: "Java (Android)", category: "mobile", level: "Advanced", color: "#ED8B00", iconName: "FaJava" },
 
   // Backend & Database
-  { id: "skill-nodejs", name: "Node.js", category: "backend", level: "Core Production", color: "#339933", iconName: "FaNodeJs" },
-  { id: "skill-express", name: "Express.js", category: "backend", level: "Core Production", color: "#ffffff", iconName: "SiExpress" },
-  { id: "skill-mongodb", name: "MongoDB & Mongoose", category: "backend", level: "Core Production", color: "#47A248", iconName: "SiMongodb" },
+  { id: "skill-nodejs", name: "Node.js", category: "backend", level: "Core", color: "#339933", iconName: "FaNodeJs" },
+  { id: "skill-express", name: "Express.js", category: "backend", level: "Core", color: "#ffffff", iconName: "SiExpress" },
+  { id: "skill-mongodb", name: "MongoDB & Mongoose", category: "backend", level: "Core", color: "#47A248", iconName: "SiMongodb" },
   { id: "skill-postgresql", name: "PostgreSQL", category: "backend", level: "Advanced", color: "#336791", iconName: "SiPostgresql" },
   { id: "skill-mysql", name: "MySQL", category: "backend", level: "Advanced", color: "#4479A1", iconName: "SiMysql" },
   { id: "skill-firebase", name: "Firebase (Auth/DB)", category: "backend", level: "Advanced", color: "#FFCA28", iconName: "SiFirebase" },
 
   // Languages
-  { id: "skill-javascript", name: "JavaScript (ES6+)", category: "languages", level: "Core Production", color: "#F7DF1E", iconName: "SiJavascript" },
+  { id: "skill-javascript", name: "JavaScript (ES6+)", category: "languages", level: "Core", color: "#F7DF1E", iconName: "SiJavascript" },
   { id: "skill-python", name: "Python", category: "languages", level: "Advanced", color: "#3776AB", iconName: "FaPython" },
   { id: "skill-cpp", name: "C++", category: "languages", level: "Advanced", color: "#00599C", iconName: "SiCplusplus" },
   { id: "skill-java", name: "Java", category: "languages", level: "Advanced", color: "#ED8B00", iconName: "FaJava" },
 
   // Tools & DevOps
-  { id: "skill-git", name: "Git & GitHub", category: "tools", level: "Core Production", color: "#F05032", iconName: "FaGitAlt" },
-  { id: "skill-postman", name: "Postman", category: "tools", level: "Core Production", color: "#FF6C37", iconName: "SiPostman" },
+  { id: "skill-git", name: "Git & GitHub", category: "tools", level: "Core", color: "#F05032", iconName: "FaGitAlt" },
+  { id: "skill-postman", name: "Postman", category: "tools", level: "Core", color: "#FF6C37", iconName: "SiPostman" },
   { id: "skill-linux", name: "Linux Environments", category: "tools", level: "Advanced", color: "#FCC624", iconName: "FaLinux" },
-  { id: "skill-docker", name: "Docker Basics", category: "tools", level: "Proficient", color: "#2496ED", iconName: "FaDocker" },
-  { id: "skill-figma", name: "UI/UX & Figma", category: "tools", level: "Proficient", color: "#F24E1E", iconName: "FaFigma" },
+  { id: "skill-docker", name: "Docker Basics", category: "tools", level: "Working Knowledge", color: "#2496ED", iconName: "FaDocker" },
+  { id: "skill-figma", name: "UI/UX & Figma", category: "tools", level: "Working Knowledge", color: "#F24E1E", iconName: "FaFigma" },
 
   // AI & IoT
   { id: "skill-tensorflow", name: "TensorFlow & Keras", category: "aiml", level: "Advanced", color: "#FF6F00", iconName: "SiTensorflow" },

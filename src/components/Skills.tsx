@@ -126,7 +126,8 @@ const Skills: React.FC = () => {
             {visibleSkills.map((skill, index) => {
               const skillIcon = resolveSkillIcon(skill.name, skill.iconName, skill.category);
               const lvlLower = (skill.level || "").toLowerCase();
-              const isExpert =
+              const isCore =
+                skill.level === "Core" ||
                 skill.level === "Core Production" ||
                 lvlLower.includes("core") ||
                 lvlLower.includes("expert") ||
@@ -136,6 +137,12 @@ const Skills: React.FC = () => {
                 lvlLower.includes("adv") ||
                 lvlLower.includes("valo") ||
                 lvlLower.includes("high");
+              const isWorkingKnowledge =
+                skill.level === "Working Knowledge" ||
+                skill.level === "Proficient" ||
+                lvlLower.includes("working") ||
+                lvlLower.includes("proficient") ||
+                lvlLower.includes("medium");
 
               return (
                 <motion.div
@@ -167,10 +174,12 @@ const Skills: React.FC = () => {
                   {/* Level Tag */}
                   <span
                     className={`inline-block mt-2 px-2.5 py-0.5 text-[10px] font-semibold rounded-full border ${
-                      isExpert
+                      isCore
                         ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                         : isAdvanced
                         ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-300"
+                        : isWorkingKnowledge
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
                         : "bg-amber-500/10 border-amber-500/30 text-amber-300"
                     }`}
                   >
