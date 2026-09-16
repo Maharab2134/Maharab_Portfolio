@@ -184,6 +184,10 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.5 }}
               className="inline-flex items-center gap-2.5 px-4 py-2 text-xs font-medium rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl text-slate-300 shadow-sm"
             >
+              <span className="text-slate-200 font-medium">
+                As-salamu alaykum
+              </span>
+              <span className="text-slate-600">•</span>
               <span className="relative flex w-2 h-2">
                 <span className="absolute inline-flex w-full h-full bg-emerald-400 rounded-full opacity-75 animate-ping" />
                 <span className="relative inline-flex w-2 h-2 bg-emerald-500 rounded-full" />
@@ -191,8 +195,6 @@ const Hero: React.FC = () => {
               <span className="font-mono text-emerald-400 tracking-wider text-[11px] uppercase font-semibold">
                 Available for Hire
               </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-slate-300 hidden sm:inline">Software Engineer &amp; Mobile Dev</span>
               {renderIcon(HiOutlineSparkles, { size: 14, className: "text-purple-400 ml-0.5" })}
             </motion.div>
 
