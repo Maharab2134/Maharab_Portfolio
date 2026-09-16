@@ -2226,6 +2226,38 @@ const STORAGE_PROJECT_REVIEWS_KEY = "maharab_project_reviews";
 const STORAGE_LIKED_REVIEWS_KEY = "maharab_liked_reviews";
 const STORAGE_DELETED_REVIEWS_KEY = "maharab_deleted_review_ids";
 const STORAGE_DELETED_REVIEW_FPS_KEY = "maharab_deleted_review_fingerprints";
+const STORAGE_REVIEWS_ORDER_KEY = "maharab_reviews_order";
+
+export const getReviewsOrderMap = (): Map<string, number> | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_REVIEWS_ORDER_KEY);
+    if (raw) {
+      const ids: string[] = JSON.parse(raw);
+      if (Array.isArray(ids) && ids.length > 0) {
+        const map = new Map<string, number>();
+        ids.forEach((id, idx) => map.set(String(id), idx));
+        return map;
+      }
+    }
+  } catch (e) {}
+  return null;
+};
+
+export const saveReviewsOrder = async (orderedList: ProjectReview[]): Promise<boolean> => {
+  try {
+    const ids = orderedList.map((r) => String(r.id));
+    localStorage.setItem(STORAGE_REVIEWS_ORDER_KEY, JSON.stringify(ids));
+    localStorage.setItem(STORAGE_PROJECT_REVIEWS_KEY, JSON.stringify(orderedList.slice(0, 200)));
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_reviews_updated"));
+    }
+    return true;
+  } catch (e) {
+    console.warn("Failed to save reviews order:", e);
+    return false;
+  }
+};
 
 export const getReviewFingerprint = (r: Partial<ProjectReview>): string => {
   const pId = (r.project_id || "").trim();
@@ -2471,9 +2503,15 @@ export const getProjectReviews = async (
           }
         });
 
-        const sorted = Array.from(mergedMap.values()).sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
+        const orderMap = getReviewsOrderMap();
+        const sorted = Array.from(mergedMap.values()).sort((a, b) => {
+          if (orderMap) {
+            const indexA = orderMap.has(a.id) ? orderMap.get(a.id)! : 999999;
+            const indexB = orderMap.has(b.id) ? orderMap.get(b.id)! : 999999;
+            if (indexA !== indexB) return indexA - indexB;
+          }
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
 
         try {
           localStorage.setItem(STORAGE_PROJECT_REVIEWS_KEY, JSON.stringify(sorted.slice(0, 200)));
@@ -2504,6 +2542,16 @@ export const getProjectReviews = async (
       );
     });
     return results;
+  }
+
+  const orderMap = getReviewsOrderMap();
+  if (orderMap) {
+    localList.sort((a, b) => {
+      const indexA = orderMap.has(a.id) ? orderMap.get(a.id)! : 999999;
+      const indexB = orderMap.has(b.id) ? orderMap.get(b.id)! : 999999;
+      if (indexA !== indexB) return indexA - indexB;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
   }
   return localList;
 };
@@ -2816,35 +2864,14 @@ export const getBestProjectReviews = async (
   const allReviews = await getProjectReviews();
   if (!allReviews || allReviews.length === 0) return [];
 
-  const config = getTestimonialsConfig();
-  const pinnedIds = config.pinnedReviewIds || [];
-
-  // 1. Extract reviews explicitly pinned to the TOP in designated priority order
-  const pinnedReviews: ProjectReview[] = [];
-  pinnedIds.forEach((id) => {
-    const match = allReviews.find((r) => r.id === id);
-    if (match) {
-      pinnedReviews.push(match);
-    }
-  });
-
-  // 2. Unpinned candidates
-  const unpinned = allReviews.filter((r) => !pinnedIds.includes(r.id));
-  let candidates = unpinned.filter((r) => (r.rating || 5) >= minRating);
+  // Reordering in Admin places top testimonials at the start of the list.
+  // Filter by minRating if available, retaining the exact ordered sequence:
+  let candidates = allReviews.filter((r) => (r.rating || 5) >= minRating);
   if (candidates.length === 0) {
-    candidates = unpinned;
+    candidates = allReviews;
   }
 
-  // 3. Sort unpinned by rating descending, then likes descending, then newest first
-  const sortedUnpinned = [...candidates].sort((a, b) => {
-    const ratingDiff = (b.rating || 5) - (a.rating || 5);
-    if (ratingDiff !== 0) return ratingDiff;
-    const likesDiff = (b.likes || 0) - (a.likes || 0);
-    if (likesDiff !== 0) return likesDiff;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
-
-  return [...pinnedReviews, ...sortedUnpinned].slice(0, limit);
+  return candidates.slice(0, limit);
 };
 
 

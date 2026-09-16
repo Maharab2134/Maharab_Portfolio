@@ -212,7 +212,7 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
                     ? "saytica-review"
                     : `${projectSlug}-review`;
 
-                const isPinned = Boolean(config.pinnedReviewIds?.includes(item.id));
+                const isPinned = reviews.indexOf(item) === 0;
 
                 return (
                   <TestimonialCard
