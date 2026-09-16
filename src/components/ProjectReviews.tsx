@@ -202,10 +202,6 @@ export const ProjectReviews: React.FC<ProjectReviewsProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-white/[0.08]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xl">💬</span>
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              Client &amp; Peer Reviews
-            </h2>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
               {stats.count} {stats.count === 1 ? "Review" : "Reviews"}
             </span>
@@ -361,18 +357,6 @@ export const ProjectReviews: React.FC<ProjectReviewsProps> = ({
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-purple-300 bg-purple-500/15 px-2 py-0.5 rounded-full border border-purple-500/25">
                           {renderIcon(FaCheckCircle, { size: 9, className: "text-purple-400" })}
                           <span>Verified Lead</span>
-                        </span>
-                        {/* Gender Tag */}
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            isFemale
-                              ? "bg-pink-500/10 text-pink-300 border-pink-500/20"
-                              : isMale
-                              ? "bg-blue-500/10 text-blue-300 border-blue-500/20"
-                              : "bg-white/5 text-slate-400 border-white/10"
-                          }`}
-                        >
-                          {isFemale ? "Female 👩" : isMale ? "Male 👨" : "Reviewer 👤"}
                         </span>
                       </div>
 
