@@ -167,15 +167,18 @@ export const ProjectReviews: React.FC<ProjectReviewsProps> = ({
       });
 
       if (res.success) {
-        setSubmitSuccess("Thank you! Your verified review has been published.");
+        setSubmitSuccess("Thank you! Your review has been published successfully. 🎉");
         setName("");
         setEmail("");
         setMessage("");
         setRating(5);
         setGenderOverride("auto");
-        setShowModal(false);
         fetchReviews();
-        setTimeout(() => setSubmitSuccess(null), 6000);
+        // Keep modal open to show success state, then auto-close
+        setTimeout(() => {
+          setShowModal(false);
+          setTimeout(() => setSubmitSuccess(null), 300);
+        }, 2500);
       }
     } catch (err: any) {
       alert("Failed to submit review: " + err.message);
@@ -465,6 +468,35 @@ export const ProjectReviews: React.FC<ProjectReviewsProps> = ({
                 </h3>
               </div>
 
+              {/* Success Screen */}
+              {submitSuccess ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  className="flex flex-col items-center justify-center py-10 text-center space-y-4"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 12 }}
+                    className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400/40 flex items-center justify-center shadow-lg shadow-emerald-500/20"
+                  >
+                    {renderIcon(FaCheckCircle, { size: 28, className: "text-emerald-400" })}
+                  </motion.div>
+                  <h4 className="text-lg font-bold text-white">Review Submitted!</h4>
+                  <p className="text-sm text-slate-300 max-w-xs leading-relaxed">
+                    {submitSuccess}
+                  </p>
+                  <motion.div
+                    initial={{ width: "100%" }}
+                    animate={{ width: "0%" }}
+                    transition={{ duration: 2.5, ease: "linear" }}
+                    className="h-0.5 rounded-full bg-emerald-400/60 self-stretch"
+                  />
+                </motion.div>
+              ) : (
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Star Rating Selector */}
                 <div>
@@ -650,6 +682,7 @@ export const ProjectReviews: React.FC<ProjectReviewsProps> = ({
                   </button>
                 </div>
               </form>
+              )}
             </motion.div>
           </div>
         )}
