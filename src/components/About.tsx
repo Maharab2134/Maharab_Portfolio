@@ -50,6 +50,7 @@ const About: React.FC = () => {
         : (PORTFOLIO_INFO as any).showIntroVideo
     ) && Boolean(introDrivePreview);
   const resumeUrl = profile.resumeUrl || PORTFOLIO_INFO.resumeUrl;
+  const aboutStats = (profile as any).aboutStats || (profile as any).about_stats || (PORTFOLIO_INFO as any).aboutStats;
 
   return (
     <section
@@ -125,6 +126,30 @@ const About: React.FC = () => {
                 {profile.bio || "I enjoy building modern web and mobile applications using React, Next.js, Node.js, and Flutter. My focus is on writing clean, scalable code and turning ideas into fast, user-friendly digital products."}
               </p>
             </div>
+
+            {/* Quick Stat Badges (Controlled from Admin) */}
+            {aboutStats && aboutStats.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-1">
+                {aboutStats.map((stat: any, idx: number) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.35, delay: idx * 0.05 }}
+                    whileHover={{ y: -3 }}
+                    className="p-3 sm:p-3.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-purple-500/30 transition-all text-center flex flex-col justify-center items-center backdrop-blur-sm group shadow-sm shadow-black/20"
+                  >
+                    <span className="text-xl sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 group-hover:scale-105 transition-transform">
+                      {stat.value}
+                    </span>
+                    <span className="text-[11px] sm:text-xs font-medium text-slate-400 mt-1 line-clamp-1 group-hover:text-slate-200 transition-colors">
+                      {stat.label}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            )}
 
             {/* Action Buttons (Matches Hero and Rest of Site) */}
             <div className="flex flex-wrap items-center gap-3 pt-2">

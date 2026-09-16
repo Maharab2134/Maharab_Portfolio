@@ -58,6 +58,12 @@ export const PORTFOLIO_INFO = {
     techStacks: "12+",
     satisfactionRate: "100%",
   },
+  aboutStats: [
+    { value: "2+ Years", label: "Project Experience" },
+    { value: "15+", label: "Projects" },
+    { value: "10+", label: "Technologies" },
+    { value: "CSE", label: "Academic Background" },
+  ],
   socials: {
     github: "https://github.com/Maharab2134",
     linkedin: "https://www.linkedin.com/in/md-maharab-hosen-679a70253/",

@@ -421,6 +421,14 @@ const Admin: React.FC = () => {
       ? (PORTFOLIO_INFO as any).typewriterPhrases.join("\n")
       : "Scalable Full-Stack Web Apps\nCross-Platform Mobile Experiences\nHigh-Throughput REST & GraphQL APIs\nSecure Microservices Architecture",
     available_for_hire: true,
+    about_stat1_val: (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years",
+    about_stat1_lbl: (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience",
+    about_stat2_val: (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+",
+    about_stat2_lbl: (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects",
+    about_stat3_val: (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+",
+    about_stat3_lbl: (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies",
+    about_stat4_val: (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE",
+    about_stat4_lbl: (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background",
     years_experience: PORTFOLIO_INFO.stats.yearsExperience,
     projects_completed: PORTFOLIO_INFO.stats.projectsCompleted,
     satisfaction_rate: PORTFOLIO_INFO.stats.satisfactionRate,
@@ -802,6 +810,14 @@ const Admin: React.FC = () => {
           ? (liveProfile as any).typewriter_phrases
           : PORTFOLIO_INFO.typewriterPhrases.join("\n"),
         available_for_hire: true,
+        about_stat1_val: (liveProfile as any).about_stat1_val || (liveProfile as any).aboutStats?.[0]?.value || (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years",
+        about_stat1_lbl: (liveProfile as any).about_stat1_lbl || (liveProfile as any).aboutStats?.[0]?.label || (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience",
+        about_stat2_val: (liveProfile as any).about_stat2_val || (liveProfile as any).aboutStats?.[1]?.value || (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+",
+        about_stat2_lbl: (liveProfile as any).about_stat2_lbl || (liveProfile as any).aboutStats?.[1]?.label || (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects",
+        about_stat3_val: (liveProfile as any).about_stat3_val || (liveProfile as any).aboutStats?.[2]?.value || (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+",
+        about_stat3_lbl: (liveProfile as any).about_stat3_lbl || (liveProfile as any).aboutStats?.[2]?.label || (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies",
+        about_stat4_val: (liveProfile as any).about_stat4_val || (liveProfile as any).aboutStats?.[3]?.value || (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE",
+        about_stat4_lbl: (liveProfile as any).about_stat4_lbl || (liveProfile as any).aboutStats?.[3]?.label || (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background",
         years_experience: liveProfile.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
         projects_completed: liveProfile.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
         satisfaction_rate: liveProfile.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
@@ -5758,6 +5774,127 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     <p className="text-[11px] text-slate-400 mt-1">
                       Controls the personal story paragraph displayed in the About Me section of the portfolio.
                     </p>
+                  </div>
+
+                  {/* About Section Stats & Highlight Badges (Admin Controlled) */}
+                  <div className="p-4 sm:p-5 rounded-2xl border border-white/[0.08] bg-[#0c101d]/60 space-y-4 shadow-lg">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-white/[0.06]">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-purple-300">
+                            About Section Stats &amp; Highlights Badges
+                          </h4>
+                          <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                            Live Badges
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Configure the 4 stat counters and highlight badges displayed directly below your About narrative
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                      {/* Stat 1 */}
+                      <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                        <span className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-wider">Badge #1</span>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Value (e.g. 2+ Years)</label>
+                          <input
+                            type="text"
+                            value={profileForm.about_stat1_val}
+                            onChange={(e) => setProfileForm({ ...profileForm, about_stat1_val: e.target.value })}
+                            placeholder="2+ Years"
+                            className="w-full px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-purple-400 font-semibold font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Label (e.g. Project Experience)</label>
+                          <input
+                            type="text"
+                            value={profileForm.about_stat1_lbl}
+                            onChange={(e) => setProfileForm({ ...profileForm, about_stat1_lbl: e.target.value })}
+                            placeholder="Project Experience"
+                            className="w-full px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-purple-400"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Stat 2 */}
+                      <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                        <span className="text-[10px] font-mono text-pink-400 font-bold uppercase tracking-wider">Badge #2</span>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Value (e.g. 15+)</label>
+                          <input
+                            type="text"
+                            value={profileForm.about_stat2_val}
+                            onChange={(e) => setProfileForm({ ...profileForm, about_stat2_val: e.target.value })}
+                            placeholder="15+"
+                            className="w-full px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-pink-400 font-semibold font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Label (e.g. Projects)</label>
+                          <input
+                            type="text"
+                            value={profileForm.about_stat2_lbl}
+                            onChange={(e) => setProfileForm({ ...profileForm, about_stat2_lbl: e.target.value })}
+                            placeholder="Projects"
+                            className="w-full px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-pink-400"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Stat 3 */}
+                      <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                        <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider">Badge #3</span>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Value (e.g. 10+)</label>
+                          <input
+                            type="text"
+                            value={profileForm.about_stat3_val}
+                            onChange={(e) => setProfileForm({ ...profileForm, about_stat3_val: e.target.value })}
+                            placeholder="10+"
+                            className="w-full px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400 font-semibold font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Label (e.g. Technologies)</label>
+                          <input
+                            type="text"
+                            value={profileForm.about_stat3_lbl}
+                            onChange={(e) => setProfileForm({ ...profileForm, about_stat3_lbl: e.target.value })}
+                            placeholder="Technologies"
+                            className="w-full px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Stat 4 */}
+                      <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                        <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-wider">Badge #4</span>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Value (e.g. CSE)</label>
+                          <input
+                            type="text"
+                            value={profileForm.about_stat4_val}
+                            onChange={(e) => setProfileForm({ ...profileForm, about_stat4_val: e.target.value })}
+                            placeholder="CSE"
+                            className="w-full px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-amber-400 font-semibold font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-medium mb-1">Label (e.g. Academic Background)</label>
+                          <input
+                            type="text"
+                            value={profileForm.about_stat4_lbl}
+                            onChange={(e) => setProfileForm({ ...profileForm, about_stat4_lbl: e.target.value })}
+                            placeholder="Academic Background"
+                            className="w-full px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-amber-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div>

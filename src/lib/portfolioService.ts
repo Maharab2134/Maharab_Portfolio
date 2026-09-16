@@ -992,6 +992,23 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
             projectsCompleted: parsed.projects_completed || parsed.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
             satisfactionRate: parsed.satisfaction_rate || parsed.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
           },
+          aboutStats:
+            parsed.aboutStats ||
+            parsed.about_stats ||
+            (parsed.about_stat1_val ? [
+              { value: parsed.about_stat1_val, label: parsed.about_stat1_lbl || "Project Experience" },
+              { value: parsed.about_stat2_val || "15+", label: parsed.about_stat2_lbl || "Projects" },
+              { value: parsed.about_stat3_val || "10+", label: parsed.about_stat3_lbl || "Technologies" },
+              { value: parsed.about_stat4_val || "CSE", label: parsed.about_stat4_lbl || "Academic Background" },
+            ] : (PORTFOLIO_INFO as any).aboutStats),
+          about_stat1_val: parsed.about_stat1_val || (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years",
+          about_stat1_lbl: parsed.about_stat1_lbl || (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience",
+          about_stat2_val: parsed.about_stat2_val || (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+",
+          about_stat2_lbl: parsed.about_stat2_lbl || (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects",
+          about_stat3_val: parsed.about_stat3_val || (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+",
+          about_stat3_lbl: parsed.about_stat3_lbl || (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies",
+          about_stat4_val: parsed.about_stat4_val || (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE",
+          about_stat4_lbl: parsed.about_stat4_lbl || (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background",
           socials: {
             ...PORTFOLIO_INFO.socials,
             github: parsed.github_url || parsed.github || parsed.socials?.github || PORTFOLIO_INFO.socials.github,
@@ -1142,6 +1159,13 @@ export const saveLiveProfile = async (
       : profileData.typewriterPhrases
   );
 
+  const aboutStats = profileData.about_stats || [
+    { value: profileData.about_stat1_val || (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years", label: profileData.about_stat1_lbl || (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience" },
+    { value: profileData.about_stat2_val || (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+", label: profileData.about_stat2_lbl || (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects" },
+    { value: profileData.about_stat3_val || (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+", label: profileData.about_stat3_lbl || (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies" },
+    { value: profileData.about_stat4_val || (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE", label: profileData.about_stat4_lbl || (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background" },
+  ];
+
   // Normalize and cache
   const toCache = {
     ...profileData,
@@ -1155,6 +1179,8 @@ export const saveLiveProfile = async (
     typewriterPrefix: typewriterPrefix,
     typewriter_phrases: typewriterPhrases,
     typewriterPhrases: typewriterPhrases,
+    aboutStats,
+    about_stats: aboutStats,
   };
 
   try {
