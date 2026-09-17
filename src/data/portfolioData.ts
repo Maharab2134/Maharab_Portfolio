@@ -25,6 +25,16 @@ export interface MilestoneItem {
   gradient: string;
 }
 
+export interface WorkingHoursConfig {
+  enabled: boolean;
+  mode: "auto" | "online" | "offline";
+  startTime: string;
+  endTime: string;
+  timezone: string;
+  onlineLabel: string;
+  offlineLabel: string;
+}
+
 export const PORTFOLIO_INFO = {
   name: "Md. Maharab Hosen",
   shortName: "Md. Maharab",
@@ -64,6 +74,15 @@ export const PORTFOLIO_INFO = {
     { value: "10+", label: "Technologies" },
     { value: "CSE", label: "Academic Background" },
   ],
+  workingHours: {
+    enabled: true,
+    mode: "auto" as const,
+    startTime: "09:00",
+    endTime: "22:00",
+    timezone: "Asia/Dhaka",
+    onlineLabel: "Available for Work",
+    offlineLabel: "Currently Away / Offline",
+  },
   socials: {
     github: "https://github.com/Maharab2134",
     linkedin: "https://www.linkedin.com/in/md-maharab-hosen-679a70253/",

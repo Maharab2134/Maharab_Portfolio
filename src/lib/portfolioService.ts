@@ -11,6 +11,7 @@ import {
   DEFAULT_SKILLS_DATA,
   SkillCategory,
   SkillItemData,
+  WorkingHoursConfig,
 } from "../data/portfolioData";
 import { VscVscode, VscCode, VscTerminal } from "react-icons/vsc";
 import {
@@ -935,6 +936,119 @@ export const parseTypewriterPhrases = (val: any): string[] => {
   ];
 };
 
+export interface WorkStatusResult {
+  isOnline: boolean;
+  statusLabel: string;
+  timeString: string;
+  timezone: string;
+  scheduleText: string;
+  mode: "auto" | "online" | "offline";
+}
+
+// Calculate whether developer is currently active/online based on timezone & schedule
+export const calculateWorkStatus = (
+  workingHoursConfig?: Partial<WorkingHoursConfig>
+): WorkStatusResult => {
+  const fallback = (PORTFOLIO_INFO as any).workingHours || {
+    enabled: true,
+    mode: "auto",
+    startTime: "09:00",
+    endTime: "22:00",
+    timezone: "Asia/Dhaka",
+    onlineLabel: "Available for Work",
+    offlineLabel: "Currently Away / Offline",
+  };
+
+  const cfg: WorkingHoursConfig = {
+    enabled: workingHoursConfig?.enabled !== undefined ? Boolean(workingHoursConfig.enabled) : fallback.enabled,
+    mode: workingHoursConfig?.mode || fallback.mode || "auto",
+    startTime: workingHoursConfig?.startTime || fallback.startTime || "09:00",
+    endTime: workingHoursConfig?.endTime || fallback.endTime || "22:00",
+    timezone: workingHoursConfig?.timezone || fallback.timezone || "Asia/Dhaka",
+    onlineLabel: workingHoursConfig?.onlineLabel || fallback.onlineLabel || "Available for Work",
+    offlineLabel: workingHoursConfig?.offlineLabel || fallback.offlineLabel || "Currently Away / Offline",
+  };
+
+  // If manual override: online
+  if (cfg.mode === "online") {
+    return {
+      isOnline: true,
+      statusLabel: cfg.onlineLabel,
+      timeString: "",
+      timezone: cfg.timezone,
+      scheduleText: "Always Online (Manual Override)",
+      mode: "online",
+    };
+  }
+
+  // If manual override: offline
+  if (cfg.mode === "offline") {
+    return {
+      isOnline: false,
+      statusLabel: cfg.offlineLabel,
+      timeString: "",
+      timezone: cfg.timezone,
+      scheduleText: "Offline (Manual Override)",
+      mode: "offline",
+    };
+  }
+
+  // Auto mode: calculate against current time in configured timezone
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: cfg.timezone,
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(now);
+    const hourPart = parts.find((p) => p.type === "hour")?.value || "0";
+    const minutePart = parts.find((p) => p.type === "minute")?.value || "0";
+    const currentMinutes = parseInt(hourPart, 10) * 60 + parseInt(minutePart, 10);
+
+    const [startH, startM] = cfg.startTime.split(":").map((v) => parseInt(v, 10) || 0);
+    const [endH, endM] = cfg.endTime.split(":").map((v) => parseInt(v, 10) || 0);
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+
+    let isOnline = false;
+    if (startMinutes <= endMinutes) {
+      // Normal shift (e.g. 09:00 - 22:00)
+      isOnline = currentMinutes >= startMinutes && currentMinutes < endMinutes;
+    } else {
+      // Cross-midnight shift (e.g. 20:00 - 04:00)
+      isOnline = currentMinutes >= startMinutes || currentMinutes < endMinutes;
+    }
+
+    const displayFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: cfg.timezone,
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    const timeString = displayFormatter.format(now);
+
+    return {
+      isOnline,
+      statusLabel: isOnline ? cfg.onlineLabel : cfg.offlineLabel,
+      timeString,
+      timezone: cfg.timezone,
+      scheduleText: `${cfg.startTime} – ${cfg.endTime} (${cfg.timezone.replace("_", " ")})`,
+      mode: "auto",
+    };
+  } catch (err) {
+    return {
+      isOnline: true,
+      statusLabel: cfg.onlineLabel,
+      timeString: "",
+      timezone: cfg.timezone,
+      scheduleText: `${cfg.startTime} – ${cfg.endTime}`,
+      mode: "auto",
+    };
+  }
+};
+
 // Profile Info Service
 export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
   try {
@@ -1015,6 +1129,7 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
             linkedin: parsed.linkedin_url || parsed.linkedin || parsed.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
             twitter: parsed.twitter_url || parsed.twitter || parsed.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
           },
+          workingHours: parsed.workingHours || parsed.working_hours || (PORTFOLIO_INFO as any).workingHours,
         };
       }
     }
@@ -1116,6 +1231,15 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
             linkedin: row.linkedin_url || PORTFOLIO_INFO.socials.linkedin,
             twitter: row.twitter_url || PORTFOLIO_INFO.socials.twitter,
           },
+          workingHours: row.working_hours || (row.work_hours_enabled !== undefined ? {
+            enabled: Boolean(row.work_hours_enabled),
+            mode: row.work_hours_mode || "auto",
+            startTime: row.work_start_time || "09:00",
+            endTime: row.work_end_time || "22:00",
+            timezone: row.work_timezone || "Asia/Dhaka",
+            onlineLabel: row.work_online_label || "Available for Work",
+            offlineLabel: row.work_offline_label || "Currently Away / Offline",
+          } : (PORTFOLIO_INFO as any).workingHours),
         };
         try {
           localStorage.setItem("maharab_cached_profile", JSON.stringify(profileMapped));
@@ -1166,6 +1290,16 @@ export const saveLiveProfile = async (
     { value: profileData.about_stat4_val || (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE", label: profileData.about_stat4_lbl || (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background" },
   ];
 
+  const workingHours: WorkingHoursConfig = profileData.workingHours || profileData.working_hours || {
+    enabled: profileData.work_hours_enabled !== undefined ? Boolean(profileData.work_hours_enabled) : true,
+    mode: profileData.work_hours_mode || "auto",
+    startTime: profileData.work_start_time || "09:00",
+    endTime: profileData.work_end_time || "22:00",
+    timezone: profileData.work_timezone || "Asia/Dhaka",
+    onlineLabel: profileData.work_online_label || "Available for Work",
+    offlineLabel: profileData.work_offline_label || "Currently Away / Offline",
+  };
+
   // Normalize and cache
   const toCache = {
     ...profileData,
@@ -1181,6 +1315,15 @@ export const saveLiveProfile = async (
     typewriterPhrases: typewriterPhrases,
     aboutStats,
     about_stats: aboutStats,
+    workingHours,
+    working_hours: workingHours,
+    work_hours_enabled: workingHours.enabled,
+    work_hours_mode: workingHours.mode,
+    work_start_time: workingHours.startTime,
+    work_end_time: workingHours.endTime,
+    work_timezone: workingHours.timezone,
+    work_online_label: workingHours.onlineLabel,
+    work_offline_label: workingHours.offlineLabel,
   };
 
   try {
@@ -1221,6 +1364,13 @@ export const saveLiveProfile = async (
         github_url: profileData.github || profileData.github_url,
         linkedin_url: profileData.linkedin || profileData.linkedin_url,
         twitter_url: profileData.twitter || profileData.twitter_url,
+        work_hours_enabled: workingHours.enabled,
+        work_hours_mode: workingHours.mode,
+        work_start_time: workingHours.startTime,
+        work_end_time: workingHours.endTime,
+        work_timezone: workingHours.timezone,
+        work_online_label: workingHours.onlineLabel,
+        work_offline_label: workingHours.offlineLabel,
       };
 
       const dbProfile: Record<string, any> = {};
@@ -1242,6 +1392,13 @@ export const saveLiveProfile = async (
           delete safeDb.typewriter_phrases;
           delete safeDb.maps_url;
           delete safeDb.footer_bio;
+          delete safeDb.work_hours_enabled;
+          delete safeDb.work_hours_mode;
+          delete safeDb.work_start_time;
+          delete safeDb.work_end_time;
+          delete safeDb.work_timezone;
+          delete safeDb.work_online_label;
+          delete safeDb.work_offline_label;
           await supabase.from("profile_info").update(safeDb).eq("id", existing[0].id);
         }
       } else {
@@ -1254,6 +1411,13 @@ export const saveLiveProfile = async (
           delete safeDb.typewriter_phrases;
           delete safeDb.maps_url;
           delete safeDb.footer_bio;
+          delete safeDb.work_hours_enabled;
+          delete safeDb.work_hours_mode;
+          delete safeDb.work_start_time;
+          delete safeDb.work_end_time;
+          delete safeDb.work_timezone;
+          delete safeDb.work_online_label;
+          delete safeDb.work_offline_label;
           await supabase.from("profile_info").insert([safeDb]);
         }
       }
@@ -1355,6 +1519,7 @@ export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
               linkedin: parsed.linkedin_url || parsed.linkedin || parsed.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
               twitter: parsed.twitter_url || parsed.twitter || parsed.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
             },
+            workingHours: parsed.workingHours || parsed.working_hours || (PORTFOLIO_INFO as any).workingHours,
           };
         }
       }

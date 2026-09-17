@@ -124,6 +124,7 @@ import {
   useTestimonialsConfig,
   saveTestimonialsConfig,
   saveReviewsOrder,
+  calculateWorkStatus,
 } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
@@ -441,6 +442,13 @@ const Admin: React.FC = () => {
     github: PORTFOLIO_INFO.socials.github,
     linkedin: PORTFOLIO_INFO.socials.linkedin,
     twitter: PORTFOLIO_INFO.socials.twitter,
+    work_hours_enabled: (PORTFOLIO_INFO as any).workingHours?.enabled ?? true,
+    work_hours_mode: (PORTFOLIO_INFO as any).workingHours?.mode || "auto",
+    work_start_time: (PORTFOLIO_INFO as any).workingHours?.startTime || "09:00",
+    work_end_time: (PORTFOLIO_INFO as any).workingHours?.endTime || "22:00",
+    work_timezone: (PORTFOLIO_INFO as any).workingHours?.timezone || "Asia/Dhaka",
+    work_online_label: (PORTFOLIO_INFO as any).workingHours?.onlineLabel || "Available for Work",
+    work_offline_label: (PORTFOLIO_INFO as any).workingHours?.offlineLabel || "Currently Away / Offline",
   });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
@@ -863,6 +871,13 @@ const Admin: React.FC = () => {
         github: liveProfile.socials?.github || PORTFOLIO_INFO.socials.github,
         linkedin: liveProfile.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
         twitter: liveProfile.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
+        work_hours_enabled: (liveProfile as any).workingHours?.enabled ?? (liveProfile as any).work_hours_enabled ?? true,
+        work_hours_mode: (liveProfile as any).workingHours?.mode || (liveProfile as any).work_hours_mode || "auto",
+        work_start_time: (liveProfile as any).workingHours?.startTime || (liveProfile as any).work_start_time || "09:00",
+        work_end_time: (liveProfile as any).workingHours?.endTime || (liveProfile as any).work_end_time || "22:00",
+        work_timezone: (liveProfile as any).workingHours?.timezone || (liveProfile as any).work_timezone || "Asia/Dhaka",
+        work_online_label: (liveProfile as any).workingHours?.onlineLabel || (liveProfile as any).work_online_label || "Available for Work",
+        work_offline_label: (liveProfile as any).workingHours?.offlineLabel || (liveProfile as any).work_offline_label || "Currently Away / Offline",
       });
     }
   }, []);
@@ -5957,6 +5972,269 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     <p className="text-[11px] text-slate-400 mt-1">
                       Controls the brief summary narrative displayed under your profile avatar and name in the website Footer.
                     </p>
+                  </div>
+                </div>
+
+                {/* Live Work Schedule & Radial Status Studio */}
+                <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#111726]/75 space-y-5 shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/[0.06]">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        {renderIcon(FaClock, { size: 14, className: "text-emerald-400" })}
+                        <span>Live Work Schedule &amp; Radial Status Studio</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Configure your shift hours and timezone. When active, a glowing green radial light blinks beside your name in the Navbar; outside hours, it automatically turns to a blinking red light.
+                      </p>
+                    </div>
+
+                    {/* Enable Toggle Switch */}
+                    <label className="inline-flex items-center gap-2 cursor-pointer self-start sm:self-auto px-3 py-1.5 rounded-xl bg-[#0c101d] border border-white/10 hover:border-white/20 transition-all">
+                      <input
+                        type="checkbox"
+                        checked={profileForm.work_hours_enabled}
+                        onChange={(e) =>
+                          setProfileForm({ ...profileForm, work_hours_enabled: e.target.checked })
+                        }
+                        className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                      />
+                      <span className="text-xs font-semibold text-slate-200">
+                        {profileForm.work_hours_enabled ? "Status Light Enabled" : "Status Light Disabled"}
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Interactive Live Status Preview Box */}
+                  {(() => {
+                    const preview = calculateWorkStatus({
+                      enabled: profileForm.work_hours_enabled,
+                      mode: profileForm.work_hours_mode as any,
+                      startTime: profileForm.work_start_time,
+                      endTime: profileForm.work_end_time,
+                      timezone: profileForm.work_timezone,
+                      onlineLabel: profileForm.work_online_label,
+                      offlineLabel: profileForm.work_offline_label,
+                    });
+
+                    return (
+                      <div className="p-4 rounded-2xl bg-[#0c101d] border border-white/[0.08] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                            Live Navbar Simulation
+                          </span>
+                          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
+                            <div className="w-7 h-7 rounded-lg overflow-hidden border border-white/20 shrink-0">
+                              <img
+                                src={toProxyImageUrl(profileForm.profile_image || PORTFOLIO_INFO.profileImage)}
+                                alt="avatar"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-bold text-white">
+                                {profileForm.short_name || profileForm.name || "Maharab"}
+                              </span>
+                              {profileForm.work_hours_enabled && (
+                                <div className="relative flex items-center justify-center shrink-0">
+                                  <span
+                                    className={`animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full opacity-75 ${
+                                      preview.isOnline ? "bg-emerald-400" : "bg-rose-500"
+                                    }`}
+                                  />
+                                  <span
+                                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                                      preview.isOnline
+                                        ? "bg-emerald-400 shadow-[0_0_8px_#34d399]"
+                                        : "bg-rose-500 shadow-[0_0_8px_#f43f5e]"
+                                    }`}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status Diagnostics */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                          <div
+                            className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-2 text-xs font-semibold ${
+                              preview.isOnline
+                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                                : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                            }`}
+                          >
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                preview.isOnline ? "bg-emerald-400 animate-pulse" : "bg-rose-400 animate-pulse"
+                              }`}
+                            />
+                            <span>{preview.isOnline ? "🟢 CURRENT STATUS: ONLINE" : "🔴 CURRENT STATUS: OFFLINE"}</span>
+                          </div>
+
+                          <div className="text-[11px] font-mono text-slate-400">
+                            <span>Timezone: </span>
+                            <span className="text-slate-200 font-semibold">{profileForm.work_timezone}</span>
+                            {preview.timeString && (
+                              <span className="ml-1 text-cyan-400 font-bold">({preview.timeString})</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Mode Selector */}
+                  <div className="space-y-2">
+                    <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
+                      Status Calculation Mode
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setProfileForm({ ...profileForm, work_hours_mode: "auto" })}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          profileForm.work_hours_mode === "auto"
+                            ? "bg-indigo-600/20 border-indigo-500/50 text-white shadow-lg shadow-indigo-500/10"
+                            : "bg-[#0c101d] border-white/10 text-slate-400 hover:border-white/20"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-white">Auto (Schedule-Based)</span>
+                          {profileForm.work_hours_mode === "auto" && (
+                            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          Switches automatically between Green &amp; Red based on your shift hours &amp; timezone.
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setProfileForm({ ...profileForm, work_hours_mode: "online" })}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          profileForm.work_hours_mode === "online"
+                            ? "bg-emerald-600/20 border-emerald-500/50 text-white shadow-lg shadow-emerald-500/10"
+                            : "bg-[#0c101d] border-white/10 text-slate-400 hover:border-white/20"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                            Always Online
+                          </span>
+                          {profileForm.work_hours_mode === "online" && (
+                            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          Manual override: Always displays glowing Green radial light.
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setProfileForm({ ...profileForm, work_hours_mode: "offline" })}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          profileForm.work_hours_mode === "offline"
+                            ? "bg-rose-600/20 border-rose-500/50 text-white shadow-lg shadow-rose-500/10"
+                            : "bg-[#0c101d] border-white/10 text-slate-400 hover:border-white/20"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-rose-400" />
+                            Always Offline
+                          </span>
+                          {profileForm.work_hours_mode === "offline" && (
+                            <span className="w-2 h-2 rounded-full bg-rose-400" />
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          Manual override: Always displays glowing Red radial light (e.g. vacation).
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Shift Hours & Timezone Configuration */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">
+                        Shift Start Time
+                      </label>
+                      <input
+                        type="time"
+                        value={profileForm.work_start_time}
+                        onChange={(e) => setProfileForm({ ...profileForm, work_start_time: e.target.value })}
+                        className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 font-mono"
+                      />
+                      <span className="text-[10px] text-slate-500 mt-1 block">When green light begins</span>
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">
+                        Shift End Time
+                      </label>
+                      <input
+                        type="time"
+                        value={profileForm.work_end_time}
+                        onChange={(e) => setProfileForm({ ...profileForm, work_end_time: e.target.value })}
+                        className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 font-mono"
+                      />
+                      <span className="text-[10px] text-slate-500 mt-1 block">When red light begins</span>
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">
+                        Timezone
+                      </label>
+                      <select
+                        value={profileForm.work_timezone}
+                        onChange={(e) => setProfileForm({ ...profileForm, work_timezone: e.target.value })}
+                        className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400"
+                      >
+                        <option value="Asia/Dhaka">🇧🇩 Bangladesh Time (Asia/Dhaka — GMT+6)</option>
+                        <option value="America/New_York">🇺🇸 US Eastern (New York — GMT-4)</option>
+                        <option value="America/Los_Angeles">🇺🇸 US Pacific (Los Angeles — GMT-7)</option>
+                        <option value="Europe/London">🇬🇧 UK Time (London — GMT+1)</option>
+                        <option value="Asia/Dubai">🇦🇪 Gulf Time (Dubai — GMT+4)</option>
+                        <option value="Asia/Kolkata">🇮🇳 India Time (Kolkata — GMT+5:30)</option>
+                        <option value="Asia/Singapore">🇸🇬 Singapore Time (GMT+8)</option>
+                        <option value="Europe/Berlin">🇩🇪 Central Europe (Berlin — GMT+2)</option>
+                        <option value="UTC">🌐 UTC (Universal Coordinated Time)</option>
+                      </select>
+                      <span className="text-[10px] text-slate-500 mt-1 block">Target reference timezone</span>
+                    </div>
+                  </div>
+
+                  {/* Status Tooltip / Badge Labels */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">
+                        Online Status Label
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.work_online_label}
+                        onChange={(e) => setProfileForm({ ...profileForm, work_online_label: e.target.value })}
+                        placeholder="Available for Work"
+                        className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-emerald-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider mb-1.5">
+                        Offline Status Label
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.work_offline_label}
+                        onChange={(e) => setProfileForm({ ...profileForm, work_offline_label: e.target.value })}
+                        placeholder="Currently Away / Offline"
+                        className="w-full px-3.5 py-2.5 text-sm text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-rose-400"
+                      />
+                    </div>
                   </div>
                 </div>
 

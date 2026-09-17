@@ -12,7 +12,7 @@ import {
   FaRocket,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
-import { useLiveProfile } from "../lib/portfolioService";
+import { useLiveProfile, calculateWorkStatus } from "../lib/portfolioService";
 
 interface NavbarProps {
   isMenuOpen: boolean;
@@ -37,6 +37,21 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
   const profile = useLiveProfile();
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+
+  // Real-time work status evaluation (recomputed every 20 seconds)
+  const [workStatus, setWorkStatus] = useState(() =>
+    calculateWorkStatus((profile as any).workingHours)
+  );
+
+  useEffect(() => {
+    setWorkStatus(calculateWorkStatus((profile as any).workingHours));
+
+    const intervalId = setInterval(() => {
+      setWorkStatus(calculateWorkStatus((profile as any).workingHours));
+    }, 20000);
+
+    return () => clearInterval(intervalId);
+  }, [profile]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -176,9 +191,34 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
               <div className="absolute inset-0 transition-opacity opacity-0 bg-white/20 group-hover:opacity-100" />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm sm:text-base font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-purple-300 truncate">
-                {displayName}
-              </span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-sm sm:text-base font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-purple-300 truncate">
+                  {displayName}
+                </span>
+
+                {/* Live Radial Blinking Status Light (Green / Red) */}
+                {((profile as any).workingHours?.enabled ?? true) && (
+                  <div
+                    className="relative flex items-center justify-center shrink-0 cursor-help group/status ml-0.5"
+                    title={`${workStatus.statusLabel} • ${workStatus.timeString ? `${workStatus.timeString} ` : ""}(${workStatus.timezone.replace("_", " ")})`}
+                  >
+                    {/* Blinking Ping Halo */}
+                    <span
+                      className={`animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full opacity-75 ${
+                        workStatus.isOnline ? "bg-emerald-400" : "bg-rose-500"
+                      }`}
+                    />
+                    {/* Solid Core Dot with Radial Glow */}
+                    <span
+                      className={`relative inline-flex rounded-full h-2 w-2 ${
+                        workStatus.isOnline
+                          ? "bg-emerald-400 shadow-[0_0_8px_#34d399]"
+                          : "bg-rose-500 shadow-[0_0_8px_#f43f5e]"
+                      }`}
+                    />
+                  </div>
+                )}
+              </div>
               <span className="text-[10px] sm:text-[11px] font-medium tracking-wide text-cyan-400/80 truncate">
                 {displayTitle}
               </span>

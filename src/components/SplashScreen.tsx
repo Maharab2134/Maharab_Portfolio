@@ -12,7 +12,7 @@ const SPLASH_SESSION_KEY = "maharab_portfolio_splash_seen_v2";
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({
   onComplete,
-  minDurationMs = 120000,
+  minDurationMs = 1200,
 }) => {
   const profile = useLiveProfile();
   const [isVisible, setIsVisible] = useState<boolean>(() => {
