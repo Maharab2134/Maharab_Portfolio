@@ -14,6 +14,7 @@ import Hire from "./pages/Hire";
 import Admin from "./pages/Admin";
 import SmartScrollButton from "./components/SmartScrollButton";
 import Testimonials from "./components/Testimonials";
+import SplashScreen from "./components/SplashScreen";
 import { Project, getAllProjectsSync } from "./data/projectsData";
 import { trackVisitorHit } from "./lib/analyticsService";
 
@@ -281,6 +282,7 @@ function App() {
 
   return (
     <>
+      <SplashScreen />
       {activeView === "project" && (
         <ProjectDetails
           initialProject={selectedProject}
