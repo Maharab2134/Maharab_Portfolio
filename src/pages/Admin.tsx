@@ -131,6 +131,11 @@ const renderIcon = (Icon: any, props: any = {}) => {
   return <Comp {...props} />;
 };
 
+// Check if Instant Developer Access (Bypass Login) is enabled via environment variable
+const isDevLoginEnabled =
+  String(process.env.REACT_APP_ENABLE_DEV_LOGIN || "").trim().toLowerCase() === "true" ||
+  String(process.env.REACT_APP_ALLOW_DEV_BYPASS || "").trim().toLowerCase() === "true";
+
 interface ProjectCategoryDef {
   id: string;
   name: string;
@@ -2201,13 +2206,15 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
               {authLoading ? "Authenticating..." : "Sign In to Admin Console"}
             </button>
 
-            <button
-              type="button"
-              onClick={() => setSession({ user: { email: "admin@maharab.dev" } })}
-              className="w-full py-2.5 text-xs font-semibold text-slate-300 hover:text-white transition-all rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] cursor-pointer"
-            >
-              ⚡ Instant Developer Access (Bypass Login)
-            </button>
+            {isDevLoginEnabled && (
+              <button
+                type="button"
+                onClick={() => setSession({ user: { email: "admin@maharab.dev" } })}
+                className="w-full py-2.5 text-xs font-semibold text-slate-300 hover:text-white transition-all rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] cursor-pointer"
+              >
+                ⚡ Instant Developer Access (Bypass Login)
+              </button>
+            )}
           </form>
 
           <div className="mt-7 pt-4 border-t border-white/[0.08] text-center">
