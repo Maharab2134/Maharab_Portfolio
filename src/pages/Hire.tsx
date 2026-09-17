@@ -364,9 +364,7 @@ const Hire: React.FC = () => {
                     <h4 className="text-sm font-semibold text-white">
                       Modern Full-Stack Standards
                     </h4>
-                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                      Clean TypeScript, modular components, optimized database queries, and resilient REST APIs.
-                    </p>
+                   
                   </div>
                 </div>
 
@@ -378,9 +376,6 @@ const Hire: React.FC = () => {
                     <h4 className="text-sm font-semibold text-white">
                       Rapid Iteration &amp; Delivery
                     </h4>
-                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                      Frequent status updates, continuous deployment previews, and disciplined milestone completion.
-                    </p>
                   </div>
                 </div>
 
@@ -392,9 +387,6 @@ const Hire: React.FC = () => {
                     <h4 className="text-sm font-semibold text-white">
                       Security &amp; Performance
                     </h4>
-                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                      Token security, input sanitization, rate limiting, and 60fps responsive interfaces.
-                    </p>
                   </div>
                 </div>
               </div>
