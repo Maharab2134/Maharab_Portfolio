@@ -45,29 +45,152 @@
     <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-    <!-- Structured Data (JSON-LD) for Search Engines -->
+    <!-- Structured Data (JSON-LD) for Search Engines & AI Agents -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Md. Maharab Hosen",
-        "alternateName": "Maharab Hosen",
-        "jobTitle": "Full Stack Software Engineer",
-        "description": "Full-Stack Software Engineer and Mobile Developer specializing in React, Next.js, Node.js, and Flutter.",
-        "alumniOf": {
-          "@type": "CollegeOrUniversity",
-          "name": "Bangladesh University of Business and Technology (BUBT)"
-        },
-        "sameAs": [
-          "https://github.com/Maharab2134",
-          "https://www.linkedin.com/in/md-maharab-hosen-679a70253/",
-          "https://x.com/Mahar22234"
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://dev-maharab.netlify.app/#person",
+            "name": "Md. Maharab Hosen",
+            "alternateName": ["Maharab Hosen", "Maharab"],
+            "jobTitle": "Full-Stack Software Engineer & Mobile Developer",
+            "description": "Full-Stack Software Engineer and Mobile Developer specializing in React, Next.js, Node.js, TypeScript, and Flutter.",
+            "url": "https://dev-maharab.netlify.app/",
+            "email": "mailto:maharab442@gmail.com",
+            "telephone": "+8801586282609",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Dhaka",
+              "addressCountry": "Bangladesh"
+            },
+            "alumniOf": {
+              "@type": "CollegeOrUniversity",
+              "name": "Bangladesh University of Business and Technology (BUBT)"
+            },
+            "knowsAbout": [
+              "React",
+              "Next.js",
+              "Node.js",
+              "TypeScript",
+              "JavaScript",
+              "Flutter",
+              "Tailwind CSS",
+              "PostgreSQL",
+              "Supabase",
+              "MongoDB",
+              "REST APIs",
+              "Git"
+            ],
+            "sameAs": [
+              "https://github.com/Maharab2134",
+              "https://www.linkedin.com/in/md-maharab-hosen-679a70253/",
+              "https://x.com/Mahar22234"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://dev-maharab.netlify.app/#website",
+            "url": "https://dev-maharab.netlify.app/",
+            "name": "Md. Maharab Hosen Portfolio",
+            "description": "Portfolio of Md. Maharab Hosen — Full-Stack Software Engineer and Mobile Developer.",
+            "publisher": {
+              "@id": "https://dev-maharab.netlify.app/#person"
+            }
+          }
         ]
       }
     </script>
   </head>
   <body class="bg-[#030014] text-slate-100 antialiased">
-    <noscript>You need to enable JavaScript to view this developer portfolio.</noscript>
-    <div id="root"></div>
+    <noscript>
+      <div style="padding: 24px; max-width: 800px; margin: 0 auto; font-family: system-ui, -apple-system, sans-serif; color: #f1f5f9; background-color: #030014;">
+        <h1>Md. Maharab Hosen | Full-Stack Software Engineer &amp; Mobile Developer</h1>
+        <p>Welcome to my professional software engineering portfolio. You are viewing the accessible static version.</p>
+        <p><strong>Bio:</strong> Software Engineering student at Bangladesh University of Business and Technology (BUBT). Specialized in building scalable, resilient digital applications across React, Next.js, Node.js, Flutter, and cloud ecosystems.</p>
+        <p><strong>Contact:</strong> maharab442@gmail.com | <a href="https://github.com/Maharab2134" style="color: #38bdf8;">GitHub</a> | <a href="https://www.linkedin.com/in/md-maharab-hosen-679a70253/" style="color: #38bdf8;">LinkedIn</a></p>
+      </div>
+    </noscript>
+
+    <!-- Semantic Static Content: Instantly readable by AI bots, crawlers, and search engines; dynamically replaced by React upon load -->
+    <div id="root">
+      <div style="max-width: 900px; margin: 0 auto; padding: 40px 20px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #e2e8f0; line-height: 1.6;">
+        <header style="margin-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px;">
+          <h1 style="font-size: 32px; font-weight: 800; color: #ffffff; margin: 0 0 8px 0;">Md. Maharab Hosen</h1>
+          <p style="font-size: 18px; color: #38bdf8; margin: 0 0 12px 0; font-weight: 600;">Full-Stack Software Engineer &amp; Mobile Developer</p>
+          <p style="font-size: 14px; color: #94a3b8; margin: 0;">Dhaka, Bangladesh | Email: <a href="mailto:maharab442@gmail.com" style="color: #38bdf8; text-decoration: none;">maharab442@gmail.com</a> | <a href="https://github.com/Maharab2134" style="color: #38bdf8;">GitHub: Maharab2134</a> | <a href="https://www.linkedin.com/in/md-maharab-hosen-679a70253/" style="color: #38bdf8;">LinkedIn</a></p>
+        </header>
+
+        <section style="margin-bottom: 36px;">
+          <h2 style="font-size: 22px; color: #ffffff; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">About Me</h2>
+          <p style="color: #cbd5e1; font-size: 15px;">
+            Passionate Software Engineering student at Bangladesh University of Business and Technology (BUBT). I bridge technical rigor with modern user experience, engineering scalable systems across React, Next.js, Node.js, Flutter, and cloud ecosystems.
+          </p>
+          <ul style="color: #94a3b8; font-size: 14px; padding-left: 20px;">
+            <li><strong>Experience:</strong> 2+ Years of Software Project Experience</li>
+            <li><strong>Projects:</strong> 15+ Full-Stack Web &amp; Mobile Applications Delivered</li>
+            <li><strong>Core Technologies:</strong> 10+ Modern Frameworks &amp; Languages</li>
+            <li><strong>Academic Background:</strong> B.Sc. in Computer Science &amp; Engineering (CSE), BUBT</li>
+          </ul>
+        </section>
+
+        <section style="margin-bottom: 36px;">
+          <h2 style="font-size: 22px; color: #ffffff; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">Core Technical Skills</h2>
+          <ul style="color: #cbd5e1; font-size: 14px; padding-left: 20px;">
+            <li><strong>Frontend Development:</strong> React.js, Next.js, TypeScript, JavaScript (ES6+), Tailwind CSS, Framer Motion, HTML5, CSS3, Redux Toolkit</li>
+            <li><strong>Mobile Development:</strong> Flutter, Dart, Cross-Platform Android &amp; iOS Engineering, Mobile State Management</li>
+            <li><strong>Backend &amp; Databases:</strong> Node.js, Express.js, RESTful APIs, Supabase, PostgreSQL, MongoDB, JWT Authentication</li>
+            <li><strong>DevOps, Tools &amp; Testing:</strong> Git, GitHub, Netlify, Vercel, Postman, npm, Linux, Responsive Web Design</li>
+          </ul>
+        </section>
+
+        <section style="margin-bottom: 36px;">
+          <h2 style="font-size: 22px; color: #ffffff; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">Featured Engineering Projects</h2>
+          
+          <article style="margin-bottom: 20px;">
+            <h3 style="font-size: 17px; color: #38bdf8; margin: 0 0 4px 0;">1. Saytica — Enterprise Web Platform &amp; Admin Dashboard</h3>
+            <p style="margin: 0 0 4px 0; color: #94a3b8; font-size: 13px;">Enterprise Management &amp; High-Performance Web Platform with analytical reporting and real-time operations.</p>
+            <p style="margin: 0; color: #cbd5e1; font-size: 13px;"><strong>Tech Stack:</strong> React, TypeScript, Tailwind CSS, REST APIs, Node.js</p>
+          </article>
+
+          <article style="margin-bottom: 20px;">
+            <h3 style="font-size: 17px; color: #38bdf8; margin: 0 0 4px 0;">2. PurchifyShop — Full-Stack E-commerce Platform</h3>
+            <p style="margin: 0 0 4px 0; color: #94a3b8; font-size: 13px;">Modern e-commerce platform with product catalogs, shopping cart, authentication, and payment gateway integration.</p>
+            <p style="margin: 0; color: #cbd5e1; font-size: 13px;"><strong>Tech Stack:</strong> React, Node.js, Express, MongoDB, Tailwind CSS</p>
+          </article>
+
+          <article style="margin-bottom: 20px;">
+            <h3 style="font-size: 17px; color: #38bdf8; margin: 0 0 4px 0;">3. Midtown Aabashon Ltd — Corporate Real Estate Platform</h3>
+            <p style="margin: 0 0 4px 0; color: #94a3b8; font-size: 13px;">Corporate property showcase with interactive listings, agent inquiries, and responsive property filters.</p>
+            <p style="margin: 0; color: #cbd5e1; font-size: 13px;"><strong>Tech Stack:</strong> React, Tailwind CSS, TypeScript, Cloud Hosting</p>
+          </article>
+
+          <article style="margin-bottom: 20px;">
+            <h3 style="font-size: 17px; color: #38bdf8; margin: 0 0 4px 0;">4. AuthNova Security Suite — Authentication Platform</h3>
+            <p style="margin: 0 0 4px 0; color: #94a3b8; font-size: 13px;">Full-stack authentication and security hardening suite featuring RBAC, rate-limiting, and session validation.</p>
+            <p style="margin: 0; color: #cbd5e1; font-size: 13px;"><strong>Tech Stack:</strong> Node.js, Express, JWT, Supabase, PostgreSQL</p>
+          </article>
+
+          <article style="margin-bottom: 20px;">
+            <h3 style="font-size: 17px; color: #38bdf8; margin: 0 0 4px 0;">5. BachLife &amp; NetBagZ — Mobile Applications</h3>
+            <p style="margin: 0 0 4px 0; color: #94a3b8; font-size: 13px;">Personal finance management and e-commerce shopping mobile applications for Android &amp; iOS.</p>
+            <p style="margin: 0; color: #cbd5e1; font-size: 13px;"><strong>Tech Stack:</strong> Flutter, Dart, REST APIs, SQLite</p>
+          </article>
+        </section>
+
+        <section style="margin-bottom: 36px;">
+          <h2 style="font-size: 22px; color: #ffffff; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">Education</h2>
+          <div style="color: #cbd5e1; font-size: 14px;">
+            <p style="margin: 0 0 4px 0;"><strong>B.Sc. in Computer Science &amp; Engineering</strong> — Bangladesh University of Business and Technology (BUBT)</p>
+            <p style="margin: 0; color: #94a3b8; font-size: 13px;">2022 - Present | Focusing on Software Engineering, Data Structures, Algorithms, Distributed Systems, and Database Management.</p>
+          </div>
+        </section>
+
+        <footer style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; font-size: 13px; color: #64748b; text-align: center;">
+          <p style="margin: 0;">&copy; Md. Maharab Hosen. All rights reserved. Built with React &amp; Tailwind CSS.</p>
+        </footer>
+      </div>
+    </div>
   </body>
 </html>
