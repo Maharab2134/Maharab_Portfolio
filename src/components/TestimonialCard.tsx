@@ -19,7 +19,6 @@ export interface TestimonialCardProps {
   reviewAnchor?: string; // e.g. "saytica-review"
   gender?: "male" | "female" | "other" | "unspecified";
   avatar?: string;
-  isPinned?: boolean;
   onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
   className?: string;
 }
@@ -37,7 +36,6 @@ export const TestimonialCard: React.FC<TestimonialCardProps> = ({
   reviewAnchor,
   gender = "unspecified",
   avatar,
-  isPinned = false,
   onClick,
   className = "",
 }) => {
@@ -54,19 +52,8 @@ export const TestimonialCard: React.FC<TestimonialCardProps> = ({
       href={targetHref}
       onClick={onClick}
       aria-label={`View client review for ${projectName} by ${reviewerName}`}
-      className={`group relative flex flex-col justify-between p-6 sm:p-7 rounded-3xl border ${
-        isPinned
-          ? "border-amber-400/50 hover:border-amber-300/70 shadow-[0_0_35px_-5px_rgba(245,158,11,0.3)] hover:shadow-[0_12px_45px_-5px_rgba(245,158,11,0.4)]"
-          : "border-blue-500/25 hover:border-blue-400/50 shadow-[0_0_30px_-5px_rgba(30,58,138,0.3)] hover:shadow-[0_12px_40px_-5px_rgba(59,130,246,0.35)]"
-      } bg-[#070d1e]/85 hover:bg-[#09122a]/95 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1.5 cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-400/50 select-none block text-decoration-none ${className}`}
+      className={`group relative flex flex-col justify-between p-6 sm:p-7 rounded-3xl border border-blue-500/25 hover:border-blue-400/50 shadow-[0_0_30px_-5px_rgba(30,58,138,0.3)] hover:shadow-[0_12px_40px_-5px_rgba(59,130,246,0.35)] bg-[#070d1e]/85 hover:bg-[#09122a]/95 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1.5 cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-cyan-400/50 select-none block text-decoration-none ${className}`}
     >
-      {/* Pinned Featured Badge in Top-Left */}
-      {isPinned && (
-        <div className="absolute top-4 left-5 z-10 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.3)] backdrop-blur-md">
-          {renderIcon(FaStar, { size: 9, className: "text-amber-400" })}
-          <span>Top Review</span>
-        </div>
-      )}
 
       {/* Decorative Translucent Quotation Mark in Top-Right */}
       <div
