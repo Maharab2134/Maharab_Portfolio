@@ -70,6 +70,21 @@ function App() {
 
     const handleHashAndPopState = () => {
       syncViewFromLocation();
+      const hash = window.location.hash;
+      if (hash && hash.startsWith("#") && hash.length > 1) {
+        const targetId = hash.substring(1);
+        if (!["admin", "hire", "journey"].includes(targetId)) {
+          const scrollToHashEl = () => {
+            const el = document.getElementById(targetId);
+            if (el) {
+              const targetTop = el.getBoundingClientRect().top + window.scrollY - 70;
+              window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+            }
+          };
+          requestAnimationFrame(scrollToHashEl);
+          setTimeout(scrollToHashEl, 80);
+        }
+      }
     };
 
     window.addEventListener("hashchange", handleHashAndPopState);
@@ -134,12 +149,20 @@ function App() {
             window.history.replaceState(null, "", window.location.pathname + window.location.search);
             return;
           }
-          const targetEl = document.getElementById(targetId);
-          if (targetEl) {
-            const targetTop = targetEl.getBoundingClientRect().top + window.scrollY;
-            window.scrollTo({ top: Math.max(0, targetTop - 70), left: 0, behavior: "instant" as any });
-            return;
-          }
+          const scrollAnchor = () => {
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) {
+              const targetTop = targetEl.getBoundingClientRect().top + window.scrollY;
+              window.scrollTo({ top: Math.max(0, targetTop - 70), left: 0, behavior: "instant" as any });
+            }
+          };
+          scrollAnchor();
+          const t1 = setTimeout(scrollAnchor, 60);
+          const t2 = setTimeout(scrollAnchor, 200);
+          return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+          };
         }
       }
 
@@ -282,7 +305,21 @@ function App() {
 
   return (
     <>
-      <SplashScreen />
+      <SplashScreen
+        onComplete={() => {
+          const hash = window.location.hash;
+          if (hash && hash.startsWith("#") && hash.length > 1) {
+            const targetId = hash.substring(1);
+            if (!["admin", "hire", "journey"].includes(targetId)) {
+              const el = document.getElementById(targetId);
+              if (el) {
+                const targetTop = el.getBoundingClientRect().top + window.scrollY - 70;
+                window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+              }
+            }
+          }
+        }}
+      />
       {activeView === "project" && (
         <ProjectDetails
           initialProject={selectedProject}

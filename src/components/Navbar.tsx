@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaBars,
@@ -37,6 +37,7 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
   const profile = useLiveProfile();
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const isProgrammaticScrollRef = useRef(false);
 
   // Real-time work status evaluation (recomputed every 20 seconds)
   const [workStatus, setWorkStatus] = useState(() =>
@@ -58,8 +59,8 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
       const scrollY = window.scrollY || document.documentElement.scrollTop;
       setScrolled(scrollY > 30);
 
-      // When scrolled near the top in Hero section, automatically remove section hash
-      if (scrollY < 120) {
+      // When scrolled near the top in Hero section, automatically remove section hash (unless programmatic scroll is running)
+      if (!isProgrammaticScrollRef.current && scrollY < 120) {
         setActiveSection("home");
         const hash = window.location.hash;
         if (hash && !["#admin", "#hire", "#journey"].includes(hash)) {
@@ -127,23 +128,59 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
     };
   }, [isMenuOpen]);
 
+  const scrollToTarget = (targetId: string) => {
+    // 1. Immediately unlock scroll on body
+    document.body.style.overflow = "";
+
+    isProgrammaticScrollRef.current = true;
+    setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 1200);
+
+    if (targetId === "home") {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      setActiveSection("home");
+      return;
+    }
+
+    const performScroll = () => {
+      const element = document.getElementById(targetId);
+      if (element) {
+        const headerOffset = 70;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: "smooth",
+        });
+
+        window.history.replaceState(null, "", window.location.pathname + window.location.search + `#${targetId}`);
+        setActiveSection(targetId);
+      }
+    };
+
+    performScroll();
+    requestAnimationFrame(performScroll);
+    setTimeout(performScroll, 80);
+    setTimeout(performScroll, 250);
+  };
+
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith("#")) {
       e.preventDefault();
       const targetId = href.substring(1);
-      const element = document.getElementById(targetId);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+
+      // Instantly release body scroll lock and close mobile drawer
+      document.body.style.overflow = "";
+      setIsMenuOpen(false);
+
+      if (onNavigatePage) {
+        onNavigatePage("home");
       }
 
-      if (targetId === "home") {
-        window.history.replaceState(null, "", window.location.pathname + window.location.search);
-        setActiveSection("home");
-      } else {
-        window.history.replaceState(null, "", window.location.pathname + window.location.search + href);
-        setActiveSection(targetId);
-      }
-      setIsMenuOpen(false);
+      scrollToTarget(targetId);
     }
   };
 
@@ -307,7 +344,10 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
                   <a
                     key={link.name}
                     href={link.href}
-                    onClick={(e) => handleLinkClick(e, link.href)}
+                    onClick={(e) => {
+                      if (onNavigatePage) onNavigatePage("home");
+                      handleLinkClick(e, link.href);
+                    }}
                     className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${isActive
                         ? "text-white bg-white/10 border border-white/10"
                         : "text-slate-300 hover:text-white hover:bg-white/5"
