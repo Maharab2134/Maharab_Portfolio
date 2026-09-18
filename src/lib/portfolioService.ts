@@ -13,6 +13,10 @@ import {
   SkillItemData,
   WorkingHoursConfig,
 } from "../data/portfolioData";
+import {
+  DevelopmentProcessConfig,
+  DEFAULT_PROCESS_CONFIG,
+} from "../data/processData";
 import { VscVscode, VscCode, VscTerminal } from "react-icons/vsc";
 import {
   FaReact,
@@ -3038,5 +3042,107 @@ export const getBestProjectReviews = async (
 
   return candidates.slice(0, limit);
 };
+
+// ============================================================================
+// Development Process Service & Hook
+// ============================================================================
+export const STORAGE_DEV_PROCESS_CONFIG_KEY = "maharab_cached_dev_process";
+
+export const getDevelopmentProcessConfig = (): DevelopmentProcessConfig => {
+  try {
+    const cached = localStorage.getItem(STORAGE_DEV_PROCESS_CONFIG_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && typeof parsed.enabled === "boolean" && Array.isArray(parsed.steps)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to read cached development process config:", e);
+  }
+  return DEFAULT_PROCESS_CONFIG;
+};
+
+export const saveDevelopmentProcessConfig = async (
+  partial: Partial<DevelopmentProcessConfig>
+): Promise<DevelopmentProcessConfig> => {
+  const current = getDevelopmentProcessConfig();
+  const updated: DevelopmentProcessConfig = {
+    ...current,
+    ...partial,
+    steps: partial.steps || current.steps || DEFAULT_PROCESS_CONFIG.steps,
+  };
+
+  try {
+    localStorage.setItem(STORAGE_DEV_PROCESS_CONFIG_KEY, JSON.stringify(updated));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("portfolio_dev_process_updated", { detail: updated })
+      );
+    }
+  } catch (e) {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: existing } = await supabase.from("profile_info").select("id").limit(1);
+      if (existing && existing.length > 0) {
+        await supabase
+          .from("profile_info")
+          .update({ development_process: updated } as any)
+          .eq("id", existing[0].id);
+      }
+    } catch (e) {}
+  }
+
+  return updated;
+};
+
+export const resetDevelopmentProcessConfig = async (): Promise<DevelopmentProcessConfig> => {
+  return saveDevelopmentProcessConfig(DEFAULT_PROCESS_CONFIG);
+};
+
+export const useDevelopmentProcessConfig = (): DevelopmentProcessConfig => {
+  const [config, setConfig] = useState<DevelopmentProcessConfig>(getDevelopmentProcessConfig);
+
+  useEffect(() => {
+    let active = true;
+    if (isSupabaseConfigured && supabase) {
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from("profile_info")
+            .select("development_process")
+            .limit(1);
+          if (!error && data && data.length > 0 && (data[0] as any)?.development_process) {
+            const remote = (data[0] as any).development_process;
+            if (active && remote && typeof remote.enabled === "boolean") {
+              setConfig(remote);
+              try {
+                localStorage.setItem(STORAGE_DEV_PROCESS_CONFIG_KEY, JSON.stringify(remote));
+              } catch (e) {}
+            }
+          }
+        } catch (e) {}
+      })();
+    }
+
+    const handleUpdate = (e?: any) => {
+      if (e?.detail) {
+        setConfig(e.detail);
+      } else {
+        setConfig(getDevelopmentProcessConfig());
+      }
+    };
+
+    window.addEventListener("portfolio_dev_process_updated", handleUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_dev_process_updated", handleUpdate);
+    };
+  }, []);
+
+  return config;
+};
+
 
 

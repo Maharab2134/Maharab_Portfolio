@@ -10,9 +10,14 @@ import {
   FaProjectDiagram,
   FaEnvelope,
   FaRocket,
+  FaCogs,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
-import { useLiveProfile, calculateWorkStatus } from "../lib/portfolioService";
+import {
+  useLiveProfile,
+  calculateWorkStatus,
+  useDevelopmentProcessConfig,
+} from "../lib/portfolioService";
 
 interface NavbarProps {
   isMenuOpen: boolean;
@@ -24,17 +29,27 @@ const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
-const navLinks = [
-  { name: "Home", href: "#home", id: "home", icon: FaHome },
-  { name: "About", href: "#about", id: "about", icon: FaUser },
-  { name: "Education", href: "#education", id: "education", icon: FaGraduationCap },
-  { name: "Skills", href: "#skills", id: "skills", icon: FaCode },
-  { name: "Projects", href: "#projects", id: "projects", icon: FaProjectDiagram },
-  { name: "Contact", href: "#contact", id: "contact", icon: FaEnvelope },
-];
-
 const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePage }) => {
   const profile = useLiveProfile();
+  const processConfig = useDevelopmentProcessConfig();
+
+  const navLinks = React.useMemo(() => {
+    const base = [
+      { name: "Home", href: "#home", id: "home", icon: FaHome },
+      { name: "About", href: "#about", id: "about", icon: FaUser },
+      { name: "Education", href: "#education", id: "education", icon: FaGraduationCap },
+      { name: "Skills", href: "#skills", id: "skills", icon: FaCode },
+    ];
+    if (processConfig.enabled) {
+      base.push({ name: "Process", href: "#process", id: "process", icon: FaCogs });
+    }
+    base.push(
+      { name: "Projects", href: "#projects", id: "projects", icon: FaProjectDiagram },
+      { name: "Contact", href: "#contact", id: "contact", icon: FaEnvelope }
+    );
+    return base;
+  }, [processConfig.enabled]);
+
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const isProgrammaticScrollRef = useRef(false);
@@ -77,7 +92,16 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const sections = ["home", "about", "education", "certificates", "skills", "projects", "contact"];
+    const sections = [
+      "home",
+      "about",
+      "education",
+      "certificates",
+      "skills",
+      "process",
+      "projects",
+      "contact",
+    ];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {

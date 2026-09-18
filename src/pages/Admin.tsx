@@ -30,6 +30,7 @@ import {
   useTestimonialsConfig,
   saveTestimonialsConfig,
   saveReviewsOrder,
+  useDevelopmentProcessConfig,
 } from "../lib/portfolioService";
 import {
   getLiveAnalytics,
@@ -54,6 +55,7 @@ import { OverviewTab } from "../components/admin/tabs/OverviewTab";
 import { AnalyticsTab } from "../components/admin/tabs/AnalyticsTab";
 import { ProjectsTab } from "../components/admin/tabs/ProjectsTab";
 import { SkillsTab } from "../components/admin/tabs/SkillsTab";
+import { ProcessTab } from "../components/admin/tabs/ProcessTab";
 import { ProfileTab } from "../components/admin/tabs/ProfileTab";
 import { EducationTab } from "../components/admin/tabs/EducationTab";
 import { ResumeTab } from "../components/admin/tabs/ResumeTab";
@@ -71,6 +73,8 @@ const getTabInfo = (tab: AdminNavTab): { title: string; section: string } => {
       return { title: "Project Catalog & Studio", section: "CONTENT" };
     case "skills":
       return { title: "Skills & Technology Stack", section: "CONTENT" };
+    case "process":
+      return { title: "Development Process & Lifecycle", section: "CONTENT" };
     case "profile":
       return { title: "Profile & Biography", section: "CONTENT" };
     case "education":
@@ -93,6 +97,7 @@ const Admin: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<AdminNavTab>("overview");
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const processConfig = useDevelopmentProcessConfig();
 
   // Login form state
   const [email, setEmail] = useState("");
@@ -911,6 +916,7 @@ const Admin: React.FC = () => {
             analyticsTotal: analyticsSummary?.totalVisits,
             projects: projectsList.length,
             skills: skillsList.length,
+            process: processConfig.steps.length,
             education: educationList.length + certsList.length,
             messages: messagesList.length,
             reviews: reviewsList.length,
@@ -987,6 +993,8 @@ const Admin: React.FC = () => {
               setSkillCategoriesList={setSkillCategoriesList}
             />
           )}
+
+          {activeTab === "process" && <ProcessTab />}
 
           {activeTab === "profile" && (
             <ProfileTab

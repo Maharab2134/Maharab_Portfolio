@@ -12,6 +12,7 @@ import {
   FaStar,
   FaDatabase,
   FaSignOutAlt,
+  FaCogs,
 } from "react-icons/fa";
 import { AdminNavTab, renderIcon } from "./types";
 import { toProxyImageUrl } from "../../data/projectsData";
@@ -23,6 +24,7 @@ interface AdminSidebarProps {
     analyticsTotal?: number;
     projects: number;
     skills: number;
+    process?: number;
     education: number;
     messages: number;
     reviews: number;
@@ -82,6 +84,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           badge: counts.skills,
           badgeColor: "bg-purple-500/10 text-purple-300 border-purple-500/20",
           activeColor: "text-purple-400",
+        },
+        {
+          id: "process" as AdminNavTab,
+          label: "Development Process",
+          icon: FaCogs,
+          badge: counts.process,
+          badgeColor: "bg-teal-500/10 text-teal-300 border-teal-500/20",
+          activeColor: "text-teal-400",
         },
         {
           id: "profile" as AdminNavTab,

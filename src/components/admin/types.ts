@@ -6,6 +6,7 @@ export type AdminNavTab =
   | "analytics"
   | "projects"
   | "skills"
+  | "process"
   | "profile"
   | "education"
   | "resume"

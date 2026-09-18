@@ -87,11 +87,10 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                   key={filter}
                   type="button"
                   onClick={() => setAnalyticsFilter(filter)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                    analyticsFilter === filter
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${analyticsFilter === filter
                       ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]"
                       : "text-slate-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   {labels[filter]}
                 </button>
@@ -135,11 +134,10 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className={`p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between shadow-lg ${
-            analyticsToast.type === "success"
+          className={`p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between shadow-lg ${analyticsToast.type === "success"
               ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300"
               : "bg-red-500/15 border border-red-500/30 text-red-300"
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2">
             {renderIcon(FaCheckCircle, { className: "h-4 w-4" })}
@@ -209,9 +207,8 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             {analyticsSummary
               ? analyticsSummary.avgDurationSeconds < 60
                 ? `${analyticsSummary.avgDurationSeconds}s`
-                : `${Math.floor(analyticsSummary.avgDurationSeconds / 60)}m ${
-                    analyticsSummary.avgDurationSeconds % 60
-                  }s`
+                : `${Math.floor(analyticsSummary.avgDurationSeconds / 60)}m ${analyticsSummary.avgDurationSeconds % 60
+                }s`
               : "0s"}
           </p>
           <div className="flex items-center justify-between text-[11px] text-emerald-400 font-medium mt-2 pt-2 border-t border-white/5">
@@ -254,15 +251,14 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       {analyticsSummary && (
         <VisitorTrendChart
           data={analyticsSummary.dailyTrends}
-          title={`Visitor Traffic Dynamics (${
-            analyticsFilter === "today"
+          title={`Visitor Traffic Dynamics (${analyticsFilter === "today"
               ? "Today"
               : analyticsFilter === "7d"
-              ? "Last 7 Days"
-              : analyticsFilter === "30d"
-              ? "Last 30 Days"
-              : "All Time"
-          })`}
+                ? "Last 7 Days"
+                : analyticsFilter === "30d"
+                  ? "Last 30 Days"
+                  : "All Time"
+            })`}
         />
       )}
 
