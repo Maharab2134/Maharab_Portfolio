@@ -85,10 +85,17 @@ const STORAGE_VISITED_BEFORE_KEY = "maharab_has_visited_before";
 if (typeof window !== "undefined") {
   try {
     const raw = localStorage.getItem(STORAGE_ANALYTICS_KEY);
-    if (raw && (raw.includes('"seed_') || raw.includes("seed-") || raw.includes("Bengaluru") || raw.includes("San Francisco"))) {
+    if (raw && (raw.includes('"seed_') || raw.includes("seed-") || raw.includes("Bengaluru") || raw.includes("San Francisco") || raw.includes("sampleJourneys"))) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        const realOnly = parsed.filter((e: any) => e && e.id && !String(e.id).startsWith("seed_"));
+        const realOnly = parsed.filter(
+          (e: any) =>
+            e &&
+            e.id &&
+            !String(e.id).startsWith("seed_") &&
+            !String(e.visitorId || "").includes("seed") &&
+            e.country !== "Bengaluru"
+        );
         localStorage.setItem(STORAGE_ANALYTICS_KEY, JSON.stringify(realOnly));
       }
     }
@@ -215,10 +222,17 @@ export const inferLocationFromTimezone = (): { country: string; city: string; fl
       return { country: "Australia", city: "Sydney", flag: "🇦🇺" };
     }
 
-    // Default fallback
-    return { country: "Bangladesh", city: "Dhaka", flag: "🇧🇩" };
+    // Dynamic location resolution from timezone string (e.g., "Asia/Tokyo", "Europe/Paris")
+    if (tz && tz.includes("/")) {
+      const parts = tz.split("/");
+      const region = parts[0].replace(/_/g, " ");
+      const city = parts[1].replace(/_/g, " ");
+      return { country: region || "Global", city: city || "Unknown", flag: "🌐" };
+    }
+
+    return { country: "Global", city: tz || "Unknown", flag: "🌐" };
   } catch (e) {
-    return { country: "Bangladesh", city: "Dhaka", flag: "🇧🇩" };
+    return { country: "Global", city: "Unknown", flag: "🌐" };
   }
 };
 
@@ -283,138 +297,10 @@ export const formatPageName = (rawPath?: string): string => {
 };
 
 // ============================================================================
-// Realistic Seed Data Generator (Past 30 Days)
+// 100% Dynamic Telemetry - No Static/Seed Data Allowed
 // ============================================================================
 export const generateRealisticSeedAnalytics = (): VisitorEvent[] => {
-  const events: VisitorEvent[] = [];
-  const now = Date.now();
-  const DAY_MS = 86400000;
-
-  const locations = [
-    { country: "Bangladesh", city: "Dhaka", flag: "🇧🇩", weight: 38 },
-    { country: "United States", city: "New York", flag: "🇺🇸", weight: 18 },
-    { country: "United States", city: "San Francisco", flag: "🇺🇸", weight: 10 },
-    { country: "United Kingdom", city: "London", flag: "🇬🇧", weight: 12 },
-    { country: "Canada", city: "Toronto", flag: "🇨🇦", weight: 8 },
-    { country: "Germany", city: "Berlin", flag: "🇩🇪", weight: 6 },
-    { country: "India", city: "Bengaluru", flag: "🇮🇳", weight: 5 },
-    { country: "Singapore", city: "Singapore", flag: "🇸🇬", weight: 3 },
-  ];
-
-  const devices: Array<{ device: "Desktop" | "Mobile" | "Tablet"; weight: number }> = [
-    { device: "Desktop", weight: 68 },
-    { device: "Mobile", weight: 28 },
-    { device: "Tablet", weight: 4 },
-  ];
-
-  const browsers = [
-    { browser: "Chrome", weight: 62 },
-    { browser: "Safari", weight: 22 },
-    { browser: "Firefox", weight: 9 },
-    { browser: "Edge", weight: 7 },
-  ];
-
-  const operatingSystems = [
-    { os: "Windows", weight: 52 },
-    { os: "macOS", weight: 26 },
-    { os: "Linux", weight: 10 },
-    { os: "Android", weight: 7 },
-    { os: "iOS", weight: 5 },
-  ];
-
-  const referrers = [
-    { source: "Direct", weight: 36 },
-    { source: "LinkedIn", weight: 28 },
-    { source: "GitHub", weight: 20 },
-    { source: "Google Search", weight: 12 },
-    { source: "Twitter / X", weight: 4 },
-  ];
-
-  const pages = [
-    { path: "/", section: "Projects Showcase", weight: 34 },
-    { path: "/", section: "Hero & Headline", weight: 24 },
-    { path: "/", section: "Technical Arsenal", weight: 18 },
-    { path: "/", section: "Biography Narrative", weight: 12 },
-    { path: "/hire", section: "Hire Inquiry", weight: 7 },
-    { path: "/journey", section: "Milestones Timeline", weight: 5 },
-  ];
-
-  const pickWeighted = <T extends { weight: number }>(items: T[]): T => {
-    const total = items.reduce((acc, item) => acc + item.weight, 0);
-    let rand = Math.random() * total;
-    for (const item of items) {
-      if (rand < item.weight) return item;
-      rand -= item.weight;
-    }
-    return items[0];
-  };
-
-  // Generate a distinct pool of 45 repeat visitors
-  const visitorPool: string[] = [];
-  for (let i = 0; i < 45; i++) {
-    visitorPool.push(`vid_${Math.random().toString(36).substring(2, 10)}`);
-  }
-
-  // Generate 30 days of data, average 8-22 visits per day
-  for (let day = 29; day >= 0; day--) {
-    const dayDate = new Date(now - day * DAY_MS);
-    const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
-    const count = Math.floor(Math.random() * (isWeekend ? 8 : 14)) + (isWeekend ? 7 : 12);
-
-    for (let j = 0; j < count; j++) {
-      const loc = pickWeighted(locations);
-      const dev = pickWeighted(devices);
-      const brw = pickWeighted(browsers);
-      const osChoice = pickWeighted(operatingSystems);
-      const ref = pickWeighted(referrers);
-      const pag = pickWeighted(pages);
-
-      const isReturning = Math.random() > 0.42;
-      const vid = isReturning
-        ? visitorPool[Math.floor(Math.random() * visitorPool.length)]
-        : `vid_${Math.random().toString(36).substring(2, 10)}`;
-
-      const timeOffsetHours = Math.floor(Math.random() * 24);
-      const timeOffsetMins = Math.floor(Math.random() * 60);
-      const eventTime = new Date(dayDate);
-      eventTime.setHours(timeOffsetHours, timeOffsetMins, Math.floor(Math.random() * 60));
-
-      const duration = Math.floor(Math.random() * 320) + 25; // 25s to 345s
-
-      const sampleJourneys = [
-        ["Home", "Projects"],
-        ["Home", "About", "Skills"],
-        ["Home", "Projects", "Saytica", "Hire"],
-        ["Home", "Journey"],
-        ["Home", "Projects", "Saytica"],
-        ["Home", "Hire"],
-        ["Home", "Skills", "Education", "Contact"],
-        ["Home", "Projects", "Journey", "Hire"],
-        ["Home"],
-      ];
-      const journey = sampleJourneys[Math.floor(Math.random() * sampleJourneys.length)];
-
-      events.push({
-        id: `evt_${eventTime.getTime()}_${j}`,
-        visitorId: vid,
-        sessionId: `sid_${Math.random().toString(36).substring(2, 10)}`,
-        isNewVisitor: !isReturning,
-        country: loc.country,
-        city: loc.city,
-        device: dev.device,
-        browser: brw.browser,
-        os: osChoice.os,
-        referrer: ref.source,
-        pagePath: pag.path,
-        section: pag.section,
-        durationSeconds: duration,
-        timestamp: eventTime.toISOString(),
-        visitedPages: journey,
-      });
-    }
-  }
-
-  return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return [];
 };
 
 // ============================================================================
@@ -592,8 +478,8 @@ export const getLiveAnalytics = async (
           visitorId: d.visitor_id || "vid_anon",
           sessionId: d.session_id || "sid_anon",
           isNewVisitor: Boolean(d.is_new_visitor),
-          country: d.country || "Bangladesh",
-          city: d.city || "Dhaka",
+          country: d.country || "Global",
+          city: d.city || "Unknown",
           device: d.device || "Desktop",
           browser: d.browser || "Chrome",
           os: d.os || "Windows",
@@ -848,24 +734,82 @@ export const getLiveAnalytics = async (
   };
 };
 
-// Clear analytics history
-export const clearAnalyticsHistory = async (): Promise<void> => {
+// Clear analytics history from database and local caches
+export const clearAnalyticsHistory = async (): Promise<{ success: boolean; error?: string }> => {
   try {
+    // 1. Clear local storage cache & all tracking session markers
     localStorage.removeItem(STORAGE_ANALYTICS_KEY);
+    sessionStorage.removeItem("maharab_session_visited_pages");
+    sessionStorage.removeItem("maharab_last_tracked_page");
+    sessionStorage.removeItem("maharab_last_hit_time");
+    sessionStorage.removeItem(STORAGE_SID_KEY);
+
+    // 2. Clear from Supabase cloud database if connected
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase
+          .from("portfolio_analytics")
+          .delete()
+          .not("id", "is", null);
+
+        if (error) {
+          console.warn("Supabase delete failed with not null filter, trying fallback filter:", error.message);
+          await supabase
+            .from("portfolio_analytics")
+            .delete()
+            .neq("visitor_id", "__none_impossible__");
+        }
+      } catch (cloudErr) {
+        console.warn("Failed to clear Supabase analytics:", cloudErr);
+      }
+    }
+
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("portfolio_analytics_updated"));
     }
-  } catch (e) {}
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase
-        .from("portfolio_analytics")
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000");
-    } catch (e) {
-      console.warn("Failed to clear Supabase analytics:", e);
+    return { success: true };
+  } catch (e: any) {
+    console.error("Failed to clear analytics history:", e);
+    return { success: false, error: e?.message || "Failed to clear analytics" };
+  }
+};
+
+// Delete single log entry from local storage and Supabase
+export const deleteVisitorLog = async (id: string, sessionId?: string): Promise<boolean> => {
+  try {
+    // 1. Update local storage cache
+    const raw = localStorage.getItem(STORAGE_ANALYTICS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const filtered = parsed.filter(
+          (e: VisitorEvent) => e.id !== id && (sessionId ? e.sessionId !== sessionId : true)
+        );
+        localStorage.setItem(STORAGE_ANALYTICS_KEY, JSON.stringify(filtered));
+      }
     }
+
+    // 2. Delete from Supabase
+    if (isSupabaseConfigured && supabase) {
+      try {
+        if (sessionId) {
+          await supabase.from("portfolio_analytics").delete().eq("session_id", sessionId);
+        } else {
+          await supabase.from("portfolio_analytics").delete().eq("id", id);
+        }
+      } catch (cloudErr) {
+        console.warn("Failed to delete log from Supabase:", cloudErr);
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_analytics_updated"));
+    }
+    return true;
+  } catch (err) {
+    console.error("Error deleting visitor log:", err);
+    return false;
   }
 };
 

@@ -575,11 +575,24 @@ const Admin: React.FC = () => {
     return () => window.removeEventListener("portfolio_analytics_updated", handleUpdate);
   }, [analyticsFilter, loadAnalyticsData]);
 
-  const handleResetAnalytics = async () => {
-    if (window.confirm("Clear all visitor analytics? System is running in 100% dynamic mode and will only track real visits.")) {
+  const handleResetAnalytics = async (skipConfirm = false) => {
+    if (
+      !skipConfirm &&
+      !window.confirm(
+        "Are you sure you want to delete all visitor analytics records from the database and local cache?"
+      )
+    ) {
+      return;
+    }
+    setAnalyticsLoading(true);
+    try {
       await clearAnalyticsHistory();
       await loadAnalyticsData(analyticsFilter);
-      showAnalyticsToast("Analytics cleared! Only live, dynamic visitor events will be recorded.");
+      showAnalyticsToast("All visitor activity logs successfully removed from database & cache!");
+    } catch (err) {
+      showAnalyticsToast("Failed to delete analytics from database", "error");
+    } finally {
+      setAnalyticsLoading(false);
     }
   };
 
@@ -3102,15 +3115,17 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     <div>
                       <span className="text-slate-400 text-[10px] block">Top Country</span>
                       <span className="text-white font-bold">
-                        {analyticsSummary?.topLocations[0]?.country || "Global"}
+                        {analyticsSummary && analyticsSummary.totalVisits > 0
+                          ? analyticsSummary.topLocations[0]?.country || "Global"
+                          : "None"}
                       </span>
                     </div>
                     <div>
                       <span className="text-slate-400 text-[10px] block">Loyalty Rate</span>
                       <span className="text-purple-400 font-bold">
-                        {analyticsSummary
+                        {analyticsSummary && analyticsSummary.totalVisits > 0
                           ? `${Math.round(
-                              (analyticsSummary.returningVisitors / (analyticsSummary.totalVisits || 1)) * 100
+                              (analyticsSummary.returningVisitors / analyticsSummary.totalVisits) * 100
                             )}%`
                           : "0%"}
                       </span>
@@ -3209,7 +3224,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   {/* Clear History Button */}
                   <button
                     type="button"
-                    onClick={handleResetAnalytics}
+                    onClick={() => handleResetAnalytics(false)}
                     title="Clear visitor analytics logs (keep only genuine dynamic data)"
                     className="flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 transition-all hover:bg-rose-500/20 active:scale-95 cursor-pointer"
                   >
@@ -3260,7 +3275,9 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   </p>
                   <div className="flex items-center justify-between text-[11px] text-cyan-400 font-medium mt-2 pt-2 border-t border-white/5">
                     <span>In current window</span>
-                    <span className="font-semibold">+18.2% vs avg</span>
+                    <span className="font-semibold">
+                      {analyticsSummary && analyticsSummary.totalVisits > 0 ? "Real-time" : "Awaiting hits"}
+                    </span>
                   </div>
                 </div>
 
@@ -3304,7 +3321,13 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                   </p>
                   <div className="flex items-center justify-between text-[11px] text-emerald-400 font-medium mt-2 pt-2 border-t border-white/5">
                     <span>Engaged attention</span>
-                    <span className="font-semibold">Healthy</span>
+                    <span className="font-semibold">
+                      {analyticsSummary && analyticsSummary.totalVisits > 0
+                        ? analyticsSummary.avgDurationSeconds > 30
+                          ? "Engaged"
+                          : "Active"
+                        : "No activity"}
+                    </span>
                   </div>
                 </div>
 
@@ -3317,13 +3340,17 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                     </div>
                   </div>
                   <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-2 font-mono">
-                    {analyticsSummary?.bounceRate ?? 25}%
+                    {analyticsSummary && analyticsSummary.totalVisits > 0 ? `${analyticsSummary.bounceRate}%` : "0%"}
                   </p>
                   <div className="flex items-center justify-between text-[11px] text-amber-400 font-medium mt-2 pt-2 border-t border-white/5">
                     <span>
-                      {analyticsSummary && 100 - analyticsSummary.bounceRate}% Multi-section Read
+                      {analyticsSummary && analyticsSummary.totalVisits > 0
+                        ? `${100 - analyticsSummary.bounceRate}% Multi-section Read`
+                        : "No visits recorded"}
                     </span>
-                    <span className="font-semibold">High Interest</span>
+                    <span className="font-semibold">
+                      {analyticsSummary && analyticsSummary.totalVisits > 0 ? "Dynamic" : "No Data"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -3377,7 +3404,11 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
 
               {/* 6. Detailed Visitor Activity Table */}
               {analyticsSummary && (
-                <VisitorTable events={analyticsSummary.recentEvents} />
+                <VisitorTable
+                  events={analyticsSummary.recentEvents}
+                  onRefresh={() => loadAnalyticsData(analyticsFilter)}
+                  onClearAll={() => handleResetAnalytics(true)}
+                />
               )}
             </div>
           )}

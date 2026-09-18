@@ -229,4 +229,11 @@ CREATE POLICY "Allow select on portfolio_analytics"
 ON public.portfolio_analytics FOR SELECT TO public
 USING (true);
 
+-- Allow clearing / deleting analytics records
+DROP POLICY IF EXISTS "Allow delete on portfolio_analytics" ON public.portfolio_analytics;
+CREATE POLICY "Allow delete on portfolio_analytics"
+ON public.portfolio_analytics FOR DELETE TO public
+USING (true);
+
+
 
