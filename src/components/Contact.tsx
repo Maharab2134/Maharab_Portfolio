@@ -40,8 +40,8 @@ const Contact: React.FC = () => {
   const mapsUrl = customMapsUrl && customMapsUrl.trim()
     ? customMapsUrl.trim()
     : location
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`
-    : PORTFOLIO_INFO.mapsUrl;
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`
+      : PORTFOLIO_INFO.mapsUrl;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -150,7 +150,7 @@ const Contact: React.FC = () => {
                 Let's discuss your vision
               </h3>
               <p className="text-sm leading-relaxed text-slate-300/80 mb-6">
-                Whether you need a full-stack engineer for a production system, a mobile app prototype, or team collaboration, feel free to reach out.
+                Building a web platform, mobile app, or production-ready system? Let’s build it together.
               </p>
 
               <div className="space-y-4">
