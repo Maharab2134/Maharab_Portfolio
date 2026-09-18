@@ -13,13 +13,14 @@ import ProjectDetails from "./pages/ProjectDetails";
 import MyJourney from "./pages/MyJourney";
 import Hire from "./pages/Hire";
 import Admin from "./pages/Admin";
+import CaseStudies from "./pages/CaseStudies";
 import SmartScrollButton from "./components/SmartScrollButton";
 import Testimonials from "./components/Testimonials";
 import SplashScreen from "./components/SplashScreen";
 import { Project, getAllProjectsSync } from "./data/projectsData";
 import { trackVisitorHit } from "./lib/analyticsService";
 
-type ActiveView = "home" | "hire" | "journey" | "project" | "admin";
+type ActiveView = "home" | "hire" | "journey" | "project" | "admin" | "case-studies";
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,6 +37,9 @@ function App() {
         pageTitle = "Hire";
       } else if (activeView === "journey") {
         pageTitle = "Journey";
+      } else if (activeView === "case-studies") {
+        pageTitle = "Case Studies Blueprint";
+        pagePath = "case-studies";
       } else if (activeView === "project") {
         const params = new URLSearchParams(window.location.search);
         const projSlug = params.get("project") || (selectedProject ? selectedProject.id : "Project");
@@ -75,6 +79,11 @@ function App() {
       return;
     }
 
+    if (hash === "#case-studies" || path === "/case-studies" || params.get("case-studies") !== null) {
+      setActiveView("case-studies");
+      return;
+    }
+
     setActiveView("home");
   }, []);
 
@@ -86,7 +95,7 @@ function App() {
       const hash = window.location.hash;
       if (hash && hash.startsWith("#") && hash.length > 1) {
         const targetId = hash.substring(1);
-        if (!["admin", "hire", "journey"].includes(targetId)) {
+        if (!["admin", "hire", "journey", "case-studies"].includes(targetId)) {
           const scrollToHashEl = () => {
             const el = document.getElementById(targetId);
             if (el) {
@@ -326,6 +335,25 @@ function App() {
     }
   };
 
+  const handleBackFromCaseStudies = () => {
+    if (typeof window !== "undefined") {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
+      const url = new URL(window.location.href);
+      url.searchParams.delete("case-studies");
+      url.hash = "projects";
+      window.history.pushState({}, "", url.toString());
+      setActiveView("home");
+      setTimeout(() => {
+        const el = document.getElementById("projects");
+        if (el) {
+          const targetTop = el.getBoundingClientRect().top + window.scrollY - 70;
+          window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+        }
+      }, 60);
+    }
+  };
+
   const handleBackFromProject = () => {
     setSelectedProject(null);
     if (typeof window !== "undefined") {
@@ -368,6 +396,12 @@ function App() {
       )}
       {activeView === "hire" && <Hire />}
       {activeView === "journey" && <MyJourney />}
+      {activeView === "case-studies" && (
+        <CaseStudies
+          onBack={handleBackFromCaseStudies}
+          onSelectProject={handleSelectProject}
+        />
+      )}
       {activeView === "home" && (
         <div className="min-h-screen bg-[#030014] text-slate-100 flex flex-col selection:bg-purple-500/30 selection:text-white">
           <Navbar

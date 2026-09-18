@@ -265,7 +265,7 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
   return (
     <section
       id="projects"
-      className="relative py-12 sm:py-16 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
+      className="relative py-8 sm:py-12 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
     >
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
@@ -279,17 +279,31 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-10 sm:mb-12 text-center"
+          className="mb-6 sm:mb-8 text-center"
         >
           <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-cyan-400">
             <span>Portfolio Showcase</span>
             <span className="w-1 h-1 rounded-full bg-cyan-400" />
             <span className="font-mono text-cyan-300 font-bold">{projectsList.length}</span>
           </span>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
-            Featured Projects &amp; Case Studies
+          <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+            <span>Featured Projects &amp;</span>
+            <a
+              href="#case-studies"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.hash = "#case-studies";
+              }}
+              title="Click to explore the Full Case Study Engineering Flow & Architecture"
+              className="group/cs inline-flex items-center gap-1 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-pink-400 cursor-pointer transition-all duration-300 underline decoration-cyan-400/40 hover:decoration-pink-400 decoration-2 underline-offset-4"
+            >
+              <span>(Case Studies)</span>
+              <span className="inline-block text-xs sm:text-sm text-cyan-400 group-hover/cs:text-pink-400 group-hover/cs:translate-x-0.5 group-hover/cs:-translate-y-0.5 transition-transform">
+                ↗
+              </span>
+            </a>
           </h2>
-          <div className="w-20 h-1 mx-auto mt-4 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
+          <div className="w-20 h-1 mx-auto mt-3 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
           <p className="max-w-2xl mx-auto mt-4 text-sm sm:text-base text-slate-400">
             Explore software systems engineered with modern architecture, practical problem solving, and proven business utility.
           </p>

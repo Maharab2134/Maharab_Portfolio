@@ -55,7 +55,7 @@ const About: React.FC = () => {
   return (
     <section
       id="about"
-      className="relative py-12 sm:py-16 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
+      className="relative py-8 sm:py-12 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
     >
       {/* Background Ambience (Exact match with Education, Skills, Certificates) */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
@@ -69,15 +69,15 @@ const About: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-10 sm:mb-12 text-center"
+          className="mb-6 sm:mb-8 text-center"
         >
           <span className="text-xs font-semibold tracking-widest uppercase text-cyan-400">
             Get To Know Me
           </span>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
+          <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">
             About Me
           </h2>
-          <div className="w-20 h-1 mx-auto mt-4 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
+          <div className="w-20 h-1 mx-auto mt-3 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
         </motion.div>
 
         {/* Clean, Simple 2-Column Layout */}

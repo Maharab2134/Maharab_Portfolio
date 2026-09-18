@@ -128,7 +128,7 @@ const Hero: React.FC = () => {
     <section
       id="home"
       onMouseMove={handleMouseMove}
-      className="relative flex items-center min-h-screen pt-28 pb-10 sm:pb-14 overflow-hidden bg-[#030014]"
+      className="relative flex items-center min-h-screen pt-24 pb-8 sm:pb-10 overflow-hidden bg-[#030014]"
     >
       {/* Dynamic Background Glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -208,7 +208,7 @@ const Hero: React.FC = () => {
               <p className="font-mono text-xs sm:text-sm font-semibold tracking-widest uppercase text-cyan-400">
                 &lt;Hello World, I am /&gt;
               </p>
-              <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl md:text-7xl">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
                 <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-purple-200">
                   {profile.name}
                 </span>

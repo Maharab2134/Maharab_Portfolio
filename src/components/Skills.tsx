@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaCode,
-  FaArrowRight,
   FaChevronDown,
   FaChevronUp,
 } from "react-icons/fa";
@@ -68,7 +67,7 @@ const Skills: React.FC = () => {
   return (
     <section
       id="skills"
-      className="relative py-12 sm:py-16 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
+      className="relative py-8 sm:py-12 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
     >
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
@@ -82,15 +81,15 @@ const Skills: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-10 sm:mb-12 text-center"
+          className="mb-6 sm:mb-8 text-center"
         >
           <span className="text-xs font-semibold tracking-widest uppercase text-purple-400">
             Technical Stack
           </span>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
+          <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">
             Skills &amp; Technologies
           </h2>
-          <div className="w-20 h-1 mx-auto mt-4 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
+          <div className="w-20 h-1 mx-auto mt-3 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
           <p className="max-w-2xl mx-auto mt-4 text-sm sm:text-base text-slate-400">
             A comprehensive, battle-tested technology arsenal applied across production web systems, mobile applications, and embedded engineering.
           </p>
@@ -214,34 +213,6 @@ const Skills: React.FC = () => {
           </div>
         )}
 
-        {/* CTA to Projects */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="p-8 mt-16 text-center border rounded-3xl bg-gradient-to-r from-purple-950/20 via-slate-900/40 to-cyan-950/20 border-white/10 backdrop-blur-xl max-w-3xl mx-auto"
-        >
-          <h3 className="text-xl font-bold text-white sm:text-2xl">
-            Want to see these technologies in action?
-          </h3>
-          <p className="mt-2 text-sm text-slate-400 max-w-lg mx-auto">
-            Browse through my full case studies featuring architecture breakdowns, code repositories, and live deployed systems.
-          </p>
-          <div className="mt-6">
-            <a
-              href="#projects"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white transition-all duration-300 rounded-full shadow-lg bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:shadow-purple-500/30 hover:scale-105 active:scale-95"
-            >
-              <span>Explore My Work</span>
-              {renderIcon(FaArrowRight, { size: 12 })}
-            </a>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

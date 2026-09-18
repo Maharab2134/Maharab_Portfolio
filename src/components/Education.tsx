@@ -27,7 +27,7 @@ const Education: React.FC = () => {
   return (
     <section
       id="education"
-      className="relative py-12 sm:py-16 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
+      className="relative py-8 sm:py-12 overflow-hidden bg-gradient-to-b from-[#030014] via-[#090e1f] to-[#030014]"
     >
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
@@ -41,15 +41,15 @@ const Education: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-10 sm:mb-12 text-center"
+          className="mb-6 sm:mb-8 text-center"
         >
           <span className="text-xs font-semibold tracking-widest uppercase text-purple-400">
             Academic Background
           </span>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
+          <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">
             Education
           </h2>
-          <div className="w-20 h-1 mx-auto mt-4 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
+          <div className="w-20 h-1 mx-auto mt-3 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400" />
           <p className="max-w-xl mx-auto mt-4 text-sm sm:text-base text-slate-400">
             My formal engineering and academic milestones, laying the foundation for analytical problem solving.
           </p>

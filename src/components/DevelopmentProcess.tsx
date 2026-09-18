@@ -61,7 +61,7 @@ export const DevelopmentProcess: React.FC = () => {
   return (
     <section
       id="process"
-      className="relative py-20 sm:py-28 overflow-hidden bg-[#030014]"
+      className="relative py-10 sm:py-14 overflow-hidden bg-[#030014]"
       aria-label="Development Process Tree"
     >
       {/* Background Ambient Glows & Grid Mesh */}
@@ -78,15 +78,15 @@ export const DevelopmentProcess: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto mb-10 sm:mb-14"
+          className="text-center max-w-2xl mx-auto mb-6 sm:mb-8"
         >
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-semibold tracking-wider uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] mb-3.5">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-semibold tracking-wider uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] mb-3">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
             <span>{config.badge || "WORKFLOW TREE • 4 BRANCHES"}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight">
             {config.title || "Engineering & Development Process"}
           </h2>
 
@@ -367,35 +367,6 @@ export const DevelopmentProcess: React.FC = () => {
                 </div>
               </div>
 
-              {/* Bottom Callout Banner */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-                className="mt-14 sm:mt-18 p-6 sm:p-8 rounded-3xl border border-white/10 bg-gradient-to-r from-cyan-950/40 via-[#0b101f] to-purple-950/40 backdrop-blur-xl relative overflow-hidden shadow-xl"
-              >
-                <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left">
-                  <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full inline-block mb-2">
-                      AGILE • CLEAN • SCALE
-                    </span>
-                    <h3 className="text-lg sm:text-xl font-bold text-white">
-                      Ready to engineer your next software product?
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Let&apos;s apply this 4-branch engineering workflow to deliver results fast.
-                    </p>
-                  </div>
-
-                  <a
-                    href="#contact"
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-xs tracking-wide shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all cursor-pointer shrink-0"
-                  >
-                    <span>Get in Touch</span>
-                    {renderIcon("FaArrowRight", { className: "text-[11px]" })}
-                  </a>
-                </div>
-              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -125,7 +125,7 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
   return (
     <section
       id="testimonials"
-      className="relative py-20 sm:py-28 bg-[#030014] text-white overflow-hidden"
+      className="relative py-10 sm:py-14 bg-[#030014] text-white overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -135,13 +135,13 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 sm:mb-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6 sm:mb-8">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-cyan-300 text-xs font-semibold uppercase tracking-wider mb-3 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-cyan-300 text-xs font-semibold uppercase tracking-wider mb-2.5 backdrop-blur-md">
               {renderIcon(FaCommentDots, { className: "text-amber-400" })}
               <span>Client &amp; Peer Testimonials</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
               What People Say About My Work
             </h2>
             <p className="text-sm sm:text-base text-slate-400 mt-2 max-w-2xl font-light leading-relaxed">
