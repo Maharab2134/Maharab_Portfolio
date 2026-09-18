@@ -6,6 +6,26 @@ export interface EducationItem {
   highlights: string[];
 }
 
+export interface ExperienceItem {
+  id?: string;
+  role: string;
+  company: string;
+  location?: string;
+  period: string;
+  employmentType?: string;
+  description: string;
+  technologies?: string[];
+  highlights: string[];
+  isActive?: boolean;
+}
+
+export interface ExperienceConfig {
+  isActive: boolean;
+  badge: string;
+  title: string;
+  subtitle: string;
+}
+
 export interface CertificateItem {
   title: string;
   issuer: string;
@@ -124,6 +144,63 @@ export const EDUCATION_DATA: EducationItem[] = [
       "Graduated with outstanding academic results",
       "Award winner in regional science and mathematics fairs",
     ],
+  },
+];
+
+export const DEFAULT_EXPERIENCE_CONFIG: ExperienceConfig = {
+  isActive: true,
+  badge: "Career Trajectory",
+  title: "Professional Experience",
+  subtitle: "A proven track record of engineering scalable web systems, cross-platform apps, and high-impact digital solutions.",
+};
+
+export const EXPERIENCE_DATA: ExperienceItem[] = [
+  {
+    role: "Full-Stack Software Engineer",
+    company: "Digital Solutions Lab / Freelance",
+    location: "Dhaka, Bangladesh (Hybrid)",
+    period: "2024 - Present",
+    employmentType: "Contract / Remote",
+    description:
+      "Architecting and developing production-grade web and mobile applications for international and regional clients, delivering responsive UIs, robust REST/GraphQL APIs, and cloud-native databases.",
+    technologies: ["React", "Next.js", "Node.js", "TypeScript", "Tailwind CSS", "Supabase", "MongoDB"],
+    highlights: [
+      "Engineered and launched 10+ end-to-end full stack web applications with 99.9% uptime",
+      "Optimized API performance and database queries, cutting response latencies by over 40%",
+      "Built real-time synchronized dashboards with automated role-based access control (RBAC)",
+    ],
+    isActive: true,
+  },
+  {
+    role: "Frontend & Mobile Application Developer",
+    company: "Tech Innovations & Open Source",
+    location: "Dhaka, Bangladesh",
+    period: "2023 - 2024",
+    employmentType: "Full-time",
+    description:
+      "Collaborated on designing high-performance client applications, cross-platform mobile apps with Flutter, and interactive design systems using modern UI/UX engineering.",
+    technologies: ["React.js", "Flutter", "Tailwind CSS", "Framer Motion", "REST APIs", "Git"],
+    highlights: [
+      "Spearheaded component library refactoring for consistent cross-browser design",
+      "Integrated state management and offline-first cache strategies with local storage",
+      "Delivered pixel-perfect, accessible user interfaces compliant with WCAG guidelines",
+    ],
+    isActive: true,
+  },
+  {
+    role: "Software Engineering Contributor & Intern",
+    company: "BUBT Software Development Cell",
+    location: "Mirpur, Dhaka",
+    period: "2022 - 2023",
+    employmentType: "Internship",
+    description:
+      "Contributed to internal university management tools, automated grading scripts, and student portal modules while adhering to Agile sprint methodologies.",
+    technologies: ["JavaScript", "Python", "HTML5/CSS3", "MySQL", "Git & GitHub"],
+    highlights: [
+      "Assisted in refactoring relational database schemas into optimized normalized structures",
+      "Authored comprehensive API documentation and postman test collections",
+    ],
+    isActive: true,
   },
 ];
 

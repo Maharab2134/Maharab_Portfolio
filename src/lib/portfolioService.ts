@@ -5,8 +5,12 @@ import {
   PORTFOLIO_INFO,
   EDUCATION_DATA,
   CERTIFICATES_DATA,
+  EXPERIENCE_DATA,
+  DEFAULT_EXPERIENCE_CONFIG,
   EducationItem,
   CertificateItem,
+  ExperienceItem,
+  ExperienceConfig,
   DEFAULT_SKILL_CATEGORIES,
   DEFAULT_SKILLS_DATA,
   SkillCategory,
@@ -3149,5 +3153,189 @@ export const useDevelopmentProcessConfig = (): DevelopmentProcessConfig => {
   return config;
 };
 
+// ============================================================================
+// Experience Service (Local-First with Supabase Cloud Sync)
+// ============================================================================
+export const STORAGE_EXPERIENCE_KEY = "maharab_cached_experience";
+export const STORAGE_EXPERIENCE_CONFIG_KEY = "maharab_cached_experience_config";
 
+export const getLiveExperience = async (): Promise<ExperienceItem[]> => {
+  try {
+    const cached = localStorage.getItem(STORAGE_EXPERIENCE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
 
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("experience")
+        .select("*")
+        .order("order_index", { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        const mapped: ExperienceItem[] = data.map((d: any) => ({
+          id: d.id,
+          role: d.role || "",
+          company: d.company || "",
+          location: d.location || "",
+          period: d.period || "",
+          employmentType: d.employment_type || d.employmentType || "",
+          description: d.description || "",
+          technologies: Array.isArray(d.technologies) ? d.technologies : [],
+          highlights: Array.isArray(d.highlights) ? d.highlights : [],
+          isActive: d.is_active !== undefined ? d.is_active : (d.isActive !== undefined ? d.isActive : true),
+        }));
+        try {
+          localStorage.setItem(STORAGE_EXPERIENCE_KEY, JSON.stringify(mapped));
+        } catch (e) {}
+        return mapped;
+      }
+    } catch (e) {}
+  }
+
+  return EXPERIENCE_DATA;
+};
+
+export const saveLiveExperience = async (
+  experienceList: ExperienceItem[]
+): Promise<{ success: boolean; error?: string }> => {
+  // 1. Immediately update localStorage & dispatch custom event
+  try {
+    localStorage.setItem(STORAGE_EXPERIENCE_KEY, JSON.stringify(experienceList));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("portfolio_experience_updated"));
+    }
+  } catch (e) {}
+
+  // 2. Sync with Supabase cloud if configured
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const rows = experienceList.map((exp, idx) => ({
+        role: exp.role,
+        company: exp.company,
+        location: exp.location || "",
+        period: exp.period,
+        employment_type: exp.employmentType || "",
+        description: exp.description,
+        technologies: exp.technologies || [],
+        highlights: exp.highlights || [],
+        is_active: exp.isActive !== false,
+        order_index: idx,
+      }));
+
+      // Delete existing and insert updated list
+      await supabase.from("experience").delete().neq("role", "___never_match___");
+      const { error } = await supabase.from("experience").insert(rows);
+      if (error) {
+        return { success: true, error: error.message };
+      }
+    } catch (err: any) {
+      return { success: true, error: err.message };
+    }
+  }
+
+  return { success: true };
+};
+
+export const getLiveExperienceConfig = (): ExperienceConfig => {
+  try {
+    const raw = localStorage.getItem(STORAGE_EXPERIENCE_CONFIG_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.isActive === "boolean") {
+        return {
+          ...DEFAULT_EXPERIENCE_CONFIG,
+          ...parsed,
+        };
+      }
+    }
+  } catch (e) {}
+  return DEFAULT_EXPERIENCE_CONFIG;
+};
+
+export const saveExperienceConfig = async (
+  updates: Partial<ExperienceConfig>
+): Promise<ExperienceConfig> => {
+  const current = getLiveExperienceConfig();
+  const updated: ExperienceConfig = {
+    ...current,
+    ...updates,
+  };
+
+  try {
+    localStorage.setItem(STORAGE_EXPERIENCE_CONFIG_KEY, JSON.stringify(updated));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("portfolio_experience_config_updated", { detail: updated })
+      );
+    }
+  } catch (e) {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from("profile_info")
+        .update({ experience_config: updated })
+        .limit(1);
+    } catch (e) {}
+  }
+
+  return updated;
+};
+
+export const resetExperienceDefaults = async (): Promise<{
+  config: ExperienceConfig;
+  items: ExperienceItem[];
+}> => {
+  const config = await saveExperienceConfig(DEFAULT_EXPERIENCE_CONFIG);
+  await saveLiveExperience(EXPERIENCE_DATA);
+  return { config, items: EXPERIENCE_DATA };
+};
+
+export const useExperienceConfig = (): ExperienceConfig => {
+  const [config, setConfig] = useState<ExperienceConfig>(getLiveExperienceConfig);
+
+  useEffect(() => {
+    let active = true;
+    if (isSupabaseConfigured && supabase) {
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from("profile_info")
+            .select("experience_config")
+            .limit(1);
+          if (!error && data && data.length > 0 && (data[0] as any)?.experience_config) {
+            const remote = (data[0] as any).experience_config;
+            if (active && remote && typeof remote.isActive === "boolean") {
+              setConfig(remote);
+              try {
+                localStorage.setItem(STORAGE_EXPERIENCE_CONFIG_KEY, JSON.stringify(remote));
+              } catch (e) {}
+            }
+          }
+        } catch (e) {}
+      })();
+    }
+
+    const handleUpdate = (e?: any) => {
+      if (e?.detail) {
+        setConfig(e.detail);
+      } else {
+        setConfig(getLiveExperienceConfig());
+      }
+    };
+
+    window.addEventListener("portfolio_experience_config_updated", handleUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_experience_config_updated", handleUpdate);
+    };
+  }, []);
+
+  return config;
+};

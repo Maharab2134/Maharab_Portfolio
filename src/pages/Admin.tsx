@@ -4,10 +4,12 @@ import {
   PORTFOLIO_INFO,
   EDUCATION_DATA,
   CERTIFICATES_DATA,
+  EXPERIENCE_DATA,
   DEFAULT_SKILL_CATEGORIES,
   DEFAULT_SKILLS_DATA,
   SkillCategory,
   SkillItemData,
+  ExperienceItem,
 } from "../data/portfolioData";
 import { PROJECTS } from "../data/projectsData";
 import {
@@ -22,6 +24,7 @@ import {
   saveLiveResumeUrl,
   getLiveEducation,
   getLiveCertificates,
+  getLiveExperience,
   getLiveSkills,
   getLiveSkillCategories,
   ProjectReview,
@@ -58,6 +61,7 @@ import { SkillsTab } from "../components/admin/tabs/SkillsTab";
 import { ProcessTab } from "../components/admin/tabs/ProcessTab";
 import { ProfileTab } from "../components/admin/tabs/ProfileTab";
 import { EducationTab } from "../components/admin/tabs/EducationTab";
+import { ExperienceTab } from "../components/admin/tabs/ExperienceTab";
 import { ResumeTab } from "../components/admin/tabs/ResumeTab";
 import { MessagesTab } from "../components/admin/tabs/MessagesTab";
 import { ReviewsTab } from "../components/admin/tabs/ReviewsTab";
@@ -79,6 +83,8 @@ const getTabInfo = (tab: AdminNavTab): { title: string; section: string } => {
       return { title: "Profile & Biography", section: "CONTENT" };
     case "education":
       return { title: "Education & Credentials", section: "CONTENT" };
+    case "experience":
+      return { title: "Experience & Career Trajectory", section: "CONTENT" };
     case "resume":
       return { title: "Resume & Cloud Storage", section: "ASSETS" };
     case "messages":
@@ -184,6 +190,9 @@ const Admin: React.FC = () => {
   // Education & Certificates state
   const [educationList, setEducationList] = useState<any[]>(EDUCATION_DATA);
   const [certsList, setCertsList] = useState<any[]>(CERTIFICATES_DATA);
+
+  // Experience state
+  const [experienceList, setExperienceList] = useState<ExperienceItem[]>(EXPERIENCE_DATA);
 
   // Skills & Categories state
   const [skillCategoriesList, setSkillCategoriesList] = useState<SkillCategory[]>(DEFAULT_SKILL_CATEGORIES);
@@ -580,6 +589,11 @@ const Admin: React.FC = () => {
     if (liveCerts && liveCerts.length > 0) setCertsList(liveCerts);
   }, []);
 
+  const fetchExperience = useCallback(async () => {
+    const liveExp = await getLiveExperience();
+    if (liveExp && liveExp.length > 0) setExperienceList(liveExp);
+  }, []);
+
   const fetchSkillsAndCategories = useCallback(async () => {
     const liveCats = await getLiveSkillCategories();
     if (liveCats && liveCats.length > 0) setSkillCategoriesList(liveCats);
@@ -590,12 +604,13 @@ const Admin: React.FC = () => {
   useEffect(() => {
     fetchProfileData();
     fetchEducationAndCerts();
+    fetchExperience();
     fetchSkillsAndCategories();
     if (session) {
       fetchProjects();
       fetchMessages();
     }
-  }, [session, fetchProjects, fetchMessages, fetchEducationAndCerts, fetchProfileData, fetchSkillsAndCategories]);
+  }, [session, fetchProjects, fetchMessages, fetchEducationAndCerts, fetchExperience, fetchProfileData, fetchSkillsAndCategories]);
 
   // Auth Handlers
   const handleLogin = async (e: React.FormEvent) => {
@@ -918,6 +933,7 @@ const Admin: React.FC = () => {
             skills: skillsList.length,
             process: processConfig.steps.length,
             education: educationList.length + certsList.length,
+            experience: experienceList.length,
             messages: messagesList.length,
             reviews: reviewsList.length,
           }}
@@ -1017,6 +1033,13 @@ const Admin: React.FC = () => {
               setEducationList={setEducationList}
               certsList={certsList}
               setCertsList={setCertsList}
+            />
+          )}
+
+          {activeTab === "experience" && (
+            <ExperienceTab
+              experienceList={experienceList}
+              setExperienceList={setExperienceList}
             />
           )}
 

@@ -82,6 +82,7 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
       "home",
       "about",
       "education",
+      "experience",
       "certificates",
       "skills",
       "process",

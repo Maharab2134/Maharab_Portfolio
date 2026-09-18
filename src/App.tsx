@@ -8,6 +8,7 @@ import Projects from "./components/Projects";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import Education from "./components/Education";
+import Experience from "./components/Experience";
 import Certificates from "./components/Certificates";
 import ProjectDetails from "./pages/ProjectDetails";
 import MyJourney from "./pages/MyJourney";
@@ -413,6 +414,7 @@ function App() {
             <Hero />
             <About />
             <Education />
+            <Experience />
             <Certificates />
             <Skills />
             <DevelopmentProcess />

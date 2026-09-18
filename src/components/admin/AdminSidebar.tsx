@@ -13,6 +13,7 @@ import {
   FaDatabase,
   FaSignOutAlt,
   FaCogs,
+  FaBriefcase,
 } from "react-icons/fa";
 import { AdminNavTab, renderIcon } from "./types";
 import { toProxyImageUrl } from "../../data/projectsData";
@@ -26,6 +27,7 @@ interface AdminSidebarProps {
     skills: number;
     process?: number;
     education: number;
+    experience?: number;
     messages: number;
     reviews: number;
   };
@@ -106,6 +108,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           badge: counts.education,
           badgeColor: "bg-cyan-500/10 text-cyan-300 border-cyan-500/20",
           activeColor: "text-cyan-400",
+        },
+        {
+          id: "experience" as AdminNavTab,
+          label: "Experience & Career",
+          icon: FaBriefcase,
+          badge: counts.experience,
+          badgeColor: "bg-purple-500/10 text-purple-300 border-purple-500/20",
+          activeColor: "text-purple-400",
         },
       ],
     },

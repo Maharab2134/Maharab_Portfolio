@@ -9,6 +9,7 @@ export type AdminNavTab =
   | "process"
   | "profile"
   | "education"
+  | "experience"
   | "resume"
   | "messages"
   | "reviews"
