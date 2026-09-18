@@ -1,3 +1,7 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+
+# Sitemap Location for Google & other search crawlers
+Sitemap: https://dev-maharab.netlify.app/sitemap.xml
