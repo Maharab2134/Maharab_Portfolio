@@ -63,6 +63,7 @@ import {
   FaWhatsapp,
   FaBriefcase,
   FaInbox,
+  FaDownload,
 } from "react-icons/fa";
 import { TypeAnimation } from "react-type-animation";
 import {
@@ -71,6 +72,10 @@ import {
   AnalyticsSummary,
   TimeRangeFilter,
 } from "../lib/analyticsService";
+import {
+  getLiveDynamicSitemap,
+  triggerSitemapDownload,
+} from "../lib/sitemapService";
 import { VisitorTrendChart } from "../components/analytics/VisitorTrendChart";
 import { NewVsReturningChart } from "../components/analytics/NewVsReturningChart";
 import { TopLocationsChart } from "../components/analytics/TopLocationsChart";
@@ -549,6 +554,37 @@ const Admin: React.FC = () => {
   const showAnalyticsToast = (message: string, type: "success" | "error" = "success") => {
     setAnalyticsToast({ message, type });
     setTimeout(() => setAnalyticsToast(null), 3000);
+  };
+
+  // Dynamic Sitemap Automation State
+  const [sitemapGenerating, setSitemapGenerating] = useState(false);
+  const [showSitemapModal, setShowSitemapModal] = useState(false);
+  const [sitemapXmlPreview, setSitemapXmlPreview] = useState("");
+  const [sitemapCopied, setSitemapCopied] = useState(false);
+
+  const handleGenerateSitemap = async (action: "download" | "view" | "copy") => {
+    setSitemapGenerating(true);
+    try {
+      const { xml } = await getLiveDynamicSitemap();
+      setSitemapXmlPreview(xml);
+
+      if (action === "download") {
+        triggerSitemapDownload(xml, "sitemap.xml");
+        showAnalyticsToast("sitemap.xml with all live projects successfully generated & downloaded!");
+      } else if (action === "copy") {
+        await navigator.clipboard.writeText(xml);
+        setSitemapCopied(true);
+        setTimeout(() => setSitemapCopied(false), 2500);
+        showAnalyticsToast("Sitemap XML copied to clipboard!");
+      } else if (action === "view") {
+        setShowSitemapModal(true);
+      }
+    } catch (err) {
+      console.error("Error generating sitemap:", err);
+      showAnalyticsToast("Failed to generate sitemap", "error");
+    } finally {
+      setSitemapGenerating(false);
+    }
   };
 
   const loadAnalyticsData = useCallback(async (filter: TimeRangeFilter = analyticsFilter) => {
@@ -3429,7 +3465,29 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <button
+                        type="button"
+                        disabled={sitemapGenerating}
+                        onClick={() => handleGenerateSitemap("view")}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-500/60 bg-cyan-500/10 hover:bg-cyan-500/20 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                        title="Preview generated sitemap XML with all projects"
+                      >
+                        {renderIcon(sitemapGenerating ? FaSpinner : FaCode, { size: 11, className: sitemapGenerating ? "animate-spin text-cyan-400" : "text-cyan-400" })}
+                        <span>Sitemap XML</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={sitemapGenerating}
+                        onClick={() => handleGenerateSitemap("download")}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                        title="Download latest sitemap.xml containing all projects (A to Z)"
+                      >
+                        {renderIcon(FaDownload, { size: 11, className: "text-emerald-400" })}
+                        <span>Download Sitemap</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={handleSyncAllProjectsToSupabase}
@@ -3437,7 +3495,7 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         title="Seed all initial projects into your Supabase database"
                       >
                         {renderIcon(FaDatabase, { size: 11, className: "text-amber-400" })}
-                        <span>Sync All to Supabase</span>
+                        <span>Sync to DB</span>
                       </button>
 
                       <button
@@ -3447,6 +3505,41 @@ WITH CHECK (bucket_id = 'portfolio-assets');`;
                         {renderIcon(FaPlus, { size: 11 })}
                         <span>Add New Project</span>
                       </button>
+                    </div>
+                  </div>
+
+                  {/* Automated Sitemap & SEO Status Bar */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-xl border border-cyan-500/20 bg-gradient-to-r from-cyan-950/30 via-indigo-950/20 to-transparent text-xs text-slate-300">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-2.5 w-2.5 relative flex-shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+                      </span>
+                      <div>
+                        <span className="font-semibold text-white">Automated Dynamic Sitemap: </span>
+                        <span className="text-slate-400">
+                          Whenever projects are added/updated, all project URLs (A–Z) are automatically indexed into <code className="text-cyan-300 font-mono">sitemap.xml</code> on every build.
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 self-end md:self-center flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateSitemap("copy")}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all font-medium text-[11px] cursor-pointer"
+                      >
+                        {renderIcon(sitemapCopied ? FaCheck : FaCopy, { size: 10, className: sitemapCopied ? "text-emerald-400" : "text-slate-400" })}
+                        <span>{sitemapCopied ? "XML Copied" : "Copy XML"}</span>
+                      </button>
+                      <a
+                        href="/sitemap.xml"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-cyan-300 hover:text-cyan-200 border border-white/10 transition-all font-medium text-[11px]"
+                      >
+                        {renderIcon(FaExternalLinkAlt, { size: 9 })}
+                        <span>View Live File</span>
+                      </a>
                     </div>
                   </div>
 
@@ -7856,6 +7949,87 @@ CREATE POLICY "Allow public all on portfolio-assets" ON storage.objects FOR ALL 
               </div>
             </div>
           )}
+
+          {/* Dynamic Sitemap.xml Preview Modal */}
+          <AnimatePresence>
+            {showSitemapModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSitemapModal(false)}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+              >
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="relative w-full max-w-4xl max-h-[85vh] flex flex-col p-5 border shadow-2xl rounded-2xl bg-[#0f1422] border-white/15 backdrop-blur-xl"
+                >
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                        {renderIcon(FaGlobe, { size: 15 })}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                          <span>Live Sitemap.xml Preview</span>
+                          <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            Auto-Indexed A to Z
+                          </span>
+                        </h3>
+                        <p className="text-[11px] text-slate-400">
+                          Generated dynamically from your live projects catalogue + core routes for Google Search Console & SEO crawlers.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSitemapModal(false)}
+                      className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    >
+                      {renderIcon(FaTimes, { size: 14 })}
+                    </button>
+                  </div>
+
+                  {/* Code Box */}
+                  <div className="my-4 flex-1 overflow-auto rounded-xl border border-white/10 bg-[#090d16] p-4 font-mono text-xs text-cyan-300/90 leading-relaxed shadow-inner">
+                    <pre className="whitespace-pre overflow-x-auto selection:bg-cyan-500/30">
+                      {sitemapXmlPreview}
+                    </pre>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/10">
+                    <div className="text-[11px] text-slate-400">
+                      Total indexed routes: <strong className="text-white">{(sitemapXmlPreview.match(/<url>/g) || []).length} URLs</strong>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateSitemap("copy")}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:text-white border border-white/15 bg-white/5 hover:bg-white/10 rounded-xl transition-all cursor-pointer"
+                      >
+                        {renderIcon(sitemapCopied ? FaCheck : FaCopy, { size: 11, className: sitemapCopied ? "text-emerald-400" : "text-slate-400" })}
+                        <span>{sitemapCopied ? "Copied to Clipboard" : "Copy XML"}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateSitemap("download")}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-cyan-600 to-indigo-600 hover:opacity-95 rounded-xl shadow-lg shadow-cyan-600/20 transition-all cursor-pointer"
+                      >
+                        {renderIcon(FaDownload, { size: 11 })}
+                        <span>Download sitemap.xml</span>
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </main>
       </div>
