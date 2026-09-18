@@ -3053,7 +3053,12 @@ export const getDevelopmentProcessConfig = (): DevelopmentProcessConfig => {
     const cached = localStorage.getItem(STORAGE_DEV_PROCESS_CONFIG_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
-      if (parsed && typeof parsed.enabled === "boolean" && Array.isArray(parsed.steps)) {
+      if (
+        parsed &&
+        typeof parsed.enabled === "boolean" &&
+        Array.isArray(parsed.steps) &&
+        parsed.steps[0]?.id !== "step-1"
+      ) {
         return parsed;
       }
     }
