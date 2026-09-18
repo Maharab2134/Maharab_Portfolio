@@ -120,28 +120,28 @@ const ProjectCard: React.FC<{
       </div>
 
       {/* Content Container */}
-      <div className="flex flex-col flex-1 p-5 sm:p-6">
+      <div className="flex flex-col flex-1 p-4 sm:p-5">
         <div className="flex-1">
-          <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-purple-300 transition-colors mb-2">
+          <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-purple-300 transition-colors mb-1.5 line-clamp-1">
             {project.title}
           </h3>
-          <p className="text-xs sm:text-sm leading-relaxed text-slate-400 line-clamp-2 mb-4 font-normal">
+          <p className="text-xs leading-relaxed text-slate-400 line-clamp-2 mb-3.5 font-normal">
             {project.description}
           </p>
         </div>
 
         {/* Technologies Pills */}
-        <div className="flex flex-wrap gap-1.5 mb-5">
+        <div className="flex flex-wrap gap-1.5 mb-4">
           {project.technologies.slice(0, 3).map((tech) => (
             <span
               key={tech}
-              className="px-2.5 py-0.5 text-[11px] font-medium rounded-md bg-white/5 border border-white/10 text-slate-300"
+              className="px-2 py-0.5 text-[10px] sm:text-[11px] font-medium rounded-md bg-white/5 border border-white/10 text-slate-300"
             >
               {tech}
             </span>
           ))}
           {project.technologies.length > 3 && (
-            <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-white/5 text-slate-400">
+            <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-md bg-white/5 text-slate-400">
               +{project.technologies.length - 3}
             </span>
           )}
@@ -221,7 +221,7 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
   useEffect(() => {
     const updateCols = () => {
       if (typeof window === "undefined") return;
-      if (window.innerWidth >= 1024) setColumns(3);
+      if (window.innerWidth >= 1024) setColumns(4);
       else if (window.innerWidth >= 640) setColumns(2);
       else setColumns(1);
     };
@@ -257,7 +257,7 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
     return projectsList.filter((p) => p.category === filterId).length;
   };
 
-  const rowLimit = columns * 4; // Exactly 4 rows based on current active grid columns
+  const rowLimit = columns * 3; // 4 columns * 3 rows = 12 projects on desktop initially
   const visibleProjects = !showAllProjects
     ? filteredProjects.slice(0, rowLimit)
     : filteredProjects;
@@ -284,7 +284,6 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
           <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-cyan-400">
             <span>Portfolio Showcase</span>
             <span className="w-1 h-1 rounded-full bg-cyan-400" />
-            <span className="font-mono text-cyan-300 font-bold">{projectsList.length}</span>
           </span>
           <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
             <span>Featured Projects &amp;</span>
@@ -348,7 +347,7 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
             {visibleProjects.length === 0 ? (
               <div className="col-span-full py-16 text-center text-slate-400 text-sm">
