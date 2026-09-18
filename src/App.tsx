@@ -212,8 +212,40 @@ function App() {
     }
   }, [activeView]);
 
-  const handleNavigatePage = (page: "home" | "hire" | "journey") => {
+  const handleNavigatePage = (page: "home" | "hire" | "journey", targetSection?: string) => {
     setSelectedProject(null);
+    if (page === "home") {
+      // If a specific section on home was targeted, navigate directly to it without jumping to Hero or clearing hash
+      if (targetSection && targetSection !== "home") {
+        setActiveView("home");
+        const url = new URL(window.location.href);
+        url.searchParams.delete("project");
+        url.hash = `#${targetSection}`;
+        window.history.replaceState({}, "", url.toString());
+
+        setTimeout(() => {
+          const targetEl = document.getElementById(targetSection);
+          if (targetEl) {
+            const targetTop = targetEl.getBoundingClientRect().top + window.scrollY - 70;
+            window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+          }
+        }, 50);
+        return;
+      }
+
+      // If user specifically requested Home / Hero section
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("portfolio_home_scroll_y");
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+        const url = new URL(window.location.href);
+        url.searchParams.delete("project");
+        url.hash = "";
+        window.history.replaceState({}, "", url.pathname);
+      }
+      setActiveView("home");
+      return;
+    }
+
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("portfolio_home_scroll_y");
       document.documentElement.style.scrollBehavior = "auto";
@@ -222,13 +254,8 @@ function App() {
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
     }
-    if (page === "home") {
-      window.location.hash = "";
-      const url = new URL(window.location.href);
-      url.searchParams.delete("project");
-      window.history.pushState({}, "", url.pathname);
-      setActiveView("home");
-    } else if (page === "hire") {
+
+    if (page === "hire") {
       window.location.hash = "#hire";
       setActiveView("hire");
     } else if (page === "journey") {

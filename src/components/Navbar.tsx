@@ -17,7 +17,7 @@ import { useLiveProfile, calculateWorkStatus } from "../lib/portfolioService";
 interface NavbarProps {
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
-  onNavigatePage?: (page: "home" | "hire" | "journey") => void;
+  onNavigatePage?: (page: "home" | "hire" | "journey", targetSection?: string) => void;
 }
 
 const renderIcon = (Icon: any, props: any = {}) => {
@@ -82,6 +82,9 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            // Avoid intermediate hash flickering during programmatic navbar link scroll
+            if (isProgrammaticScrollRef.current) return;
+
             const sectionId = entry.target.id;
             setActiveSection(sectionId);
 
@@ -144,27 +147,35 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
       return;
     }
 
-    const performScroll = () => {
-      const element = document.getElementById(targetId);
-      if (element) {
-        const headerOffset = 70;
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.scrollY - headerOffset;
+    const element = document.getElementById(targetId);
+    if (element) {
+      const headerOffset = 70;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - headerOffset;
 
-        window.scrollTo({
-          top: Math.max(0, offsetPosition),
-          behavior: "smooth",
-        });
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: "smooth",
+      });
 
-        window.history.replaceState(null, "", window.location.pathname + window.location.search + `#${targetId}`);
-        setActiveSection(targetId);
-      }
-    };
+      window.history.replaceState(null, "", window.location.pathname + window.location.search + `#${targetId}`);
+      setActiveSection(targetId);
 
-    performScroll();
-    requestAnimationFrame(performScroll);
-    setTimeout(performScroll, 80);
-    setTimeout(performScroll, 250);
+      // Re-align once mobile menu drawer collapse transition completes
+      setTimeout(() => {
+        const recheckEl = document.getElementById(targetId);
+        if (recheckEl) {
+          const newPos = recheckEl.getBoundingClientRect().top;
+          if (Math.abs(newPos - headerOffset) > 15) {
+            const recheckOffset = newPos + window.scrollY - headerOffset;
+            window.scrollTo({
+              top: Math.max(0, recheckOffset),
+              behavior: "smooth",
+            });
+          }
+        }
+      }, 320);
+    }
   };
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -176,11 +187,14 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
       document.body.style.overflow = "";
       setIsMenuOpen(false);
 
-      if (onNavigatePage) {
-        onNavigatePage("home");
+      const element = document.getElementById(targetId);
+      if (element) {
+        // Section is present on current page - scroll directly to it without resetting view or jumping to Hero!
+        scrollToTarget(targetId);
+      } else if (onNavigatePage) {
+        // Target is not on current page (e.g. user was on /hire or /journey)
+        onNavigatePage("home", targetId);
       }
-
-      scrollToTarget(targetId);
     }
   };
 
@@ -344,10 +358,7 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
                   <a
                     key={link.name}
                     href={link.href}
-                    onClick={(e) => {
-                      if (onNavigatePage) onNavigatePage("home");
-                      handleLinkClick(e, link.href);
-                    }}
+                    onClick={(e) => handleLinkClick(e, link.href)}
                     className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${isActive
                         ? "text-white bg-white/10 border border-white/10"
                         : "text-slate-300 hover:text-white hover:bg-white/5"
