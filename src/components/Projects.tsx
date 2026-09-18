@@ -294,10 +294,10 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
                 e.preventDefault();
                 window.location.hash = "#case-studies";
               }}
-              title="Click to explore the Full Case Study Engineering Flow & Architecture"
-              className="group/cs inline-flex items-center gap-1 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-pink-400 cursor-pointer transition-all duration-300 underline decoration-cyan-400/40 hover:decoration-pink-400 decoration-2 underline-offset-4"
+              title="Click to explore the Case Studies Flow"
+              className="group/cs inline-flex items-center gap-1.5 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-pink-400 cursor-pointer transition-all duration-300 underline decoration-cyan-400/40 hover:decoration-pink-400 decoration-2 underline-offset-4"
             >
-              <span>(Case Studies)</span>
+              <span>Case Studies</span>
               <span className="inline-block text-xs sm:text-sm text-cyan-400 group-hover/cs:text-pink-400 group-hover/cs:translate-x-0.5 group-hover/cs:-translate-y-0.5 transition-transform">
                 ↗
               </span>
