@@ -15,6 +15,7 @@ export interface VisitorEvent {
   section: string;
   durationSeconds: number;
   timestamp: string; // ISO string
+  visitedPages?: string[]; // array of visited pages in order, e.g. ["Home", "Projects", "Saytica"]
 }
 
 export type TimeRangeFilter = "today" | "7d" | "30d" | "all";
@@ -249,6 +250,38 @@ export const normalizeReferrer = (rawReferrer?: string): string => {
   }
 };
 
+// Check if the current page load was triggered by a browser refresh/reload
+export const isPageReload = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    const navEntries = performance.getEntriesByType("navigation");
+    if (navEntries && navEntries.length > 0) {
+      const nav = navEntries[0] as PerformanceNavigationTiming;
+      return nav.type === "reload";
+    }
+    if (performance.navigation && (performance.navigation as any).type === 1) {
+      return true;
+    }
+  } catch (e) {}
+  return false;
+};
+
+// Format raw page path or section title into a clean display label
+export const formatPageName = (rawPath?: string): string => {
+  if (!rawPath) return "Home";
+  const clean = rawPath.replace(/^\/+/, "").trim();
+  const lower = clean.toLowerCase();
+  if (!lower || lower === "home") return "Home";
+  if (lower === "hire") return "Hire";
+  if (lower === "journey") return "Journey";
+  if (lower.startsWith("project:")) {
+    const slug = clean.substring(8).trim();
+    return slug.charAt(0).toUpperCase() + slug.slice(1);
+  }
+  if (lower === "project" || lower === "projects") return "Projects";
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
+};
+
 // ============================================================================
 // Realistic Seed Data Generator (Past 30 Days)
 // ============================================================================
@@ -348,6 +381,19 @@ export const generateRealisticSeedAnalytics = (): VisitorEvent[] => {
 
       const duration = Math.floor(Math.random() * 320) + 25; // 25s to 345s
 
+      const sampleJourneys = [
+        ["Home", "Projects"],
+        ["Home", "About", "Skills"],
+        ["Home", "Projects", "Saytica", "Hire"],
+        ["Home", "Journey"],
+        ["Home", "Projects", "Saytica"],
+        ["Home", "Hire"],
+        ["Home", "Skills", "Education", "Contact"],
+        ["Home", "Projects", "Journey", "Hire"],
+        ["Home"],
+      ];
+      const journey = sampleJourneys[Math.floor(Math.random() * sampleJourneys.length)];
+
       events.push({
         id: `evt_${eventTime.getTime()}_${j}`,
         visitorId: vid,
@@ -363,6 +409,7 @@ export const generateRealisticSeedAnalytics = (): VisitorEvent[] => {
         section: pag.section,
         durationSeconds: duration,
         timestamp: eventTime.toISOString(),
+        visitedPages: journey,
       });
     }
   }
@@ -380,30 +427,53 @@ export const trackVisitorHit = async (
   if (typeof window === "undefined") return;
 
   try {
+    const pageLabel = formatPageName(section || pagePath);
+
+    // 1. REFRESH / RELOAD PROTECTION:
+    // When the website is refreshed/reloaded, DO NOT count as a new Visitor Activity Log!
+    const reload = isPageReload();
+    const lastTrackedPage = sessionStorage.getItem("maharab_last_tracked_page");
+
+    // Skip creating a new log on reload of the same page
+    if (reload && lastTrackedPage === pageLabel) {
+      return;
+    }
+
+    // Deduplicate rapid re-triggers (< 3 seconds) on identical page
+    const lastHitTimeStr = sessionStorage.getItem("maharab_last_hit_time");
+    const lastHitTime = lastHitTimeStr ? parseInt(lastHitTimeStr, 10) : 0;
+    if (lastTrackedPage === pageLabel && Date.now() - lastHitTime < 3000) {
+      return;
+    }
+
+    sessionStorage.setItem("maharab_last_tracked_page", pageLabel);
+    sessionStorage.setItem("maharab_last_hit_time", String(Date.now()));
+
+    // 2. Track visited pages sequence for this session
+    const STORAGE_SESSION_PAGES_KEY = "maharab_session_visited_pages";
+    let sessionPages: string[] = [];
+    try {
+      const stored = sessionStorage.getItem(STORAGE_SESSION_PAGES_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) sessionPages = parsed;
+      }
+    } catch (e) {}
+
+    if (sessionPages.length === 0 || sessionPages[sessionPages.length - 1] !== pageLabel) {
+      sessionPages.push(pageLabel);
+      try {
+        sessionStorage.setItem(STORAGE_SESSION_PAGES_KEY, JSON.stringify(sessionPages));
+      } catch (e) {}
+    }
+
     const visitorId = getAnonymizedVisitorId();
     const { sessionId, isNew } = getSessionId();
     const { device, browser, os } = parseUserAgent();
     const { country, city } = inferLocationFromTimezone();
     const referrer = normalizeReferrer();
 
-    const newEvent: VisitorEvent = {
-      id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      visitorId,
-      sessionId,
-      isNewVisitor: isNew,
-      country,
-      city,
-      device,
-      browser,
-      os,
-      referrer,
-      pagePath,
-      section,
-      durationSeconds: Math.floor(Math.random() * 90) + 15,
-      timestamp: new Date().toISOString(),
-    };
-
-    // 1. Update Local Storage Cache
+    // 3. Update Local Storage Cache
     let cachedEvents: VisitorEvent[] = [];
     try {
       const raw = localStorage.getItem(STORAGE_ANALYTICS_KEY);
@@ -413,7 +483,46 @@ export const trackVisitorHit = async (
       }
     } catch (e) {}
 
-    cachedEvents.unshift(newEvent);
+    // Check if an event already exists for this session
+    const existingSessionIndex = cachedEvents.findIndex((e) => e.sessionId === sessionId);
+
+    let currentEvent: VisitorEvent;
+
+    if (existingSessionIndex >= 0) {
+      // Update existing session record with new page in journey
+      currentEvent = {
+        ...cachedEvents[existingSessionIndex],
+        pagePath,
+        section,
+        visitedPages: [...sessionPages],
+        timestamp: new Date().toISOString(),
+        durationSeconds: (cachedEvents[existingSessionIndex].durationSeconds || 15) + Math.floor(Math.random() * 30) + 15,
+      };
+      // Move this updated session event to top of activity log
+      cachedEvents.splice(existingSessionIndex, 1);
+      cachedEvents.unshift(currentEvent);
+    } else {
+      // Brand new browsing session
+      currentEvent = {
+        id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        visitorId,
+        sessionId,
+        isNewVisitor: isNew,
+        country,
+        city,
+        device,
+        browser,
+        os,
+        referrer,
+        pagePath,
+        section,
+        visitedPages: [...sessionPages],
+        durationSeconds: Math.floor(Math.random() * 90) + 15,
+        timestamp: new Date().toISOString(),
+      };
+      cachedEvents.unshift(currentEvent);
+    }
+
     // Keep last 600 events in local cache for speed
     if (cachedEvents.length > 600) {
       cachedEvents = cachedEvents.slice(0, 600);
@@ -424,24 +533,24 @@ export const trackVisitorHit = async (
       window.dispatchEvent(new Event("portfolio_analytics_updated"));
     } catch (e) {}
 
-    // 2. Sync to Supabase cloud if connected
+    // 4. Sync to Supabase cloud if connected
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from("portfolio_analytics").insert([
           {
-            visitor_id: newEvent.visitorId,
-            session_id: newEvent.sessionId,
-            is_new_visitor: newEvent.isNewVisitor,
-            country: newEvent.country,
-            city: newEvent.city,
-            device: newEvent.device,
-            browser: newEvent.browser,
-            os: newEvent.os,
-            referrer: newEvent.referrer,
-            page_path: newEvent.pagePath,
-            section: newEvent.section,
-            duration_seconds: newEvent.durationSeconds,
-            created_at: newEvent.timestamp,
+            visitor_id: currentEvent.visitorId,
+            session_id: currentEvent.sessionId,
+            is_new_visitor: currentEvent.isNewVisitor,
+            country: currentEvent.country,
+            city: currentEvent.city,
+            device: currentEvent.device,
+            browser: currentEvent.browser,
+            os: currentEvent.os,
+            referrer: currentEvent.referrer,
+            page_path: currentEvent.pagePath,
+            section: currentEvent.section,
+            duration_seconds: currentEvent.durationSeconds,
+            created_at: currentEvent.timestamp,
           },
         ]);
       } catch (err) {}
@@ -643,11 +752,21 @@ export const getLiveAnalytics = async (
   // Top Pages / Sections
   const pageMap = new Map<string, { path: string; title: string; count: number }>();
   filteredEvents.forEach((e) => {
-    const key = e.section || e.pagePath || "Hero";
-    if (!pageMap.has(key)) {
-      pageMap.set(key, { path: e.pagePath || "/", title: e.section || "Hero", count: 0 });
+    if (Array.isArray(e.visitedPages) && e.visitedPages.length > 0) {
+      e.visitedPages.forEach((p) => {
+        const key = p;
+        if (!pageMap.has(key)) {
+          pageMap.set(key, { path: p.toLowerCase(), title: p, count: 0 });
+        }
+        pageMap.get(key)!.count++;
+      });
+    } else {
+      const key = e.section || e.pagePath || "Hero";
+      if (!pageMap.has(key)) {
+        pageMap.set(key, { path: e.pagePath || "/", title: e.section || "Hero", count: 0 });
+      }
+      pageMap.get(key)!.count++;
     }
-    pageMap.get(key)!.count++;
   });
 
   const topPages: PageStat[] = Array.from(pageMap.values())
@@ -676,6 +795,42 @@ export const getLiveAnalytics = async (
       percentage: totalVisits > 0 ? Math.round((count / totalVisits) * 100) : 0,
     }));
 
+  // Aggregate visitedPages by session ID
+  const sessionPagesMap = new Map<string, string[]>();
+  allEvents.forEach((e) => {
+    const sid = e.sessionId || e.id;
+    if (!sessionPagesMap.has(sid)) {
+      sessionPagesMap.set(sid, []);
+    }
+    const currentList = sessionPagesMap.get(sid)!;
+    if (Array.isArray(e.visitedPages) && e.visitedPages.length > 0) {
+      e.visitedPages.forEach((p) => {
+        if (!currentList.includes(p)) currentList.push(p);
+      });
+    } else {
+      const pName = formatPageName(e.section || e.pagePath);
+      if (!currentList.includes(pName)) currentList.push(pName);
+    }
+  });
+
+  // Assign aggregated visitedPages to all filtered events
+  filteredEvents.forEach((e) => {
+    const sid = e.sessionId || e.id;
+    const pages = sessionPagesMap.get(sid);
+    e.visitedPages = pages && pages.length > 0 ? pages : [formatPageName(e.section || e.pagePath)];
+  });
+
+  // Deduplicate recentEvents by sessionId so each row in Visitor Activity Logs represents a unique visitor session
+  const seenSessions = new Set<string>();
+  const uniqueSessionEvents: VisitorEvent[] = [];
+  filteredEvents.forEach((e) => {
+    const key = e.sessionId || e.id;
+    if (!seenSessions.has(key)) {
+      seenSessions.add(key);
+      uniqueSessionEvents.push(e);
+    }
+  });
+
   return {
     totalVisits,
     uniqueVisitors,
@@ -689,7 +844,7 @@ export const getLiveAnalytics = async (
     osBreakdown,
     topPages,
     topReferrers,
-    recentEvents: filteredEvents.slice(0, 100),
+    recentEvents: uniqueSessionEvents.slice(0, 100),
   };
 };
 

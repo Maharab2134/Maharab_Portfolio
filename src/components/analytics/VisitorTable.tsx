@@ -31,6 +31,14 @@ export const VisitorTable: React.FC<VisitorTableProps> = ({ events }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [copiedVid, setCopiedVid] = useState<string | null>(null);
+  const [expandedRowIds, setExpandedRowIds] = useState<Record<string, boolean>>({});
+
+  const toggleExpandPages = (id: string) => {
+    setExpandedRowIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   // Copy helper
   const handleCopy = (vid: string) => {
@@ -66,6 +74,7 @@ export const VisitorTable: React.FC<VisitorTableProps> = ({ events }) => {
     return events.filter((e) => {
       // Search matches
       const term = searchTerm.toLowerCase();
+      const eventPages = e.visitedPages && e.visitedPages.length > 0 ? e.visitedPages : [e.pagePath];
       const matchesSearch =
         !term ||
         e.visitorId.toLowerCase().includes(term) ||
@@ -74,6 +83,7 @@ export const VisitorTable: React.FC<VisitorTableProps> = ({ events }) => {
         e.browser.toLowerCase().includes(term) ||
         e.os.toLowerCase().includes(term) ||
         e.pagePath.toLowerCase().includes(term) ||
+        eventPages.some((p) => p.toLowerCase().includes(term)) ||
         e.referrer.toLowerCase().includes(term);
 
       // Device filter
@@ -107,24 +117,27 @@ export const VisitorTable: React.FC<VisitorTableProps> = ({ events }) => {
       "Browser",
       "OS",
       "Referrer",
-      "Page Visited",
+      "Pages Visited",
       "Duration (s)",
       "Visitor Type",
     ];
 
-    const rows = filteredEvents.map((e) => [
-      `"${e.visitorId}"`,
-      `"${e.timestamp}"`,
-      `"${e.country}"`,
-      `"${e.city}"`,
-      `"${e.device}"`,
-      `"${e.browser}"`,
-      `"${e.os}"`,
-      `"${e.referrer}"`,
-      `"${e.pagePath}"`,
-      e.durationSeconds,
-      e.isNewVisitor ? "First-time" : "Returning",
-    ]);
+    const rows = filteredEvents.map((e) => {
+      const pages = (e.visitedPages && e.visitedPages.length > 0 ? e.visitedPages : [e.pagePath]).join(" -> ");
+      return [
+        `"${e.visitorId}"`,
+        `"${e.timestamp}"`,
+        `"${e.country}"`,
+        `"${e.city}"`,
+        `"${e.device}"`,
+        `"${e.browser}"`,
+        `"${e.os}"`,
+        `"${e.referrer}"`,
+        `"${pages}"`,
+        e.durationSeconds,
+        e.isNewVisitor ? "First-time" : "Returning",
+      ];
+    });
 
     const csvContent =
       "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -246,7 +259,7 @@ export const VisitorTable: React.FC<VisitorTableProps> = ({ events }) => {
               <th scope="col" className="px-4 py-3">Device & OS</th>
               <th scope="col" className="px-4 py-3">Browser</th>
               <th scope="col" className="px-4 py-3">Referrer</th>
-              <th scope="col" className="px-4 py-3">Page Visited</th>
+              <th scope="col" className="px-4 py-3">Pages Visited</th>
               <th scope="col" className="px-4 py-3 text-right">Duration</th>
             </tr>
           </thead>
@@ -366,11 +379,55 @@ export const VisitorTable: React.FC<VisitorTableProps> = ({ events }) => {
                       </span>
                     </td>
 
-                    {/* Page Visited */}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded text-[11px]">
-                        /{event.pagePath}
-                      </span>
+                    {/* Pages Visited */}
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const pages: string[] =
+                          event.visitedPages && event.visitedPages.length > 0
+                            ? event.visitedPages
+                            : [event.pagePath ? event.pagePath.replace(/^\/+/, "") : "Home"];
+                        const isExpanded = Boolean(expandedRowIds[event.id]);
+                        const hasMoreThanTwo = pages.length > 2;
+                        const visiblePages = hasMoreThanTwo && !isExpanded ? pages.slice(0, 2) : pages;
+
+                        return (
+                          <div className="flex flex-wrap items-center gap-1.5 min-w-[170px] max-w-[320px]">
+                            {visiblePages.map((page, pIdx) => (
+                              <React.Fragment key={pIdx}>
+                                {pIdx > 0 && (
+                                  <span className="text-slate-600 text-[10px] select-none">→</span>
+                                )}
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 whitespace-nowrap">
+                                  /{page}
+                                </span>
+                              </React.Fragment>
+                            ))}
+
+                            {hasMoreThanTwo && !isExpanded && (
+                              <button
+                                type="button"
+                                onClick={() => toggleExpandPages(event.id)}
+                                title={`Click to show all ${pages.length} visited pages`}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 hover:border-purple-400 hover:text-white transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+                              >
+                                <span>...</span>
+                                <span className="text-[9px] opacity-80">(+{pages.length - 2})</span>
+                              </button>
+                            )}
+
+                            {hasMoreThanTwo && isExpanded && (
+                              <button
+                                type="button"
+                                onClick={() => toggleExpandPages(event.id)}
+                                title="Click to collapse"
+                                className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer ml-1"
+                              >
+                                Hide
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     {/* Session Duration */}

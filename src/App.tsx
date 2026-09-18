@@ -29,9 +29,21 @@ function App() {
   // Track telemetry hit when visitor navigates across views
   useEffect(() => {
     if (activeView !== "admin") {
-      trackVisitorHit(activeView);
+      let pagePath: string = activeView;
+      let pageTitle = "Home";
+      if (activeView === "hire") {
+        pageTitle = "Hire";
+      } else if (activeView === "journey") {
+        pageTitle = "Journey";
+      } else if (activeView === "project") {
+        const params = new URLSearchParams(window.location.search);
+        const projSlug = params.get("project") || (selectedProject ? selectedProject.id : "Project");
+        pageTitle = selectedProject?.title || projSlug || "Project";
+        pagePath = `project:${projSlug}`;
+      }
+      trackVisitorHit(pagePath, pageTitle);
     }
-  }, [activeView]);
+  }, [activeView, selectedProject]);
 
   const syncViewFromLocation = useCallback(() => {
     if (typeof window === "undefined") return;
