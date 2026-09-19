@@ -152,7 +152,7 @@ export class PortfolioChatbotEngine {
     const snapshot = getDynamicPortfolioSnapshot(context);
     const { profile, context: ctx } = snapshot;
 
-    let welcomeText = `Hi! 👋 I'm **${profile.shortName || profile.name}'s AI Assistant**.\n\nYou can ask me anything about my portfolio — projects, skills, experience, or just explore around.`;
+    let welcomeText = `Hi! 👋 I'm **${profile.shortName || profile.name}'s AI Assistant**.\n\nYou can ask me anything about my portfolio - projects, skills, experience, or just explore around.`;
 
     if (ctx.project) {
       welcomeText = `Hi! 👋 You are currently viewing the **${ctx.project.title}** (${ctx.project.categoryLabel}) project.\n\nAsk me anything about its architecture, stack, features, or live demo!`;
@@ -226,7 +226,7 @@ export class PortfolioChatbotEngine {
       if (ctx.project) {
         const p = ctx.project;
         let text = `### **${p.title}** (${p.categoryLabel})\n\n`;
-        if (p.subtitle) text += `*${p.subtitle}*\n\n`;
+        if (p.subtitle) text += `${p.subtitle}\n\n`;
         text += `${p.description}\n\n`;
         if (p.problem) {
           text += `**Problem Addressed:**\n${p.problem}\n\n`;
@@ -262,7 +262,7 @@ export class PortfolioChatbotEngine {
         return {
           id: `bot_${Date.now()}`,
           sender: "bot",
-          text: `You are currently viewing the main portfolio overview. Which project would you like to know about? For example: **MedAlert**, **StockPulse**, **QuickBite**, **DevFlow**, or ask *"Show Flutter projects"*!`,
+          text: `You are currently viewing the main portfolio overview. Which project would you like to know about? For example: **MedAlert**, **StockPulse**, **QuickBite**, **DevFlow**, or ask for Flutter projects!`,
           timestamp: new Date().toISOString(),
           actions: [
             { label: "Browse Projects", type: "scroll", target: "projects", primary: true },
@@ -423,7 +423,7 @@ export class PortfolioChatbotEngine {
           );
           const prioritizedTechs = [...matched, ...others].slice(0, 3).join(", ");
 
-          text += `- **${proj.title}** (${proj.categoryLabel}) — *${prioritizedTechs}*\n`;
+          text += `- **${proj.title}** (${proj.categoryLabel}) — ${prioritizedTechs}\n`;
         });
 
         return {
@@ -465,7 +465,7 @@ export class PortfolioChatbotEngine {
     if (matchedProject) {
       const p = matchedProject;
       let text = `### **${p.title}** (${p.categoryLabel})\n\n`;
-      if (p.subtitle) text += `*${p.subtitle}*\n\n`;
+      if (p.subtitle) text += `${p.subtitle}\n\n`;
       text += `${p.description}\n\n`;
       if (p.problem) {
         text += `**Problem Addressed:**\n${p.problem}\n\n`;
@@ -517,7 +517,7 @@ export class PortfolioChatbotEngine {
       let text = `### **Engineering Projects Portfolio** (${projects.length} Total)\n\n`;
       text += `Maharab has developed **${projects.length} verified projects** spanning Mobile (Flutter), Full-Stack Web (Next.js/React), Machine Learning, and IoT. Featured projects include:\n\n`;
       projects.slice(0, 4).forEach((proj) => {
-        text += `- **${proj.title}** (${proj.categoryLabel}) — *${proj.technologies.slice(0, 3).join(", ")}*\n`;
+        text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
       });
 
       return {
@@ -879,10 +879,10 @@ export class PortfolioChatbotEngine {
     const fallbackText =
       `I don't have that specific information because my knowledge is strictly limited to the verified content on **Maharab's portfolio**.\n\n` +
       `I do not invent external facts or unconfirmed details. Here is what I can assist you with:\n` +
-      `- **Projects & Case Studies** (e.g. *"Show mobile apps"*, *"Tell me about MedAlert"*)\n` +
-      `- **Technical Skills & Tools** (e.g. *"What skills does he have?"*, *"Does he know Python?"*)\n` +
-      `- **Work Experience & Education** (e.g. *"Where did he study?"*, *"Career history"*)\n` +
-      `- **Resume & Contact** (e.g. *"Download CV"*, *"How to contact?"*)`;
+      `- **Projects & Case Studies** (e.g. Show mobile apps, Tell me about MedAlert)\n` +
+      `- **Technical Skills & Tools** (e.g. What skills does he have?, Does he know Python?)\n` +
+      `- **Work Experience & Education** (e.g. Where did he study?, Career history)\n` +
+      `- **Resume & Contact** (e.g. Download CV, How to contact?)`;
 
     return {
       id: `bot_${Date.now()}`,

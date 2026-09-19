@@ -238,7 +238,9 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   };
 
   const renderInlineFormatting = (text: string) => {
-    const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+    // Strip accidental stray asterisks like *"quote"* or *text* so they never leak into UI
+    const cleanedText = text.replace(/\*(".*?")\*/g, "$1").replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "$1");
+    const parts = cleanedText.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
     return parts.map((part, i) => {
       if (part.startsWith("**") && part.endsWith("**")) {
         return (
