@@ -9,7 +9,6 @@ import {
   ActiveContext,
   getDynamicPortfolioSnapshot,
   findSkillInPortfolio,
-  searchProjects,
 } from "./chatbotKnowledge";
 import { Project } from "../data/projectsData";
 
@@ -333,13 +332,66 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 5. Specific Named Project Search ("tell me about MedAlert", "StockPulse", etc.)
+    // 5. Technology / Skill Filtering on Projects (BEFORE named project search)
+    //    "Show me Flutter projects", "React apps", "flutter all project", etc.
     // ------------------------------------------------------------------------
+    const foundTechKeyword = TECH_KEYWORDS.find((t) => q.includes(t));
+
+    if (
+      (q.includes("project") || q.includes("app") || q.includes("work") || q.includes("built") || q.includes("all") || q.includes("show")) &&
+      foundTechKeyword
+    ) {
+      // Strict tech-only filtering: only match projects whose technologies array contains the keyword
+      const matchingProjects = projects.filter((p) =>
+        p.technologies.some(
+          (t) =>
+            t.toLowerCase() === foundTechKeyword ||
+            t.toLowerCase().includes(foundTechKeyword) ||
+            foundTechKeyword.includes(t.toLowerCase())
+        )
+      );
+      if (matchingProjects.length > 0) {
+        let text = `### **${foundTechKeyword.toUpperCase()} Projects** (${matchingProjects.length} Found)\n\n`;
+        text += `Here are the engineering projects built with **${foundTechKeyword.toUpperCase()}**:\n\n`;
+        matchingProjects.slice(0, 6).forEach((proj) => {
+          text += `- **${proj.title}** (${proj.categoryLabel}) — *${proj.technologies.slice(0, 3).join(", ")}*\n`;
+        });
+
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text,
+          timestamp: new Date().toISOString(),
+          projectsList: matchingProjects.slice(0, 6),
+          actions: [
+            { label: "Browse All Projects", type: "scroll", target: "projects", primary: true },
+            { label: "View Skills", type: "scroll", target: "skills" },
+          ],
+        };
+      } else {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `No specific projects built with **${foundTechKeyword}** are currently published in the portfolio.\n\nAvailable technology categories include **React, Next.js, Flutter, Node.js, Python, Supabase, and TypeScript**.`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Browse All Projects", type: "scroll", target: "projects", primary: true }],
+        };
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // 6. Specific Named Project Search ("tell me about MedAlert", "StockPulse", etc.)
+    //    Excludes tech keyword words from title word matching to prevent false positives
+    // ------------------------------------------------------------------------
+    const techKeywordSet = new Set(TECH_KEYWORDS);
     const matchedProject = projects.find(
       (p) =>
         q.includes(p.title.toLowerCase()) ||
         q.includes(p.id.toLowerCase()) ||
-        p.title.toLowerCase().split(" ").some((word) => word.length > 3 && q.includes(word))
+        p.title
+          .toLowerCase()
+          .split(" ")
+          .some((word) => word.length > 3 && q.includes(word) && !techKeywordSet.has(word))
     );
 
     if (matchedProject) {
@@ -381,45 +433,6 @@ export class PortfolioChatbotEngine {
         projectsList: [p],
         actions,
       };
-    }
-
-    // ------------------------------------------------------------------------
-    // 6. Technology / Skill Filtering on Projects ("Show me Flutter projects", "React apps", etc.)
-    // ------------------------------------------------------------------------
-    const foundTechKeyword = TECH_KEYWORDS.find((t) => q.includes(t));
-
-    if (
-      (q.includes("project") || q.includes("app") || q.includes("work") || q.includes("built")) &&
-      foundTechKeyword
-    ) {
-      const matchingProjects = searchProjects(projects, foundTechKeyword);
-      if (matchingProjects.length > 0) {
-        let text = `### **${foundTechKeyword.toUpperCase()} Projects** (${matchingProjects.length} Found)\n\n`;
-        text += `Here are the engineering projects built with **${foundTechKeyword.toUpperCase()}**:\n\n`;
-        matchingProjects.slice(0, 4).forEach((proj) => {
-          text += `- **${proj.title}** (${proj.categoryLabel}) — *${proj.technologies.slice(0, 3).join(", ")}*\n`;
-        });
-
-        return {
-          id: `bot_${Date.now()}`,
-          sender: "bot",
-          text,
-          timestamp: new Date().toISOString(),
-          projectsList: matchingProjects.slice(0, 4),
-          actions: [
-            { label: "Browse All Projects", type: "scroll", target: "projects", primary: true },
-            { label: "View Skills", type: "scroll", target: "skills" },
-          ],
-        };
-      } else {
-        return {
-          id: `bot_${Date.now()}`,
-          sender: "bot",
-          text: `No specific projects built with **${foundTechKeyword}** are currently published in the portfolio.\n\nAvailable technology categories include **React, Next.js, Flutter, Node.js, Python, Supabase, and TypeScript**.`,
-          timestamp: new Date().toISOString(),
-          actions: [{ label: "Browse All Projects", type: "scroll", target: "projects", primary: true }],
-        };
-      }
     }
 
     // ------------------------------------------------------------------------

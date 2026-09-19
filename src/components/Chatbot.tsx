@@ -591,8 +591,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Pill Input Container */}
-            <div className="relative z-10 px-3.5 pt-2.5 pb-2 border-t border-white/10 bg-slate-950/95 backdrop-blur-md shrink-0">
+            {/* Pill Input Container — absolute last element, no gap below */}
+            <div className="relative z-10 px-3 py-2 border-t border-white/10 bg-slate-950/95 backdrop-blur-md shrink-0">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -617,16 +617,6 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   {renderIcon(FaPaperPlane, { size: 10 })}
                 </button>
               </form>
-
-              {/* Footer Caption */}
-              <div className="text-center mt-1.5 flex items-center justify-center gap-1.5 text-[9.5px] text-slate-400 font-medium">
-                <span>Powered by portfolio content</span>
-                <span>•</span>
-                <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
-                  Always up to date
-                </span>
-              </div>
             </div>
           </motion.div>
         )}
