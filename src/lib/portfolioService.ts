@@ -2194,7 +2194,7 @@ export const resolveSkillIcon = (name: string, iconName?: string, category?: str
 // ============================================================================
 export const STORAGE_SKILL_CATEGORIES_KEY = "maharab_cached_skill_categories";
 
-export const getLiveSkillCategories = async (): Promise<SkillCategory[]> => {
+export const getCachedSkillCategoriesSync = (): SkillCategory[] => {
   try {
     const cached = localStorage.getItem(STORAGE_SKILL_CATEGORIES_KEY);
     if (cached) {
@@ -2204,6 +2204,14 @@ export const getLiveSkillCategories = async (): Promise<SkillCategory[]> => {
       }
     }
   } catch (e) {}
+  return DEFAULT_SKILL_CATEGORIES;
+};
+
+export const getLiveSkillCategories = async (): Promise<SkillCategory[]> => {
+  const cached = getCachedSkillCategoriesSync();
+  if (cached !== DEFAULT_SKILL_CATEGORIES && cached.length > 0) {
+    return cached;
+  }
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -3184,7 +3192,7 @@ export const useDevelopmentProcessConfig = (): DevelopmentProcessConfig => {
         try {
           const { data, error } = await supabase
             .from("profile_info")
-            .select("development_process")
+            .select("*")
             .limit(1);
           if (!error && data && data.length > 0 && (data[0] as any)?.development_process) {
             const remote = (data[0] as any).development_process;
@@ -3354,10 +3362,13 @@ export const saveExperienceConfig = async (
 
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase
-        .from("profile_info")
-        .update({ experience_config: updated })
-        .limit(1);
+      const { data: existing } = await supabase.from("profile_info").select("id").limit(1);
+      if (existing && existing.length > 0) {
+        await supabase
+          .from("profile_info")
+          .update({ experience_config: updated })
+          .eq("id", existing[0].id);
+      }
     } catch (e) {}
   }
 
@@ -3383,7 +3394,7 @@ export const useExperienceConfig = (): ExperienceConfig => {
         try {
           const { data, error } = await supabase
             .from("profile_info")
-            .select("experience_config")
+            .select("*")
             .limit(1);
           if (!error && data && data.length > 0 && (data[0] as any)?.experience_config) {
             const remote = (data[0] as any).experience_config;
@@ -3414,4 +3425,111 @@ export const useExperienceConfig = (): ExperienceConfig => {
   }, []);
 
   return config;
+};
+
+// ============================================================================
+// Direct 1-Click Sync of All Portfolio & Admin Data to Supabase Cloud
+// ============================================================================
+export const syncAllPortfolioDataToSupabaseCloud = async (): Promise<{
+  success: boolean;
+  results: { entity: string; success: boolean; error?: string }[];
+}> => {
+  if (!isSupabaseConfigured || !supabase) {
+    return {
+      success: false,
+      results: [{ entity: "Supabase Connection", success: false, error: "Supabase client credentials not configured." }],
+    };
+  }
+
+  const results: { entity: string; success: boolean; error?: string }[] = [];
+
+  // 1. Profile Info
+  try {
+    const currentProfile = await getLiveProfile();
+    const res = await saveLiveProfile(currentProfile);
+    results.push({
+      entity: "Profile Information",
+      success: res.success && !res.error,
+      error: res.error,
+    });
+  } catch (err: any) {
+    results.push({ entity: "Profile Information", success: false, error: err.message });
+  }
+
+  // 2. Skill Categories
+  try {
+    const cats = getCachedSkillCategoriesSync();
+    const res = await saveLiveSkillCategories(cats);
+    results.push({
+      entity: "Skill Categories",
+      success: res.success && !res.error,
+      error: res.error,
+    });
+  } catch (err: any) {
+    results.push({ entity: "Skill Categories", success: false, error: err.message });
+  }
+
+  // 3. Skills
+  try {
+    const skills = getCachedSkillsSync();
+    const res = await saveLiveSkills(skills);
+    results.push({
+      entity: "Skills & Technologies",
+      success: res.success && !res.error,
+      error: res.error,
+    });
+  } catch (err: any) {
+    results.push({ entity: "Skills & Technologies", success: false, error: err.message });
+  }
+
+  // 4. Experience
+  try {
+    const exp = getCachedExperienceSync();
+    const res = await saveLiveExperience(exp);
+    results.push({
+      entity: "Work Experience",
+      success: res.success && !res.error,
+      error: res.error,
+    });
+  } catch (err: any) {
+    results.push({ entity: "Work Experience", success: false, error: err.message });
+  }
+
+  // 5. Education
+  try {
+    const edu = getCachedEducationSync();
+    const res = await saveLiveEducation(edu);
+    results.push({
+      entity: "Education",
+      success: res.success && !res.error,
+      error: res.error,
+    });
+  } catch (err: any) {
+    results.push({ entity: "Education", success: false, error: err.message });
+  }
+
+  // 6. Certificates
+  try {
+    const certs = getCachedCertificatesSync();
+    const res = await saveLiveCertificates(certs);
+    results.push({
+      entity: "Certifications",
+      success: res.success && !res.error,
+      error: res.error,
+    });
+  } catch (err: any) {
+    results.push({ entity: "Certifications", success: false, error: err.message });
+  }
+
+  // 7. Experience Config & Development Process
+  try {
+    await saveExperienceConfig(getLiveExperienceConfig());
+    await saveDevelopmentProcessConfig(getDevelopmentProcessConfig());
+    results.push({ entity: "Configurations (Experience & Workflow)", success: true });
+  } catch (err: any) {
+    results.push({ entity: "Configurations (Experience & Workflow)", success: false, error: err.message });
+  }
+
+  const allSuccess = results.every((r) => r.success);
+  return { success: allSuccess, results };
 };
