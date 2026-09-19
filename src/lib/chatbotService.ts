@@ -152,10 +152,10 @@ export class PortfolioChatbotEngine {
     const snapshot = getDynamicPortfolioSnapshot(context);
     const { profile, context: ctx } = snapshot;
 
-    let welcomeText = `Hi! 👋 I'm **${profile.shortName || profile.name}'s AI Assistant**.\n\nYou can ask me anything about my portfolio - projects, skills, experience, or just explore around.`;
+    let welcomeText = `Hi! 👋 I'm **${profile.shortName || profile.name}'s assistant**.\n\nFeel free to ask me anything about his projects, tech stack, experience, or resume!`;
 
     if (ctx.project) {
-      welcomeText = `Hi! 👋 You are currently viewing the **${ctx.project.title}** (${ctx.project.categoryLabel}) project.\n\nAsk me anything about its architecture, stack, features, or live demo!`;
+      welcomeText = `Hi! 👋 You're currently viewing **${ctx.project.title}** (${ctx.project.categoryLabel}).\n\nFeel free to ask me about its features, tech stack, architecture, or live demo!`;
     }
 
     const defaultActions: ChatAction[] = ctx.project
@@ -211,6 +211,64 @@ export class PortfolioChatbotEngine {
     const { profile, projects, skills, experience, education, certificates, process, reviews, context: ctx } = snapshot;
 
     // ------------------------------------------------------------------------
+    // A. Friendly Human Greeting ("hi", "hello", "hey", "salam", "kemon acho", etc.)
+    // ------------------------------------------------------------------------
+    const isGreeting =
+      q === "hi" ||
+      q === "hello" ||
+      q === "hey" ||
+      q === "salam" ||
+      q.includes("assalamu alaikum") ||
+      q.includes("kemon acho") ||
+      q.includes("kemon asen") ||
+      q.includes("ki obostha") ||
+      q.includes("ki khobor") ||
+      q.startsWith("hi ") ||
+      q.startsWith("hello ") ||
+      q.startsWith("hey ") ||
+      q.includes("good morning") ||
+      q.includes("good afternoon") ||
+      q.includes("good evening");
+
+    if (isGreeting) {
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text: `Hi there! 👋 I'm **${profile.shortName || profile.name}'s assistant**.\n\nHow can I help you today? You can ask me about his projects, tech stack, work experience, or how to get in touch!`,
+        timestamp: new Date().toISOString(),
+        actions: [
+          { label: "🚀 Browse Projects", type: "scroll", target: "projects", primary: true },
+          { label: "🛠️ View Skills", type: "scroll", target: "skills" },
+          { label: "📄 Download CV", type: "url", target: profile.resumeUrl },
+          { label: "📬 Contact Maharab", type: "scroll", target: "contact" },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // B. Gratitude / Polite Response ("thank you", "thanks", "dhonnobad", etc.)
+    // ------------------------------------------------------------------------
+    if (
+      q === "thanks" ||
+      q === "thank you" ||
+      q.includes("thank you") ||
+      q.includes("thanks a lot") ||
+      q.includes("dhonnobad") ||
+      q.includes("shukriya")
+    ) {
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text: `You're very welcome! 😊 If you have any other questions about Maharab's work or want to get in touch with him, I'm right here.`,
+        timestamp: new Date().toISOString(),
+        actions: [
+          { label: "🚀 Browse Projects", type: "scroll", target: "projects" },
+          { label: "📬 Contact Maharab", type: "scroll", target: "contact", primary: true },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
     // 1. Context-Aware Relative Query ("this project", "this app", "this", "eita", "ei project")
     // ------------------------------------------------------------------------
     const isRelativeProjectQuery =
@@ -229,19 +287,19 @@ export class PortfolioChatbotEngine {
         if (p.subtitle) text += `${p.subtitle}\n\n`;
         text += `${p.description}\n\n`;
         if (p.problem) {
-          text += `**Problem Addressed:**\n${p.problem}\n\n`;
+          text += `**The Challenge:**\n${p.problem}\n\n`;
         }
         if (p.solution) {
-          text += `**Engineered Solution:**\n${p.solution}\n\n`;
+          text += `**How It Was Solved:**\n${p.solution}\n\n`;
         }
         if (p.technologies && p.technologies.length > 0) {
-          text += `**Technologies:** ${p.technologies.join(", ")}\n\n`;
+          text += `**Tech Stack:** ${p.technologies.join(", ")}\n\n`;
         }
         if (p.features && p.features.length > 0) {
-          text += `**Key Features:**\n${p.features.slice(0, 4).map((f) => `- ${f}`).join("\n")}\n\n`;
+          text += `**Key Highlights:**\n${p.features.slice(0, 4).map((f) => `- ${f}`).join("\n")}\n\n`;
         }
         if (p.results && p.results.length > 0) {
-          text += `**Results & Impact:**\n${p.results.slice(0, 3).map((r) => `- ${r}`).join("\n")}\n\n`;
+          text += `**Impact & Results:**\n${p.results.slice(0, 3).map((r) => `- ${r}`).join("\n")}\n\n`;
         }
 
         return {
@@ -284,7 +342,7 @@ export class PortfolioChatbotEngine {
       q.includes("pdf")
     ) {
       const url = profile.resumeUrl || "";
-      const text = `You can view and download **${profile.name}'s official resume (CV)** directly.\n\nIt outlines his full software engineering background, B.Sc. in CSE at BUBT, published projects, and technical proficiencies.`;
+      const text = `Here is **${profile.name}'s resume (CV)**! 📄\n\nYou can view or download it directly using the button below. It outlines his full background in Computer Science at BUBT, production projects, and core technical skills.`;
       return {
         id: `bot_${Date.now()}`,
         sender: "bot",
@@ -315,20 +373,16 @@ export class PortfolioChatbotEngine {
       q.includes("reach") ||
       q.includes("jogajog")
     ) {
-      let text = `### **Contact & Availability**\n\n`;
-      text += `**Name:** ${profile.name}\n`;
-      text += `**Title:** ${profile.title}\n`;
-      text += `**Email:** [${profile.email}](mailto:${profile.email})\n`;
+      let text = `Here is how you can easily connect with **${profile.name}**:\n\n`;
+      text += `- 📧 **Email:** [${profile.email}](mailto:${profile.email})\n`;
       if (profile.whatsappNumber) {
-        text += `**WhatsApp:** [+880 15862 82609](${profile.whatsappUrl || `https://wa.me/${profile.whatsappNumber}`})\n`;
+        text += `- 💬 **WhatsApp:** [+880 15862 82609](${profile.whatsappUrl || `https://wa.me/${profile.whatsappNumber}`})\n`;
       }
-      text += `**Location:** ${profile.location}\n`;
+      text += `- 📍 **Location:** ${profile.location}\n`;
       if (profile.workingHours?.enabled) {
-        text += `**Status:** ${profile.workingHours.onlineLabel || "Available for Work"} (Timezone: ${profile.workingHours.timezone || "Asia/Dhaka"})\n`;
+        text += `- ⚡ **Status:** ${profile.workingHours.onlineLabel || "Available for Work"}\n`;
       }
-      text += `\n**Social Profiles:**\n`;
-      if (profile.socials?.github) text += `- GitHub: [github.com/Maharab2134](${profile.socials.github})\n`;
-      if (profile.socials?.linkedin) text += `- LinkedIn: [LinkedIn Profile](${profile.socials.linkedin})\n`;
+      text += `\nFeel free to drop an email or reach out on WhatsApp anytime!`;
 
       const actions: ChatAction[] = [
         { label: "📬 Open Contact Section", type: "scroll", target: "contact", primary: true },
@@ -363,14 +417,13 @@ export class PortfolioChatbotEngine {
       q.includes("ke tumi") ||
       q.includes("maharab ke")
     ) {
-      let text = `### **About ${profile.name}**\n\n`;
-      text += `**${profile.title}** based in **${profile.location}**.\n\n`;
+      let text = `**${profile.name}** is a **${profile.title}** based in **${profile.location}**.\n\n`;
       text += `${profile.bio}\n\n`;
-      text += `**Key Highlights:**\n`;
-      text += `- **Experience:** ${profile.stats.yearsExperience} in production full-stack & mobile engineering\n`;
-      text += `- **Projects Delivered:** ${profile.stats.projectsCompleted} across web, mobile, ML, and IoT\n`;
-      text += `- **Satisfaction Rate:** ${profile.stats.satisfactionRate}\n`;
-      text += `- **Education:** B.Sc. in Computer Science & Engineering at BUBT\n`;
+      text += `**Quick Snapshot:**\n`;
+      text += `- 🚀 **${profile.stats.projectsCompleted} Projects** completed across mobile, web, and IoT\n`;
+      text += `- 💼 **${profile.stats.yearsExperience} Experience** in building modern apps\n`;
+      text += `- 🎓 **B.Sc. in CSE** at BUBT\n`;
+      text += `- ⭐ **${profile.stats.satisfactionRate} Satisfaction** from clients and teammates\n`;
 
       return {
         id: `bot_${Date.now()}`,
@@ -405,8 +458,7 @@ export class PortfolioChatbotEngine {
     ) {
       const matchingProjects = searchProjectsByTechnology(projects, foundTechKeyword);
       if (matchingProjects.length > 0) {
-        let text = `### **${foundTechKeyword.toUpperCase()} Projects** (${matchingProjects.length} Found)\n\n`;
-        text += `Here are the engineering projects built with **${foundTechKeyword.toUpperCase()}**:\n\n`;
+        let text = `Found **${matchingProjects.length} project(s)** built with **${foundTechKeyword.toUpperCase()}**:\n\n`;
         matchingProjects.slice(0, 6).forEach((proj) => {
           // Prioritize showing the searched technology first
           const matched = proj.technologies.filter(
@@ -425,6 +477,7 @@ export class PortfolioChatbotEngine {
 
           text += `- **${proj.title}** (${proj.categoryLabel}) — ${prioritizedTechs}\n`;
         });
+        text += `\nClick any project card below to see full details or live demo!`;
 
         return {
           id: `bot_${Date.now()}`,
@@ -441,7 +494,7 @@ export class PortfolioChatbotEngine {
         return {
           id: `bot_${Date.now()}`,
           sender: "bot",
-          text: `No specific projects built with **${foundTechKeyword.toUpperCase()}** were found in the current portfolio.\n\nAvailable technology categories include **Flutter, React, Next.js, Node.js, Python, Supabase, and TypeScript**.`,
+          text: `I couldn't find any projects specifically built with **${foundTechKeyword.toUpperCase()}** in the portfolio.\n\nMaharab primarily focuses on **Flutter, React, Next.js, Node.js, Python, and TypeScript**.`,
           timestamp: new Date().toISOString(),
           actions: [{ label: "Browse All Projects", type: "scroll", target: "projects", primary: true }],
         };
@@ -468,19 +521,19 @@ export class PortfolioChatbotEngine {
       if (p.subtitle) text += `${p.subtitle}\n\n`;
       text += `${p.description}\n\n`;
       if (p.problem) {
-        text += `**Problem Addressed:**\n${p.problem}\n\n`;
+        text += `**The Challenge:**\n${p.problem}\n\n`;
       }
       if (p.solution) {
-        text += `**Engineered Solution:**\n${p.solution}\n\n`;
+        text += `**How It Was Solved:**\n${p.solution}\n\n`;
       }
       if (p.technologies && p.technologies.length > 0) {
-        text += `**Technologies:** ${p.technologies.join(", ")}\n\n`;
+        text += `**Tech Stack:** ${p.technologies.join(", ")}\n\n`;
       }
       if (p.features && p.features.length > 0) {
-        text += `**Key Features:**\n${p.features.slice(0, 4).map((f) => `- ${f}`).join("\n")}\n\n`;
+        text += `**Key Highlights:**\n${p.features.slice(0, 4).map((f) => `- ${f}`).join("\n")}\n\n`;
       }
       if (p.results && p.results.length > 0) {
-        text += `**Results & Impact:**\n${p.results.slice(0, 3).map((r) => `- ${r}`).join("\n")}\n\n`;
+        text += `**Impact & Results:**\n${p.results.slice(0, 3).map((r) => `- ${r}`).join("\n")}\n\n`;
       }
 
       const actions: ChatAction[] = [];
@@ -514,11 +567,11 @@ export class PortfolioChatbotEngine {
       q.includes("works") ||
       q.includes("case studies")
     ) {
-      let text = `### **Engineering Projects Portfolio** (${projects.length} Total)\n\n`;
-      text += `Maharab has developed **${projects.length} verified projects** spanning Mobile (Flutter), Full-Stack Web (Next.js/React), Machine Learning, and IoT. Featured projects include:\n\n`;
+      let text = `Maharab has built **${projects.length} verified projects** spanning mobile apps, full-stack web platforms, machine learning, and IoT hardware.\n\nHere are some featured highlights:\n\n`;
       projects.slice(0, 4).forEach((proj) => {
         text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
       });
+      text += `\nYou can explore the project cards below or visit the Projects section!`;
 
       return {
         id: `bot_${Date.now()}`,
@@ -539,18 +592,16 @@ export class PortfolioChatbotEngine {
     if (foundTechKeyword) {
       const result = findSkillInPortfolio(skills, projects, foundTechKeyword);
       if (result.found) {
-        let text = `### **${foundTechKeyword.toUpperCase()} Expertise**\n\n`;
-        if (result.skillItem) {
-          text += `**Status:** Verified in portfolio skills (${result.skillItem.level} level, Category: ${result.skillItem.category}).\n\n`;
-        }
+        let text = `Yes! **${foundTechKeyword.toUpperCase()}** is one of Maharab's verified skills (${result.skillItem ? `${result.skillItem.level} level` : "actively used"}).\n\n`;
         if (result.projectsUsingIt.length > 0) {
-          text += `**Used in ${result.projectsUsingIt.length} Project(s):**\n`;
+          text += `He has used it in **${result.projectsUsingIt.length} project(s)**, including:\n`;
           text += result.projectsUsingIt
             .slice(0, 3)
             .map((p) => `- **${p.title}** (${p.categoryLabel})`)
             .join("\n");
           text += "\n\n";
         }
+        text += `Feel free to explore those projects below or browse the full Skills section!`;
 
         const actions: ChatAction[] = result.projectsUsingIt.slice(0, 2).map((p) => ({
           label: `View ${p.title}`,
@@ -587,13 +638,13 @@ export class PortfolioChatbotEngine {
       const database = skills.filter((s) => s.category === "database").map((s) => s.name);
       const tools = skills.filter((s) => s.category === "tools" || s.category === "devops").map((s) => s.name);
 
-      let text = `### **Technical Skills & Stack**\n\n`;
-      if (frontend.length > 0) text += `**Frontend:** ${frontend.slice(0, 6).join(", ")}\n`;
-      if (mobile.length > 0) text += `**Mobile:** ${mobile.join(", ")}\n`;
-      if (backend.length > 0) text += `**Backend & APIs:** ${backend.slice(0, 6).join(", ")}\n`;
-      if (database.length > 0) text += `**Databases & Cloud:** ${database.slice(0, 5).join(", ")}\n`;
-      if (tools.length > 0) text += `**Tools & DevOps:** ${tools.slice(0, 6).join(", ")}\n`;
-      text += `\nTotal verified skills cataloged: **${skills.length}**.`;
+      let text = `Here is a quick overview of Maharab's core technical stack:\n\n`;
+      if (mobile.length > 0) text += `- 📱 **Mobile:** ${mobile.join(", ")}\n`;
+      if (frontend.length > 0) text += `- 🌐 **Frontend:** ${frontend.slice(0, 6).join(", ")}\n`;
+      if (backend.length > 0) text += `- ⚙️ **Backend & APIs:** ${backend.slice(0, 6).join(", ")}\n`;
+      if (database.length > 0) text += `- 🗄️ **Databases & Cloud:** ${database.slice(0, 5).join(", ")}\n`;
+      if (tools.length > 0) text += `- 🛠️ **Tools & DevOps:** ${tools.slice(0, 6).join(", ")}\n`;
+      text += `\nNeed someone with a specific tool or language? Just ask me directly!`;
 
       return {
         id: `bot_${Date.now()}`,
@@ -633,11 +684,11 @@ export class PortfolioChatbotEngine {
         };
       }
 
-      let text = `### **Career Experience & Roles**\n\n`;
+      let text = `Here is Maharab's work and professional experience:\n\n`;
       text += experience
         .map((exp) => {
-          let item = `**${exp.role}** at **${exp.company}**\n`;
-          item += `*${exp.period} • ${exp.location || "Remote / On-site"}*\n`;
+          let item = `💼 **${exp.role}** at **${exp.company}**\n`;
+          item += `${exp.period} • ${exp.location || "Remote / On-site"}\n`;
           item += `${exp.description}\n`;
           if (exp.technologies && exp.technologies.length > 0) {
             item += `**Tech:** ${exp.technologies.join(", ")}\n`;
@@ -673,11 +724,11 @@ export class PortfolioChatbotEngine {
       q.includes("school") ||
       q.includes("cgpa")
     ) {
-      let text = `### **Academic Background & Education**\n\n`;
+      let text = `Here is Maharab's academic background:\n\n`;
       text += education
         .map((edu) => {
-          let item = `**${edu.degree}**\n`;
-          item += `*${edu.institution} (${edu.period})*\n`;
+          let item = `🎓 **${edu.degree}**\n`;
+          item += `${edu.institution} (${edu.period})\n`;
           item += `${edu.description}\n`;
           if (edu.highlights && edu.highlights.length > 0) {
             item += `**Highlights:**\n${edu.highlights.map((h) => `- ${h}`).join("\n")}\n`;
@@ -708,10 +759,10 @@ export class PortfolioChatbotEngine {
       q.includes("awards") ||
       q.includes("licenses")
     ) {
-      let text = `### **Certificates & Credentials** (${certificates.length} Total)\n\n`;
+      let text = `Here are Maharab's verified certifications and credentials:\n\n`;
       text += certificates
         .slice(0, 4)
-        .map((c) => `- **${c.title}** issued by **${c.issuer}** (${c.year}) • *${c.type}*`)
+        .map((c) => `- 🏆 **${c.title}** — ${c.issuer} (${c.year}) • ${c.type}`)
         .join("\n");
 
       const actions: ChatAction[] = [
@@ -741,8 +792,7 @@ export class PortfolioChatbotEngine {
       q.includes("services") ||
       q.includes("engineering flow")
     ) {
-      let text = `### **Engineering Methodology & Workflow**\n\n`;
-      text += `Maharab follows a disciplined 5-stage lifecycle for every project:\n\n`;
+      let text = `Here is how Maharab approaches and delivers software projects:\n\n`;
       text += process.steps
         .map((s, idx) => `${idx + 1}. **${s.title}** (${s.estimatedDuration || "Phase"}): ${s.description}`)
         .join("\n\n");
@@ -769,8 +819,7 @@ export class PortfolioChatbotEngine {
       q.includes("rating") ||
       q.includes("client")
     ) {
-      let text = `### **Client Reviews & Feedback**\n\n`;
-      text += `Maharab maintains a **${profile.stats.satisfactionRate} satisfaction rate** with verified project reviews.\n\n`;
+      let text = `Here is what clients and collaborators say about working with Maharab (${profile.stats.satisfactionRate} satisfaction rate):\n\n`;
       if (reviews.length > 0) {
         text += `**Recent Feedback:**\n`;
         text += reviews
