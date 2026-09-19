@@ -260,53 +260,55 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
   return (
     <>
-      {/* Floating Launcher Button - Positioned directly above SmartScrollButton */}
-      <div className="fixed bottom-20 sm:bottom-22 right-6 z-40 pointer-events-auto flex items-center gap-3">
-        {/* Prototype-style Speech Bubble Callout */}
-        <motion.div
-          initial={{ opacity: 0, x: 8, scale: 0.92 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="hidden sm:flex flex-col items-end relative pointer-events-none"
-        >
-          <div className="relative px-3.5 py-2 rounded-2xl bg-slate-900/95 border border-purple-500/30 shadow-xl shadow-purple-950/50 text-right backdrop-blur-xl">
-            <span className="text-[11px] text-slate-300 font-medium block leading-tight">
-              Have a question?
-            </span>
-            <span className="text-[12px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-indigo-300 to-cyan-300 leading-tight">
-              Ask Maharab!
-            </span>
-            {/* Arrow tail */}
-            <span className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 bg-slate-900 border-t border-r border-purple-500/30 rotate-45" />
-          </div>
-        </motion.div>
+      {/* Floating Launcher Button - Positioned with clear gap directly above SmartScrollButton */}
+      {!isOpen && (
+        <div className="fixed bottom-[96px] sm:bottom-[100px] right-6 z-40 pointer-events-auto flex items-center gap-3">
+          {/* Prototype-style Speech Bubble Callout */}
+          <motion.div
+            initial={{ opacity: 0, x: 8, scale: 0.92 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="hidden sm:flex flex-col items-end relative pointer-events-none"
+          >
+            <div className="relative px-3.5 py-2 rounded-2xl bg-slate-900/95 border border-purple-500/30 shadow-xl shadow-purple-950/50 text-right backdrop-blur-xl">
+              <span className="text-[11px] text-slate-300 font-medium block leading-tight">
+                Have a question?
+              </span>
+              <span className="text-[12px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-indigo-300 to-cyan-300 leading-tight">
+                Ask Maharab!
+              </span>
+              {/* Arrow tail */}
+              <span className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 bg-slate-900 border-t border-r border-purple-500/30 rotate-45" />
+            </div>
+          </motion.div>
 
-        {/* Floating Robot Launcher Button */}
-        <motion.button
-          onClick={() => setIsOpen(!isOpen)}
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          aria-label="Open Ask Maharab AI Assistant"
-          className="relative group w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-950/90 border border-purple-500/40 p-2 shadow-xl shadow-purple-950/60 backdrop-blur-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:border-cyan-400 hover:shadow-cyan-500/30"
-        >
-          {/* Ambient Glow */}
-          <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 opacity-60 blur-md group-hover:opacity-100 transition duration-500 -z-10 animate-pulse" />
+          {/* Floating Robot Launcher Button */}
+          <motion.button
+            onClick={() => setIsOpen(true)}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            aria-label="Open Ask Maharab AI Assistant"
+            className="relative group w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-950/90 border border-purple-500/40 p-2 shadow-xl shadow-purple-950/60 backdrop-blur-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:border-cyan-400 hover:shadow-cyan-500/30"
+          >
+            {/* Ambient Glow */}
+            <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 opacity-60 blur-md group-hover:opacity-100 transition duration-500 -z-10 animate-pulse" />
 
-          {/* Robot Icon Image */}
-          <img
-            src="/chatbot.png"
-            alt="Ask Maharab"
-            className="w-full h-full object-contain rounded-full"
-          />
+            {/* Robot Icon Image */}
+            <img
+              src="/chatbot.png"
+              alt="Ask Maharab"
+              className="w-full h-full object-contain rounded-full"
+            />
 
-          {/* Red / Coral Notification Dot */}
-          <span
-            className={`absolute top-0 right-0 w-3.5 h-3.5 bg-rose-500 border-2 border-slate-950 rounded-full shadow-sm ${
-              hasUnread ? "animate-bounce" : ""
-            }`}
-          />
-        </motion.button>
-      </div>
+            {/* Red / Coral Notification Dot */}
+            <span
+              className={`absolute top-0 right-0 w-3.5 h-3.5 bg-rose-500 border-2 border-slate-950 rounded-full shadow-sm ${
+                hasUnread ? "animate-bounce" : ""
+              }`}
+            />
+          </motion.button>
+        </div>
+      )}
 
       {/* Floating Chat Window Modal */}
       <AnimatePresence>
@@ -316,18 +318,18 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="fixed bottom-24 sm:bottom-28 right-3 sm:right-6 z-50 w-[95vw] sm:w-[420px] h-[600px] max-h-[82vh] rounded-3xl bg-slate-950/95 border border-slate-800/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/50 flex flex-col overflow-hidden text-slate-100"
+            className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-50 w-[95vw] sm:w-[410px] h-[550px] max-h-[calc(100vh-2.5rem)] rounded-3xl bg-slate-950/95 border border-slate-800/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 flex flex-col overflow-hidden text-slate-100"
           >
             {/* Ambient Background Glows */}
             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
             <div className="absolute -top-20 -right-20 w-44 h-44 rounded-full bg-purple-600/25 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-20 -left-20 w-44 h-44 rounded-full bg-cyan-600/20 blur-3xl pointer-events-none" />
 
-            {/* Prototype Header */}
-            <div className="relative z-10 px-4 py-3.5 border-b border-white/10 bg-slate-900/80 backdrop-blur-md flex items-center justify-between">
+            {/* Prototype Header (Always visible at top of modal) */}
+            <div className="sticky top-0 z-20 px-4 py-3 border-b border-white/10 bg-slate-900/95 backdrop-blur-md flex items-center justify-between shrink-0 shadow-sm">
               <div className="flex items-center gap-3">
                 {/* Developer Profile Avatar with Online Dot */}
-                <div className="relative w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 via-indigo-500 to-cyan-400 p-[1.5px] shadow-md flex-shrink-0">
+                <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-purple-500 via-indigo-500 to-cyan-400 p-[1.5px] shadow-md flex-shrink-0">
                   <img
                     src="/images/img.jpg"
                     alt="Maharab"
@@ -336,7 +338,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                       (e.target as HTMLImageElement).src = "/chatbot.png";
                     }}
                   />
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-slate-950 rounded-full shadow-sm" />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full shadow-sm" />
                 </div>
 
                 {/* Name & Title */}
@@ -344,7 +346,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   <h3 className="text-sm font-bold text-white tracking-wide leading-tight">
                     Ask Maharab
                   </h3>
-                  <p className="text-[11px] text-slate-400 font-medium leading-tight">
+                  <p className="text-[10px] text-slate-400 font-medium leading-tight">
                     Portfolio Assistant
                   </p>
                 </div>
@@ -358,7 +360,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   aria-label="Reset chat"
                   className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors"
                 >
-                  {renderIcon(FaRedo, { size: 12 })}
+                  {renderIcon(FaRedo, { size: 11 })}
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -366,15 +368,15 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   aria-label="Minimize chat"
                   className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors"
                 >
-                  {renderIcon(FaMinus, { size: 12 })}
+                  {renderIcon(FaMinus, { size: 11 })}
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
                   title="Close Assistant (Esc)"
                   aria-label="Close chat"
-                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-300 text-slate-200 transition-colors"
                 >
-                  {renderIcon(FaTimes, { size: 13 })}
+                  {renderIcon(FaTimes, { size: 15 })}
                 </button>
               </div>
             </div>
@@ -505,8 +507,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                     </div>
                   )}
 
-                  {/* Interactive Action Pills */}
-                  {msg.actions && msg.actions.length > 0 && (
+                  {/* Interactive Action Pills (hidden if quick action grid is displayed) */}
+                  {msg.actions && msg.actions.length > 0 && !msg.showQuickActionGrid && (
                     <div className="flex flex-wrap gap-1.5 mt-2 max-w-[95%]">
                       {msg.actions.map((act, aIdx) => (
                         <button

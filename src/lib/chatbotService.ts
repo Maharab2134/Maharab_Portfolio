@@ -132,14 +132,7 @@ export class PortfolioChatbotEngine {
             : []),
           { label: "View All Projects", type: "scroll", target: "projects" },
         ]
-      : [
-          { label: "🚀 Top Projects", type: "scroll", target: "projects" },
-          { label: "🛠️ Key Skills", type: "scroll", target: "skills" },
-          { label: "💼 Experience", type: "scroll", target: "experience" },
-          { label: "🎓 Education", type: "scroll", target: "education" },
-          { label: "📄 Download CV", type: "url", target: profile.resumeUrl },
-          { label: "📬 Contact Maharab", type: "scroll", target: "contact", primary: true },
-        ];
+      : [];
 
     return {
       id: `bot_${Date.now()}_init`,
@@ -746,14 +739,6 @@ export class PortfolioChatbotEngine {
         text: `I'm your personal interactive guide to Maharab's portfolio! Select any topic below or ask me directly:`,
         timestamp: new Date().toISOString(),
         showQuickActionGrid: true,
-        actions: [
-          { label: "🚀 Projects", type: "scroll", target: "projects" },
-          { label: "🛠️ Skills", type: "scroll", target: "skills" },
-          { label: "💼 Experience", type: "scroll", target: "experience" },
-          { label: "🎓 Education", type: "scroll", target: "education" },
-          { label: "📄 Download CV", type: "url", target: profile.resumeUrl },
-          { label: "📬 Contact", type: "scroll", target: "contact", primary: true },
-        ],
       };
     }
 
