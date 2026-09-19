@@ -24,6 +24,14 @@ const Education: React.FC = () => {
     return () => window.removeEventListener("portfolio_education_updated", fetchEdu);
   }, []);
 
+  const visibleEducation = educationList.filter(
+    (edu) => edu.isActive !== false
+  );
+
+  if (visibleEducation.length === 0) {
+    return null;
+  }
+
   return (
     <section
       id="education"
@@ -57,7 +65,7 @@ const Education: React.FC = () => {
 
         {/* Timeline Container */}
         <div className="relative pl-6 sm:pl-10 space-y-10 border-l border-white/10 ml-4 sm:ml-8">
-          {educationList.map((edu, index) => (
+          {visibleEducation.map((edu, index) => (
             <motion.div
               key={edu.degree}
               initial={{ opacity: 0, x: -30 }}

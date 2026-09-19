@@ -1586,6 +1586,7 @@ export const getLiveEducation = async (): Promise<EducationItem[]> => {
           period: d.period || "",
           description: d.description || "",
           highlights: Array.isArray(d.highlights) ? d.highlights : [],
+          isActive: d.is_active !== undefined ? d.is_active : (d.isActive !== undefined ? d.isActive : true),
         }));
         try {
           localStorage.setItem("maharab_cached_education", JSON.stringify(mapped));
@@ -1618,6 +1619,7 @@ export const saveLiveEducation = async (
         period: edu.period,
         description: edu.description,
         highlights: edu.highlights || [],
+        is_active: edu.isActive !== false,
         order_index: idx,
       }));
 

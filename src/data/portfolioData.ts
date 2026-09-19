@@ -4,6 +4,7 @@ export interface EducationItem {
   period: string;
   description: string;
   highlights: string[];
+  isActive?: boolean;
 }
 
 export interface ExperienceItem {
@@ -122,6 +123,7 @@ export const EDUCATION_DATA: EducationItem[] = [
       "BUBT IT Club Active Member & Technical Contributor",
       "Core coursework in Object-Oriented Programming, System Design, and Web Architectures",
     ],
+    isActive: true,
   },
   {
     degree: "Higher Secondary Certificate (HSC) — Science",
@@ -133,6 +135,7 @@ export const EDUCATION_DATA: EducationItem[] = [
       "Graduated with excellent GPA in Science division",
       "Member of Regional Science and Tech Club",
     ],
+    isActive: true,
   },
   {
     degree: "Secondary School Certificate (SSC) — Science",
@@ -144,6 +147,7 @@ export const EDUCATION_DATA: EducationItem[] = [
       "Graduated with outstanding academic results",
       "Award winner in regional science and mathematics fairs",
     ],
+    isActive: true,
   },
 ];
 

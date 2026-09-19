@@ -11,6 +11,10 @@ import {
   FaTrash,
   FaCertificate,
   FaExternalLinkAlt,
+  FaEye,
+  FaEyeSlash,
+  FaArrowUp,
+  FaArrowDown,
 } from "react-icons/fa";
 import {
   saveLiveEducation,
@@ -44,6 +48,7 @@ export const EducationTab: React.FC<EducationTabProps> = ({
     period: "",
     description: "",
     highlights: "",
+    isActive: true,
   });
 
   // Certificate state
@@ -71,6 +76,7 @@ export const EducationTab: React.FC<EducationTabProps> = ({
       period: "",
       description: "",
       highlights: "",
+      isActive: true,
     });
   };
 
@@ -85,6 +91,7 @@ export const EducationTab: React.FC<EducationTabProps> = ({
       period: item.period || "",
       description: item.description || "",
       highlights: Array.isArray(item.highlights) ? item.highlights.join("\n") : "",
+      isActive: item.isActive !== false,
     });
   };
 
@@ -101,6 +108,7 @@ export const EducationTab: React.FC<EducationTabProps> = ({
       period: eduForm.period.trim() || "2024 - Present",
       description: eduForm.description.trim(),
       highlights: getFeatureList(eduForm.highlights),
+      isActive: eduForm.isActive,
     };
 
     let updatedList: any[];
@@ -145,6 +153,51 @@ export const EducationTab: React.FC<EducationTabProps> = ({
       setTimeout(() => setEduToast(null), 3000);
     } catch (err: any) {
       alert("Failed to delete degree: " + err.message);
+    } finally {
+      setEduSaving(false);
+    }
+  };
+
+  const handleToggleDegreeActive = async (idx: number) => {
+    const item = educationList[idx];
+    if (!item) return;
+
+    const updated = [...educationList];
+    const newStatus = item.isActive === false ? true : false;
+    updated[idx] = { ...item, isActive: newStatus };
+
+    setEducationList(updated);
+    setEduSaving(true);
+    try {
+      await saveLiveEducation(updated);
+      setEduToast({
+        message: `"${item.degree}" is now ${newStatus ? "ACTIVE (visible)" : "INACTIVE (hidden)"}.`,
+        type: "success",
+      });
+      setTimeout(() => setEduToast(null), 3000);
+    } catch (err: any) {
+      alert("Failed to update degree status: " + err.message);
+    } finally {
+      setEduSaving(false);
+    }
+  };
+
+  const handleMoveDegree = async (index: number, direction: "up" | "down") => {
+    const targetIdx = direction === "up" ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= educationList.length) return;
+
+    const updated = [...educationList];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(targetIdx, 0, moved);
+
+    setEducationList(updated);
+    setEduSaving(true);
+    try {
+      await saveLiveEducation(updated);
+      setEduToast({ message: "Degree timeline order updated!", type: "success" });
+      setTimeout(() => setEduToast(null), 3000);
+    } catch (err: any) {
+      alert("Failed to reorder degree: " + err.message);
     } finally {
       setEduSaving(false);
     }
@@ -434,6 +487,20 @@ export const EducationTab: React.FC<EducationTabProps> = ({
               />
             </div>
 
+            {/* Active / Inactive checkbox */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/10">
+              <input
+                type="checkbox"
+                id="isActiveDegree"
+                checked={eduForm.isActive}
+                onChange={(e) => setEduForm({ ...eduForm, isActive: e.target.checked })}
+                className="w-4 h-4 rounded text-cyan-500 bg-slate-800 border-white/20 focus:ring-cyan-500 cursor-pointer"
+              />
+              <label htmlFor="isActiveDegree" className="text-xs text-slate-300 cursor-pointer">
+                <span className="font-semibold text-white">Degree Active</span> &mdash; When checked, this academic program is visible on the public website.
+              </label>
+            </div>
+
             <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/[0.08]">
               <button
                 type="button"
@@ -464,66 +531,121 @@ export const EducationTab: React.FC<EducationTabProps> = ({
               <p className="text-xs text-slate-400">No degrees added yet. Click "+ Add Degree" to add your first degree.</p>
             </div>
           ) : (
-            educationList.map((edu, idx) => (
-              <div
-                key={idx}
-                className="p-5 rounded-2xl border border-white/[0.08] bg-[#111726]/75 backdrop-blur-sm space-y-3 shadow-lg hover:border-indigo-500/30 transition-all group"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
-                        {edu.degree}
-                      </h4>
-                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
-                        {edu.period}
-                      </span>
+            educationList.map((edu, idx) => {
+              const isItemActive = edu.isActive !== false;
+              return (
+                <div
+                  key={idx}
+                  className={`p-5 rounded-2xl border transition-all space-y-3 shadow-lg group ${
+                    isItemActive
+                      ? "bg-[#111726]/75 border-white/[0.08] hover:border-indigo-500/30"
+                      : "bg-red-950/10 border-red-500/20 opacity-70"
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
+                          {edu.degree}
+                        </h4>
+                        <span
+                          className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${
+                            isItemActive
+                              ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+                              : "bg-rose-500/10 text-rose-300 border-rose-500/20"
+                          }`}
+                        >
+                          {isItemActive ? "ACTIVE" : "INACTIVE"}
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
+                          {edu.period}
+                        </span>
+                      </div>
+                      <p className="text-xs font-medium text-cyan-300 mt-0.5">{edu.institution}</p>
                     </div>
-                    <p className="text-xs font-medium text-cyan-300 mt-0.5">{edu.institution}</p>
-                  </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEditDegree(idx)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-white/[0.04] hover:bg-indigo-500/20 text-slate-300 hover:text-indigo-200 border border-white/[0.08] hover:border-indigo-500/40 transition-all cursor-pointer"
-                    >
-                      {renderIcon(FaEdit, { size: 11 })}
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteDegree(idx)}
-                      className="p-2 rounded-xl text-slate-400 hover:text-rose-400 bg-white/[0.04] hover:bg-rose-500/15 border border-white/[0.08] hover:border-rose-500/30 transition-all cursor-pointer"
-                      title="Delete Degree"
-                    >
-                      {renderIcon(FaTrash, { size: 11 })}
-                    </button>
-                  </div>
-                </div>
-
-                {edu.description && (
-                  <p className="text-xs text-slate-400 leading-relaxed font-light">
-                    {edu.description}
-                  </p>
-                )}
-
-                {/* Highlights pills */}
-                {Array.isArray(edu.highlights) && edu.highlights.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/[0.06]">
-                    {edu.highlights.map((hl: string, hIdx: number) => (
-                      <span
-                        key={hIdx}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] bg-white/[0.03] border border-white/[0.06] text-slate-300"
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                      {/* Active/Inactive Toggle */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleDegreeActive(idx)}
+                        disabled={eduSaving}
+                        className={`p-2 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
+                          isItemActive
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
+                            : "bg-slate-800 border-white/10 text-slate-400 hover:text-white"
+                        }`}
+                        title={isItemActive ? "Click to set Inactive" : "Click to set Active"}
                       >
-                        <span className="text-indigo-400">✓</span>
-                        <span>{hl}</span>
-                      </span>
-                    ))}
+                        {isItemActive
+                          ? renderIcon(FaEye, { size: 12 })
+                          : renderIcon(FaEyeSlash, { size: 12 })}
+                      </button>
+
+                      {/* Move Up */}
+                      <button
+                        type="button"
+                        onClick={() => handleMoveDegree(idx, "up")}
+                        disabled={idx === 0 || eduSaving}
+                        className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/[0.08] disabled:opacity-30 text-xs transition-all cursor-pointer"
+                        title="Move Up"
+                      >
+                        {renderIcon(FaArrowUp, { size: 11 })}
+                      </button>
+
+                      {/* Move Down */}
+                      <button
+                        type="button"
+                        onClick={() => handleMoveDegree(idx, "down")}
+                        disabled={idx === educationList.length - 1 || eduSaving}
+                        className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/[0.08] disabled:opacity-30 text-xs transition-all cursor-pointer"
+                        title="Move Down"
+                      >
+                        {renderIcon(FaArrowDown, { size: 11 })}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditDegree(idx)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-white/[0.04] hover:bg-indigo-500/20 text-slate-300 hover:text-indigo-200 border border-white/[0.08] hover:border-indigo-500/40 transition-all cursor-pointer"
+                      >
+                        {renderIcon(FaEdit, { size: 11 })}
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteDegree(idx)}
+                        className="p-2 rounded-xl text-slate-400 hover:text-rose-400 bg-white/[0.04] hover:bg-rose-500/15 border border-white/[0.08] hover:border-rose-500/30 transition-all cursor-pointer"
+                        title="Delete Degree"
+                      >
+                        {renderIcon(FaTrash, { size: 11 })}
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))
+
+                  {edu.description && (
+                    <p className="text-xs text-slate-400 leading-relaxed font-light">
+                      {edu.description}
+                    </p>
+                  )}
+
+                  {/* Highlights pills */}
+                  {Array.isArray(edu.highlights) && edu.highlights.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/[0.06]">
+                      {edu.highlights.map((hl: string, hIdx: number) => (
+                        <span
+                          key={hIdx}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] bg-white/[0.03] border border-white/[0.06] text-slate-300"
+                        >
+                          <span className="text-indigo-400">✓</span>
+                          <span>{hl}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </div>
