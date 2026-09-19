@@ -144,7 +144,49 @@ export const getDynamicPortfolioSnapshot = (context: ActiveContext): DynamicPort
 };
 
 /**
- * Helper search utilities against existing data
+ * Strict technology search utility against existing projects data.
+ * Verifies that a project was authentically engineered with the technology,
+ * preventing accidental false-positive matches on general text descriptions.
+ */
+export const searchProjectsByTechnology = (
+  projects: Project[],
+  techName: string
+): Project[] => {
+  const clean = techName.toLowerCase().trim();
+  if (!clean) return projects;
+
+  return projects.filter((p) => {
+    // 1. Strict match in technologies array
+    const techMatch = p.technologies.some((t) => {
+      const tClean = t.toLowerCase().trim();
+      return (
+        tClean === clean ||
+        tClean.includes(clean) ||
+        clean.includes(tClean)
+      );
+    });
+
+    // 2. Direct title match (e.g. "Islamic Life Assistant Flutter Application")
+    const titleMatch = p.title.toLowerCase().includes(clean);
+
+    // 3. Category match if searching for general categories (e.g. "mobile", "iot", "web", "ml")
+    const isCategory =
+      clean === "mobile" ||
+      clean === "web" ||
+      clean === "iot" ||
+      clean === "ml" ||
+      clean === "ai";
+    const catMatch =
+      isCategory &&
+      (p.category.toLowerCase() === clean ||
+        p.categoryLabel.toLowerCase().includes(clean));
+
+    return techMatch || titleMatch || catMatch;
+  });
+};
+
+/**
+ * General multi-field query search utility
  */
 export const searchProjects = (
   projects: Project[],

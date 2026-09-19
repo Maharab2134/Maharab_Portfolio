@@ -9,7 +9,7 @@ import {
   ActiveContext,
   getDynamicPortfolioSnapshot,
   findSkillInPortfolio,
-  searchProjects,
+  searchProjectsByTechnology,
 } from "./chatbotKnowledge";
 import { Project } from "../data/projectsData";
 
@@ -89,6 +89,60 @@ const TECH_KEYWORDS = [
   "opencv",
   "socket.io",
 ];
+
+// Common typo & alias normalization for technology queries
+export const TECH_ALIASES: Record<string, string> = {
+  fluttee: "flutter",
+  fluter: "flutter",
+  fluttter: "flutter",
+  fultter: "flutter",
+  reack: "react",
+  rect: "react",
+  nxtjs: "next.js",
+  nextjs: "next.js",
+  "next.js": "next.js",
+  pytnon: "python",
+  pyhton: "python",
+  typecript: "typescript",
+  typescrip: "typescript",
+  javascrip: "javascript",
+  jscript: "javascript",
+  supbase: "supabase",
+  firebae: "firebase",
+  mongod: "mongodb",
+  postgre: "postgresql",
+  postgress: "postgresql",
+  postgres: "postgresql",
+  tailwid: "tailwind",
+  tailwindcss: "tailwind",
+  node: "node.js",
+  nodejs: "node.js",
+  "node.js": "node.js",
+};
+
+/**
+ * Intelligent technology keyword extractor with alias & typo tolerance
+ */
+export const extractTechnologyKeyword = (query: string): string | null => {
+  const cleanQ = query.toLowerCase();
+  const words = cleanQ.replace(/[^a-z0-9.+]/g, " ").split(/\s+/).filter(Boolean);
+
+  // 1. Check direct typo / alias match
+  for (const w of words) {
+    if (TECH_ALIASES[w]) {
+      return TECH_ALIASES[w];
+    }
+  }
+
+  // 2. Check multi-word or exact keyword matches
+  for (const tech of TECH_KEYWORDS) {
+    if (words.includes(tech) || cleanQ.includes(tech)) {
+      return tech;
+    }
+  }
+
+  return null;
+};
 
 export class PortfolioChatbotEngine {
   /**
@@ -333,20 +387,43 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 5. Technology / Skill Filtering on Projects ("Show me Flutter projects", "React apps", etc.)
+    // 5. Technology / Skill Filtering on Projects ("Show me Flutter projects", "fluttee project ache ki", etc.)
     // ------------------------------------------------------------------------
-    const foundTechKeyword = TECH_KEYWORDS.find((t) => q.includes(t));
+    const foundTechKeyword = extractTechnologyKeyword(q);
 
     if (
-      (q.includes("project") || q.includes("app") || q.includes("work") || q.includes("built") || q.includes("all") || q.includes("show")) &&
+      (q.includes("project") ||
+        q.includes("app") ||
+        q.includes("work") ||
+        q.includes("built") ||
+        q.includes("all") ||
+        q.includes("show") ||
+        q.includes("ache") ||
+        q.includes("ase") ||
+        q.includes("koto")) &&
       foundTechKeyword
     ) {
-      const matchingProjects = searchProjects(projects, foundTechKeyword);
+      const matchingProjects = searchProjectsByTechnology(projects, foundTechKeyword);
       if (matchingProjects.length > 0) {
         let text = `### **${foundTechKeyword.toUpperCase()} Projects** (${matchingProjects.length} Found)\n\n`;
         text += `Here are the engineering projects built with **${foundTechKeyword.toUpperCase()}**:\n\n`;
         matchingProjects.slice(0, 6).forEach((proj) => {
-          text += `- **${proj.title}** (${proj.categoryLabel}) — *${proj.technologies.slice(0, 3).join(", ")}*\n`;
+          // Prioritize showing the searched technology first
+          const matched = proj.technologies.filter(
+            (t) =>
+              t.toLowerCase() === foundTechKeyword ||
+              t.toLowerCase().includes(foundTechKeyword) ||
+              foundTechKeyword.includes(t.toLowerCase())
+          );
+          const others = proj.technologies.filter(
+            (t) =>
+              t.toLowerCase() !== foundTechKeyword &&
+              !t.toLowerCase().includes(foundTechKeyword) &&
+              !foundTechKeyword.includes(t.toLowerCase())
+          );
+          const prioritizedTechs = [...matched, ...others].slice(0, 3).join(", ");
+
+          text += `- **${proj.title}** (${proj.categoryLabel}) — *${prioritizedTechs}*\n`;
         });
 
         return {
@@ -364,7 +441,7 @@ export class PortfolioChatbotEngine {
         return {
           id: `bot_${Date.now()}`,
           sender: "bot",
-          text: `No specific projects built with **${foundTechKeyword}** are currently published in the portfolio.\n\nAvailable technology categories include **React, Next.js, Flutter, Node.js, Python, Supabase, and TypeScript**.`,
+          text: `No specific projects built with **${foundTechKeyword.toUpperCase()}** were found in the current portfolio.\n\nAvailable technology categories include **Flutter, React, Next.js, Node.js, Python, Supabase, and TypeScript**.`,
           timestamp: new Date().toISOString(),
           actions: [{ label: "Browse All Projects", type: "scroll", target: "projects", primary: true }],
         };

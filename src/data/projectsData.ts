@@ -559,7 +559,7 @@ export const PROJECTS: Project[] = [
     description: "Microcontroller-based smart home automation hub featuring ESP32, MQTT telemetry, relay control, and mobile remote management.",
     longDescription: "An end-to-end IoT platform enabling homeowners to automate appliance schedules, monitor power consumption, and receive emergency sensor alerts through mobile apps.",
     problem: "Proprietary smart home systems lock users into expensive walled ecosystems without local network control fallbacks.",
-    solution: "Engineered an open ESP32 hardware architecture communicating over MQTT with a lightweight Node.js broker and Flutter companion app.",
+    solution: "Engineered an open ESP32 hardware architecture communicating over MQTT with a lightweight Node.js broker and real-time telemetry dashboard.",
     features: [
       "Sub-100ms remote device switching via lightweight MQTT messaging",
       "Real-time sensor telemetry (temperature, humidity, fire detection)",
@@ -568,7 +568,7 @@ export const PROJECTS: Project[] = [
     results: [
       "Successfully built, wired, and demonstrated working physical hardware prototype",
     ],
-    technologies: ["ESP32", "Arduino C++", "MQTT", "Node.js", "Flutter", "Firebase", "Sensors"],
+    technologies: ["ESP32", "Arduino C++", "MQTT", "Node.js", "Relay Control", "Sensors"],
     image: "https://images.weserv.nl/?url=drive.google.com/uc?export=view%26id=1-n_olWQeEIS10Ng2-xCdVTGiBdmbwOJA",
     fallbackGradient: "from-teal-600/30 to-blue-600/30",
     github: "https://github.com/Maharab2134/smart-home-iot",
@@ -654,14 +654,20 @@ export const getAllProjectsSync = (): Project[] => {
                   .map((r: string) => r.trim())
                   .filter(Boolean)
               : ["100% responsive", "Production ready"],
-            technologies: Array.isArray(item.technologies)
-              ? item.technologies
-              : typeof item.technologies === "string"
-              ? item.technologies
-                  .split(",")
-                  .map((t: string) => t.trim())
-                  .filter(Boolean)
-              : ["React"],
+            technologies: (() => {
+              let techs = Array.isArray(item.technologies)
+                ? item.technologies
+                : typeof item.technologies === "string"
+                ? item.technologies
+                    .split(",")
+                    .map((t: string) => t.trim())
+                    .filter(Boolean)
+                : ["React"];
+              if (id === "smart-home-iot") {
+                techs = techs.filter((t: string) => t.toLowerCase() !== "flutter");
+              }
+              return techs;
+            })(),
             image: item.image || item.image_url || "",
             fallbackGradient:
               item.fallbackGradient || "from-purple-600/30 to-blue-600/30",
