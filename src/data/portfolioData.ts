@@ -103,13 +103,13 @@ export const PORTFOLIO_INFO = {
   profileImage: "/images/img.jpg",
   stats: {
     yearsExperience: "2+",
-    projectsCompleted: "50+",
+    projectsCompleted: "20+",
     techStacks: "12+",
     satisfactionRate: "100%",
   },
   aboutStats: [
     { value: "2+ Years", label: "Project Experience" },
-    { value: "15+", label: "Projects" },
+    { value: "20+", label: "Projects" },
     { value: "10+", label: "Technologies" },
     { value: "CSE", label: "Academic Background" },
   ],

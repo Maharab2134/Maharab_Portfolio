@@ -63,6 +63,7 @@ ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS maps_url TEXT;
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS experience_config JSONB DEFAULT '{"isActive": true, "showCurrentOnly": false, "enableHighlights": true}'::jsonb;
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS development_process JSONB;
 ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS working_hours JSONB;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS about_stats JSONB DEFAULT '[{"value": "2+ Years", "label": "Project Experience"}, {"value": "20+", "label": "Projects"}, {"value": "10+", "label": "Technologies"}, {"value": "CSE", "label": "Academic Background"}]'::jsonb;
 
 -- 3. Create Contact Messages Table
 CREATE TABLE IF NOT EXISTS public.contact_messages (

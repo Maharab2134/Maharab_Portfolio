@@ -1240,6 +1240,32 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
             projectsCompleted: row.projects_completed || PORTFOLIO_INFO.stats.projectsCompleted,
             satisfactionRate: row.satisfaction_rate || PORTFOLIO_INFO.stats.satisfactionRate,
           },
+          aboutStats:
+            Array.isArray(row.about_stats) && row.about_stats.length > 0
+              ? row.about_stats
+              : [
+                  { value: row.years_experience || PORTFOLIO_INFO.stats.yearsExperience, label: "Project Experience" },
+                  { value: row.projects_completed || "20+", label: "Projects" },
+                  { value: "10+", label: "Technologies" },
+                  { value: "CSE", label: "Academic Background" },
+                ],
+          about_stats:
+            Array.isArray(row.about_stats) && row.about_stats.length > 0
+              ? row.about_stats
+              : [
+                  { value: row.years_experience || PORTFOLIO_INFO.stats.yearsExperience, label: "Project Experience" },
+                  { value: row.projects_completed || "20+", label: "Projects" },
+                  { value: "10+", label: "Technologies" },
+                  { value: "CSE", label: "Academic Background" },
+                ],
+          about_stat1_val: (Array.isArray(row.about_stats) && row.about_stats[0]?.value) || row.years_experience || "2+ Years",
+          about_stat1_lbl: (Array.isArray(row.about_stats) && row.about_stats[0]?.label) || "Project Experience",
+          about_stat2_val: (Array.isArray(row.about_stats) && row.about_stats[1]?.value) || row.projects_completed || "20+",
+          about_stat2_lbl: (Array.isArray(row.about_stats) && row.about_stats[1]?.label) || "Projects",
+          about_stat3_val: (Array.isArray(row.about_stats) && row.about_stats[2]?.value) || "10+",
+          about_stat3_lbl: (Array.isArray(row.about_stats) && row.about_stats[2]?.label) || "Technologies",
+          about_stat4_val: (Array.isArray(row.about_stats) && row.about_stats[3]?.value) || "CSE",
+          about_stat4_lbl: (Array.isArray(row.about_stats) && row.about_stats[3]?.label) || "Academic Background",
           socials: {
             github: row.github_url || PORTFOLIO_INFO.socials.github,
             linkedin: row.linkedin_url || PORTFOLIO_INFO.socials.linkedin,
@@ -1385,6 +1411,7 @@ export const saveLiveProfile = async (
         work_timezone: workingHours.timezone,
         work_online_label: workingHours.onlineLabel,
         work_offline_label: workingHours.offlineLabel,
+        about_stats: aboutStats,
       };
 
       const dbProfile: Record<string, any> = {};
@@ -1413,6 +1440,7 @@ export const saveLiveProfile = async (
           delete safeDb.work_timezone;
           delete safeDb.work_online_label;
           delete safeDb.work_offline_label;
+          delete safeDb.about_stats;
           await supabase.from("profile_info").update(safeDb).eq("id", existing[0].id);
         }
       } else {
@@ -1432,6 +1460,7 @@ export const saveLiveProfile = async (
           delete safeDb.work_timezone;
           delete safeDb.work_online_label;
           delete safeDb.work_offline_label;
+          delete safeDb.about_stats;
           await supabase.from("profile_info").insert([safeDb]);
         }
       }
@@ -1527,6 +1556,23 @@ export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
               projectsCompleted: parsed.projects_completed || parsed.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
               satisfactionRate: parsed.satisfaction_rate || parsed.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
             },
+            aboutStats:
+              (Array.isArray(parsed.about_stats) && parsed.about_stats.length > 0)
+                ? parsed.about_stats
+                : (Array.isArray(parsed.aboutStats) && parsed.aboutStats.length > 0)
+                ? parsed.aboutStats
+                : (parsed.about_stat1_val ? [
+                    { value: parsed.about_stat1_val, label: parsed.about_stat1_lbl || "Project Experience" },
+                    { value: parsed.about_stat2_val || "20+", label: parsed.about_stat2_lbl || "Projects" },
+                    { value: parsed.about_stat3_val || "10+", label: parsed.about_stat3_lbl || "Technologies" },
+                    { value: parsed.about_stat4_val || "CSE", label: parsed.about_stat4_lbl || "Academic Background" },
+                  ] : (PORTFOLIO_INFO as any).aboutStats),
+            about_stats:
+              (Array.isArray(parsed.about_stats) && parsed.about_stats.length > 0)
+                ? parsed.about_stats
+                : (Array.isArray(parsed.aboutStats) && parsed.aboutStats.length > 0)
+                ? parsed.aboutStats
+                : (PORTFOLIO_INFO as any).aboutStats,
             socials: {
               ...PORTFOLIO_INFO.socials,
               github: parsed.github_url || parsed.github || parsed.socials?.github || PORTFOLIO_INFO.socials.github,

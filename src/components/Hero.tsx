@@ -441,7 +441,7 @@ const Hero: React.FC = () => {
                   </p>
                   <p className="text-[11px] text-slate-400 flex items-center gap-1.5 truncate">
                     <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                    <span className="truncate">Mirpur, Dhaka, Bangladesh</span>
+                    <span className="truncate">{profile.location || "Dhaka, Bangladesh"}</span>
                   </p>
                 </div>
               </div>
@@ -502,7 +502,7 @@ const Hero: React.FC = () => {
                 {/* Quick Performance Strip */}
                 <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
                   <div className="py-2 px-1 rounded-lg bg-white/[0.02] border border-white/5">
-                    <p className="text-xs font-bold text-cyan-400">50+</p>
+                    <p className="text-xs font-bold text-cyan-400">{profile.stats?.projectsCompleted || "20+"}</p>
                     <p className="text-[10px] text-slate-400">Projects</p>
                   </div>
                   <div className="py-2 px-1 rounded-lg bg-white/[0.02] border border-white/5">
