@@ -306,142 +306,151 @@ export const generateRealisticSeedAnalytics = (): VisitorEvent[] => {
 // ============================================================================
 // Core Telemetry Tracker (Invoked on Portfolio Page Navigation)
 // ============================================================================
-export const trackVisitorHit = async (
+export const trackVisitorHit = (
   pagePath: string = "/",
   section: string = "Hero"
-): Promise<void> => {
+): void => {
   if (typeof window === "undefined") return;
 
-  try {
-    const pageLabel = formatPageName(section || pagePath);
-
-    // 1. REFRESH / RELOAD PROTECTION:
-    // When the website is refreshed/reloaded, DO NOT count as a new Visitor Activity Log!
-    const reload = isPageReload();
-    const lastTrackedPage = sessionStorage.getItem("maharab_last_tracked_page");
-
-    // Skip creating a new log on reload of the same page
-    if (reload && lastTrackedPage === pageLabel) {
-      return;
-    }
-
-    // Deduplicate rapid re-triggers (< 3 seconds) on identical page
-    const lastHitTimeStr = sessionStorage.getItem("maharab_last_hit_time");
-    const lastHitTime = lastHitTimeStr ? parseInt(lastHitTimeStr, 10) : 0;
-    if (lastTrackedPage === pageLabel && Date.now() - lastHitTime < 3000) {
-      return;
-    }
-
-    sessionStorage.setItem("maharab_last_tracked_page", pageLabel);
-    sessionStorage.setItem("maharab_last_hit_time", String(Date.now()));
-
-    // 2. Track visited pages sequence for this session
-    const STORAGE_SESSION_PAGES_KEY = "maharab_session_visited_pages";
-    let sessionPages: string[] = [];
+  const runTracking = async () => {
     try {
-      const stored = sessionStorage.getItem(STORAGE_SESSION_PAGES_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) sessionPages = parsed;
-      }
-    } catch (e) {}
+      const pageLabel = formatPageName(section || pagePath);
 
-    if (sessionPages.length === 0 || sessionPages[sessionPages.length - 1] !== pageLabel) {
-      sessionPages.push(pageLabel);
+      // 1. REFRESH / RELOAD PROTECTION:
+      // When the website is refreshed/reloaded, DO NOT count as a new Visitor Activity Log!
+      const reload = isPageReload();
+      const lastTrackedPage = sessionStorage.getItem("maharab_last_tracked_page");
+
+      // Skip creating a new log on reload of the same page
+      if (reload && lastTrackedPage === pageLabel) {
+        return;
+      }
+
+      // Deduplicate rapid re-triggers (< 3 seconds) on identical page
+      const lastHitTimeStr = sessionStorage.getItem("maharab_last_hit_time");
+      const lastHitTime = lastHitTimeStr ? parseInt(lastHitTimeStr, 10) : 0;
+      if (lastTrackedPage === pageLabel && Date.now() - lastHitTime < 3000) {
+        return;
+      }
+
+      sessionStorage.setItem("maharab_last_tracked_page", pageLabel);
+      sessionStorage.setItem("maharab_last_hit_time", String(Date.now()));
+
+      // 2. Track visited pages sequence for this session
+      const STORAGE_SESSION_PAGES_KEY = "maharab_session_visited_pages";
+      let sessionPages: string[] = [];
       try {
-        sessionStorage.setItem(STORAGE_SESSION_PAGES_KEY, JSON.stringify(sessionPages));
+        const stored = sessionStorage.getItem(STORAGE_SESSION_PAGES_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) sessionPages = parsed;
+        }
       } catch (e) {}
-    }
 
-    const visitorId = getAnonymizedVisitorId();
-    const { sessionId, isNew } = getSessionId();
-    const { device, browser, os } = parseUserAgent();
-    const { country, city } = inferLocationFromTimezone();
-    const referrer = normalizeReferrer();
-
-    // 3. Update Local Storage Cache
-    let cachedEvents: VisitorEvent[] = [];
-    try {
-      const raw = localStorage.getItem(STORAGE_ANALYTICS_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) cachedEvents = parsed;
+      if (sessionPages.length === 0 || sessionPages[sessionPages.length - 1] !== pageLabel) {
+        sessionPages.push(pageLabel);
+        try {
+          sessionStorage.setItem(STORAGE_SESSION_PAGES_KEY, JSON.stringify(sessionPages));
+        } catch (e) {}
       }
-    } catch (e) {}
 
-    // Check if an event already exists for this session
-    const existingSessionIndex = cachedEvents.findIndex((e) => e.sessionId === sessionId);
+      const visitorId = getAnonymizedVisitorId();
+      const { sessionId, isNew } = getSessionId();
+      const { device, browser, os } = parseUserAgent();
+      const { country, city } = inferLocationFromTimezone();
+      const referrer = normalizeReferrer();
 
-    let currentEvent: VisitorEvent;
-
-    if (existingSessionIndex >= 0) {
-      // Update existing session record with new page in journey
-      currentEvent = {
-        ...cachedEvents[existingSessionIndex],
-        pagePath,
-        section,
-        visitedPages: [...sessionPages],
-        timestamp: new Date().toISOString(),
-        durationSeconds: (cachedEvents[existingSessionIndex].durationSeconds || 15) + Math.floor(Math.random() * 30) + 15,
-      };
-      // Move this updated session event to top of activity log
-      cachedEvents.splice(existingSessionIndex, 1);
-      cachedEvents.unshift(currentEvent);
-    } else {
-      // Brand new browsing session
-      currentEvent = {
-        id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        visitorId,
-        sessionId,
-        isNewVisitor: isNew,
-        country,
-        city,
-        device,
-        browser,
-        os,
-        referrer,
-        pagePath,
-        section,
-        visitedPages: [...sessionPages],
-        durationSeconds: Math.floor(Math.random() * 90) + 15,
-        timestamp: new Date().toISOString(),
-      };
-      cachedEvents.unshift(currentEvent);
-    }
-
-    // Keep last 600 events in local cache for speed
-    if (cachedEvents.length > 600) {
-      cachedEvents = cachedEvents.slice(0, 600);
-    }
-
-    try {
-      localStorage.setItem(STORAGE_ANALYTICS_KEY, JSON.stringify(cachedEvents));
-      window.dispatchEvent(new Event("portfolio_analytics_updated"));
-    } catch (e) {}
-
-    // 4. Sync to Supabase cloud if connected
-    if (isSupabaseConfigured && supabase) {
+      // 3. Update Local Storage Cache
+      let cachedEvents: VisitorEvent[] = [];
       try {
-        await supabase.from("portfolio_analytics").insert([
-          {
-            visitor_id: currentEvent.visitorId,
-            session_id: currentEvent.sessionId,
-            is_new_visitor: currentEvent.isNewVisitor,
-            country: currentEvent.country,
-            city: currentEvent.city,
-            device: currentEvent.device,
-            browser: currentEvent.browser,
-            os: currentEvent.os,
-            referrer: currentEvent.referrer,
-            page_path: currentEvent.pagePath,
-            section: currentEvent.section,
-            duration_seconds: currentEvent.durationSeconds,
-            created_at: currentEvent.timestamp,
-          },
-        ]);
-      } catch (err) {}
-    }
-  } catch (err) {}
+        const raw = localStorage.getItem(STORAGE_ANALYTICS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) cachedEvents = parsed;
+        }
+      } catch (e) {}
+
+      // Check if an event already exists for this session
+      const existingSessionIndex = cachedEvents.findIndex((e) => e.sessionId === sessionId);
+
+      let currentEvent: VisitorEvent;
+
+      if (existingSessionIndex >= 0) {
+        // Update existing session record with new page in journey
+        currentEvent = {
+          ...cachedEvents[existingSessionIndex],
+          pagePath,
+          section,
+          visitedPages: [...sessionPages],
+          timestamp: new Date().toISOString(),
+          durationSeconds: (cachedEvents[existingSessionIndex].durationSeconds || 15) + Math.floor(Math.random() * 30) + 15,
+        };
+        // Move this updated session event to top of activity log
+        cachedEvents.splice(existingSessionIndex, 1);
+        cachedEvents.unshift(currentEvent);
+      } else {
+        // Brand new browsing session
+        currentEvent = {
+          id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          visitorId,
+          sessionId,
+          isNewVisitor: isNew,
+          country,
+          city,
+          device,
+          browser,
+          os,
+          referrer,
+          pagePath,
+          section,
+          visitedPages: [...sessionPages],
+          durationSeconds: Math.floor(Math.random() * 90) + 15,
+          timestamp: new Date().toISOString(),
+        };
+        cachedEvents.unshift(currentEvent);
+      }
+
+      // Keep last 300 events in local cache for speed
+      if (cachedEvents.length > 300) {
+        cachedEvents = cachedEvents.slice(0, 300);
+      }
+
+      try {
+        localStorage.setItem(STORAGE_ANALYTICS_KEY, JSON.stringify(cachedEvents));
+        window.dispatchEvent(new Event("portfolio_analytics_updated"));
+      } catch (e) {}
+
+      // 4. Sync to Supabase cloud if connected (non-blocking in background)
+      if (isSupabaseConfigured && supabase) {
+        try {
+          await supabase.from("portfolio_analytics").insert([
+            {
+              visitor_id: currentEvent.visitorId,
+              session_id: currentEvent.sessionId,
+              is_new_visitor: currentEvent.isNewVisitor,
+              country: currentEvent.country,
+              city: currentEvent.city,
+              device: currentEvent.device,
+              browser: currentEvent.browser,
+              os: currentEvent.os,
+              referrer: currentEvent.referrer,
+              page_path: currentEvent.pagePath,
+              section: currentEvent.section,
+              duration_seconds: currentEvent.durationSeconds,
+              created_at: currentEvent.timestamp,
+            },
+          ]);
+        } catch (err) {}
+      }
+    } catch (err) {}
+  };
+
+  // Execute in browser idle time so UI navigation transitions have 0ms latency and 0 CPU blocking
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    (window as any).requestIdleCallback(runTracking, { timeout: 2000 });
+  } else {
+    setTimeout(runTracking, 800);
+  }
 };
 
 // ============================================================================

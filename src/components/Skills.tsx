@@ -39,8 +39,10 @@ const Skills: React.FC = () => {
   }, []);
 
   const handleTabChange = (tabId: string) => {
-    setActiveCategory(tabId);
-    setShowAllSkills(false);
+    React.startTransition(() => {
+      setActiveCategory(tabId);
+      setShowAllSkills(false);
+    });
   };
 
   const filterTabs = [

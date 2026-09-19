@@ -15,14 +15,13 @@ import {
   FaChevronUp,
 } from "react-icons/fa";
 import {
-  PROJECTS,
   Project,
+  getAllProjectsSync,
   toProxyImageUrl,
   extractGoogleDriveFileId,
   toGoogleDriveDirectUrl,
   createProjectSvgFallback,
 } from "../data/projectsData";
-import { getLiveProjects } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -89,6 +88,7 @@ const ProjectCard: React.FC<{
           src={imgSrc}
           alt={project.title}
           loading="lazy"
+          decoding="async"
           onError={handleImageError}
           className="object-cover object-top w-full h-full transition-transform duration-700 group-hover:scale-105"
         />
@@ -200,22 +200,21 @@ const ProjectCard: React.FC<{
 };
 
 const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
-  const [projectsList, setProjectsList] = useState<Project[]>(PROJECTS);
+  const [projectsList, setProjectsList] = useState<Project[]>(getAllProjectsSync);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [showAllProjects, setShowAllProjects] = useState<boolean>(false);
   const [columns, setColumns] = useState<number>(3);
 
   useEffect(() => {
-    const fetchProjects = () => {
-      getLiveProjects().then((data) => {
-        if (data && data.length > 0) {
-          setProjectsList(data);
-        }
+    const handleProjectsUpdate = () => {
+      const live = getAllProjectsSync();
+      React.startTransition(() => {
+        setProjectsList(live);
       });
     };
-    fetchProjects();
-    window.addEventListener("portfolio_projects_updated", fetchProjects);
-    return () => window.removeEventListener("portfolio_projects_updated", fetchProjects);
+
+    window.addEventListener("portfolio_projects_updated", handleProjectsUpdate);
+    return () => window.removeEventListener("portfolio_projects_updated", handleProjectsUpdate);
   }, []);
 
   useEffect(() => {
@@ -232,8 +231,10 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
   }, []);
 
   const handleFilterChange = (filterId: string) => {
-    setActiveFilter(filterId);
-    setShowAllProjects(false);
+    React.startTransition(() => {
+      setActiveFilter(filterId);
+      setShowAllProjects(false);
+    });
   };
 
   const filterTabs = [

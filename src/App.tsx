@@ -20,6 +20,7 @@ import Testimonials from "./components/Testimonials";
 import SplashScreen from "./components/SplashScreen";
 import { Project, getAllProjectsSync } from "./data/projectsData";
 import { trackVisitorHit } from "./lib/analyticsService";
+import { initBackgroundSync } from "./lib/backgroundSync";
 
 type ActiveView = "home" | "hire" | "journey" | "project" | "admin" | "case-studies";
 
@@ -28,6 +29,11 @@ function App() {
   const [activeView, setActiveView] = useState<ActiveView>("home");
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  // Initialize background data sync engine for user panel
+  useEffect(() => {
+    initBackgroundSync();
+  }, []);
 
   // Track telemetry hit when visitor navigates across views
   useEffect(() => {

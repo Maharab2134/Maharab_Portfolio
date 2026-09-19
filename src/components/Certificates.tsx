@@ -8,30 +8,28 @@ import {
   FaChevronDown,
   FaChevronUp,
 } from "react-icons/fa";
-import { CERTIFICATES_DATA, CertificateItem } from "../data/portfolioData";
-import { getLiveCertificates } from "../lib/portfolioService";
+import { CertificateItem } from "../data/portfolioData";
+import { getCachedCertificatesSync } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
 const Certificates: React.FC = () => {
-  const [certsList, setCertsList] = useState<CertificateItem[]>(CERTIFICATES_DATA);
+  const [certsList, setCertsList] = useState<CertificateItem[]>(getCachedCertificatesSync);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [showAll, setShowAll] = useState(false);
   const initialLimit = 4;
 
   useEffect(() => {
-    const fetchCerts = () => {
-      getLiveCertificates().then((data) => {
-        if (data && data.length > 0) {
-          setCertsList(data);
-        }
+    const handleCertsUpdate = () => {
+      const live = getCachedCertificatesSync();
+      React.startTransition(() => {
+        setCertsList(live);
       });
     };
-    fetchCerts();
-    window.addEventListener("portfolio_certificates_updated", fetchCerts);
-    return () => window.removeEventListener("portfolio_certificates_updated", fetchCerts);
+    window.addEventListener("portfolio_certificates_updated", handleCertsUpdate);
+    return () => window.removeEventListener("portfolio_certificates_updated", handleCertsUpdate);
   }, []);
 
   const filteredCerts = certsList.filter((cert) => {

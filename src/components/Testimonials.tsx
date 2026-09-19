@@ -9,6 +9,7 @@ import {
   ProjectReview,
   getBestProjectReviews,
   useTestimonialsConfig,
+  getCachedReviewsSync,
 } from "../lib/portfolioService";
 import { getAllProjectsSync } from "../data/projectsData";
 import { TestimonialCard } from "./TestimonialCard";
@@ -25,8 +26,8 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
   onSelectProjectReview,
 }) => {
   const config = useTestimonialsConfig();
-  const [reviews, setReviews] = useState<ProjectReview[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<ProjectReview[]>(() => getCachedReviewsSync(12));
+  const [loading, setLoading] = useState<boolean>(() => getCachedReviewsSync(12).length === 0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [isPaused, setIsPaused] = useState(false);
@@ -35,11 +36,20 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
   // Fetch top rated reviews
   const loadReviews = useCallback(async () => {
     try {
+      const cached = getCachedReviewsSync(config.maxItems);
+      if (cached.length > 0) {
+        React.startTransition(() => {
+          setReviews(cached);
+          setLoading(false);
+        });
+      }
       const data = await getBestProjectReviews(config.minRating, config.maxItems);
-      setReviews(data);
+      React.startTransition(() => {
+        setReviews(data);
+        setLoading(false);
+      });
     } catch (e) {
       console.warn("Failed to load testimonials:", e);
-    } finally {
       setLoading(false);
     }
   }, [config.minRating, config.maxItems]);
@@ -48,14 +58,20 @@ export const Testimonials: React.FC<TestimonialsProps> = ({
     loadReviews();
 
     const handleReviewsUpdate = () => {
-      loadReviews();
+      const cached = getCachedReviewsSync(config.maxItems);
+      if (cached.length > 0) {
+        React.startTransition(() => {
+          setReviews(cached);
+          setLoading(false);
+        });
+      }
     };
 
     window.addEventListener("portfolio_reviews_updated", handleReviewsUpdate);
     return () => {
       window.removeEventListener("portfolio_reviews_updated", handleReviewsUpdate);
     };
-  }, [loadReviews]);
+  }, [loadReviews, config.maxItems]);
 
   // Determine items per page based on window size
   const [itemsPerPage, setItemsPerPage] = useState(3);

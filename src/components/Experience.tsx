@@ -8,9 +8,9 @@ import {
   FaBuilding,
   FaExternalLinkAlt,
 } from "react-icons/fa";
-import { EXPERIENCE_DATA, ExperienceItem, getCompanyLogoUrl } from "../data/portfolioData";
+import { ExperienceItem, getCompanyLogoUrl } from "../data/portfolioData";
 import {
-  getLiveExperience,
+  getCachedExperienceSync,
   useExperienceConfig,
 } from "../lib/portfolioService";
 
@@ -20,19 +20,17 @@ const renderIcon = (Icon: any, props: any = {}) => {
 
 const Experience: React.FC = () => {
   const config = useExperienceConfig();
-  const [experienceList, setExperienceList] = useState<ExperienceItem[]>(EXPERIENCE_DATA);
+  const [experienceList, setExperienceList] = useState<ExperienceItem[]>(getCachedExperienceSync);
 
   useEffect(() => {
-    const fetchExp = () => {
-      getLiveExperience().then((data) => {
-        if (data && data.length > 0) {
-          setExperienceList(data);
-        }
+    const handleExpUpdate = () => {
+      const live = getCachedExperienceSync();
+      React.startTransition(() => {
+        setExperienceList(live);
       });
     };
-    fetchExp();
-    window.addEventListener("portfolio_experience_updated", fetchExp);
-    return () => window.removeEventListener("portfolio_experience_updated", fetchExp);
+    window.addEventListener("portfolio_experience_updated", handleExpUpdate);
+    return () => window.removeEventListener("portfolio_experience_updated", handleExpUpdate);
   }, []);
 
   // If section is toggled off in Admin Studio, completely hide it
@@ -106,6 +104,8 @@ const Experience: React.FC = () => {
                     <img
                       src={logoUrl}
                       alt={exp.company}
+                      loading="lazy"
+                      decoding="async"
                       className="w-5 h-5 sm:w-6 sm:h-6 object-contain rounded p-0.5"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = "none";
@@ -136,6 +136,8 @@ const Experience: React.FC = () => {
                               <img
                                 src={logoUrl}
                                 alt={exp.company}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-4 h-4 rounded object-contain bg-white/10 p-0.5"
                                 onError={(e) => {
                                   (e.target as HTMLElement).style.display = "none";
@@ -156,6 +158,8 @@ const Experience: React.FC = () => {
                               <img
                                 src={logoUrl}
                                 alt={exp.company}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-4 h-4 rounded object-contain bg-white/10 p-0.5"
                                 onError={(e) => {
                                   (e.target as HTMLElement).style.display = "none";

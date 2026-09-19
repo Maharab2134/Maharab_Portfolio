@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, startTransition } from "react";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
 import { PROJECTS, Project } from "../data/projectsData";
 import {
@@ -144,6 +144,8 @@ import {
   SiHuggingface,
   SiSocketdotio,
 } from "react-icons/si";
+
+export type { SkillCategory, SkillItemData };
 
 export interface ExtendedProject extends Project {
   db_id?: string;
@@ -333,13 +335,15 @@ export const saveProjectOrder = async (orderedList: ExtendedProject[]): Promise<
   }
 };
 
+export const STORAGE_PROJECTS_KEY = "maharab_cached_projects";
+
 // Fetch live projects (Supabase + LocalStorage Smart Merge + Web First Priority)
 export const getLiveProjects = async (): Promise<ExtendedProject[]> => {
   let cachedList: ExtendedProject[] = [];
 
   // 1. Read localStorage cache first
   try {
-    const cached = localStorage.getItem("maharab_cached_projects");
+    const cached = localStorage.getItem(STORAGE_PROJECTS_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1057,10 +1061,12 @@ export const calculateWorkStatus = (
   }
 };
 
+export const STORAGE_PROFILE_KEY = "maharab_cached_profile";
+
 // Profile Info Service
 export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
   try {
-    const cached = localStorage.getItem("maharab_cached_profile");
+    const cached = localStorage.getItem(STORAGE_PROFILE_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed && (parsed.name || parsed.resume_url || parsed.resumeUrl)) {
@@ -1539,7 +1545,11 @@ export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
     let active = true;
     const fetchLatest = async () => {
       const live = await getLiveProfile();
-      if (active) setProfile(live);
+      if (active) {
+        startTransition(() => {
+          setProfile(live);
+        });
+      }
     };
 
     fetchLatest();
@@ -1561,9 +1571,11 @@ export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
 // ============================================================================
 // Education Service (Local-First with Supabase Cloud Sync)
 // ============================================================================
-export const getLiveEducation = async (): Promise<EducationItem[]> => {
+export const STORAGE_EDUCATION_KEY = "maharab_cached_education";
+
+export const getCachedEducationSync = (): EducationItem[] => {
   try {
-    const cached = localStorage.getItem("maharab_cached_education");
+    const cached = localStorage.getItem(STORAGE_EDUCATION_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1571,6 +1583,14 @@ export const getLiveEducation = async (): Promise<EducationItem[]> => {
       }
     }
   } catch (e) {}
+  return EDUCATION_DATA;
+};
+
+export const getLiveEducation = async (): Promise<EducationItem[]> => {
+  const cached = getCachedEducationSync();
+  if (cached !== EDUCATION_DATA && cached.length > 0) {
+    return cached;
+  }
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -1589,7 +1609,7 @@ export const getLiveEducation = async (): Promise<EducationItem[]> => {
           isActive: d.is_active !== undefined ? d.is_active : (d.isActive !== undefined ? d.isActive : true),
         }));
         try {
-          localStorage.setItem("maharab_cached_education", JSON.stringify(mapped));
+          localStorage.setItem(STORAGE_EDUCATION_KEY, JSON.stringify(mapped));
         } catch (e) {}
         return mapped;
       }
@@ -1604,7 +1624,7 @@ export const saveLiveEducation = async (
 ): Promise<{ success: boolean; error?: string }> => {
   // 1. Immediately update localStorage
   try {
-    localStorage.setItem("maharab_cached_education", JSON.stringify(educationList));
+    localStorage.setItem(STORAGE_EDUCATION_KEY, JSON.stringify(educationList));
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("portfolio_education_updated"));
     }
@@ -1640,9 +1660,11 @@ export const saveLiveEducation = async (
 // ============================================================================
 // Certificates & Credentials Service (Local-First with Supabase Cloud Sync)
 // ============================================================================
-export const getLiveCertificates = async (): Promise<CertificateItem[]> => {
+export const STORAGE_CERTIFICATES_KEY = "maharab_cached_certificates";
+
+export const getCachedCertificatesSync = (): CertificateItem[] => {
   try {
-    const cached = localStorage.getItem("maharab_cached_certificates");
+    const cached = localStorage.getItem(STORAGE_CERTIFICATES_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1650,6 +1672,14 @@ export const getLiveCertificates = async (): Promise<CertificateItem[]> => {
       }
     }
   } catch (e) {}
+  return CERTIFICATES_DATA;
+};
+
+export const getLiveCertificates = async (): Promise<CertificateItem[]> => {
+  const cached = getCachedCertificatesSync();
+  if (cached !== CERTIFICATES_DATA && cached.length > 0) {
+    return cached;
+  }
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -1669,7 +1699,7 @@ export const getLiveCertificates = async (): Promise<CertificateItem[]> => {
           verificationId: c.verification_id || c.verificationId || "",
         }));
         try {
-          localStorage.setItem("maharab_cached_certificates", JSON.stringify(mapped));
+          localStorage.setItem(STORAGE_CERTIFICATES_KEY, JSON.stringify(mapped));
         } catch (e) {}
         return mapped;
       }
@@ -1684,7 +1714,7 @@ export const saveLiveCertificates = async (
 ): Promise<{ success: boolean; error?: string }> => {
   // 1. Immediately update localStorage
   try {
-    localStorage.setItem("maharab_cached_certificates", JSON.stringify(certsList));
+    localStorage.setItem(STORAGE_CERTIFICATES_KEY, JSON.stringify(certsList));
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("portfolio_certificates_updated"));
     }
@@ -2162,9 +2192,11 @@ export const resolveSkillIcon = (name: string, iconName?: string, category?: str
 // ============================================================================
 // Skill Categories Service (Local-First with Supabase Cloud Sync)
 // ============================================================================
+export const STORAGE_SKILL_CATEGORIES_KEY = "maharab_cached_skill_categories";
+
 export const getLiveSkillCategories = async (): Promise<SkillCategory[]> => {
   try {
-    const cached = localStorage.getItem("maharab_cached_skill_categories");
+    const cached = localStorage.getItem(STORAGE_SKILL_CATEGORIES_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -2248,7 +2280,11 @@ export const useLiveSkillCategories = (): SkillCategory[] => {
     let active = true;
     const fetchLatest = async () => {
       const live = await getLiveSkillCategories();
-      if (active && live && live.length > 0) setCategories(live);
+      if (active && live && live.length > 0) {
+        startTransition(() => {
+          setCategories(live);
+        });
+      }
     };
 
     fetchLatest();
@@ -2270,9 +2306,11 @@ export const useLiveSkillCategories = (): SkillCategory[] => {
 // ============================================================================
 // Skills List Service (Local-First with Supabase Cloud Sync)
 // ============================================================================
-export const getLiveSkills = async (): Promise<SkillItemData[]> => {
+export const STORAGE_SKILLS_KEY = "maharab_cached_skills";
+
+export const getCachedSkillsSync = (): SkillItemData[] => {
   try {
-    const cached = localStorage.getItem("maharab_cached_skills");
+    const cached = localStorage.getItem(STORAGE_SKILLS_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -2280,6 +2318,14 @@ export const getLiveSkills = async (): Promise<SkillItemData[]> => {
       }
     }
   } catch (e) {}
+  return DEFAULT_SKILLS_DATA;
+};
+
+export const getLiveSkills = async (): Promise<SkillItemData[]> => {
+  const cached = getCachedSkillsSync();
+  if (cached !== DEFAULT_SKILLS_DATA && cached.length > 0) {
+    return cached;
+  }
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -2362,7 +2408,11 @@ export const useLiveSkills = (): SkillItemData[] => {
     let active = true;
     const fetchLatest = async () => {
       const live = await getLiveSkills();
-      if (active && live && live.length > 0) setSkills(live);
+      if (active && live && live.length > 0) {
+        startTransition(() => {
+          setSkills(live);
+        });
+      }
     };
 
     fetchLatest();
@@ -2397,7 +2447,7 @@ export interface ProjectReview {
   likes?: number;
 }
 
-const STORAGE_PROJECT_REVIEWS_KEY = "maharab_project_reviews";
+export const STORAGE_PROJECT_REVIEWS_KEY = "maharab_project_reviews";
 const STORAGE_LIKED_REVIEWS_KEY = "maharab_liked_reviews";
 const STORAGE_DELETED_REVIEWS_KEY = "maharab_deleted_review_ids";
 const STORAGE_DELETED_REVIEW_FPS_KEY = "maharab_deleted_review_fingerprints";
@@ -2919,6 +2969,18 @@ export const likeProjectReview = async (id: string): Promise<number> => {
 // ============================================================================
 // Testimonials Slider System (Home Page Dynamic Showcase)
 // ============================================================================
+export const getCachedReviewsSync = (limit = 12): ProjectReview[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_PROJECT_REVIEWS_KEY);
+    if (raw) {
+      const list: ProjectReview[] = JSON.parse(raw);
+      if (Array.isArray(list) && list.length > 0) {
+        return list.slice(0, limit);
+      }
+    }
+  } catch (e) {}
+  return [];
+};
 
 export const STORAGE_TESTIMONIALS_CONFIG_KEY = "maharab_testimonials_config";
 
@@ -3161,7 +3223,7 @@ export const useDevelopmentProcessConfig = (): DevelopmentProcessConfig => {
 export const STORAGE_EXPERIENCE_KEY = "maharab_cached_experience";
 export const STORAGE_EXPERIENCE_CONFIG_KEY = "maharab_cached_experience_config";
 
-export const getLiveExperience = async (): Promise<ExperienceItem[]> => {
+export const getCachedExperienceSync = (): ExperienceItem[] => {
   try {
     const cached = localStorage.getItem(STORAGE_EXPERIENCE_KEY);
     if (cached) {
@@ -3171,6 +3233,14 @@ export const getLiveExperience = async (): Promise<ExperienceItem[]> => {
       }
     }
   } catch (e) {}
+  return EXPERIENCE_DATA;
+};
+
+export const getLiveExperience = async (): Promise<ExperienceItem[]> => {
+  const cached = getCachedExperienceSync();
+  if (cached !== EXPERIENCE_DATA && cached.length > 0) {
+    return cached;
+  }
 
   if (isSupabaseConfigured && supabase) {
     try {
