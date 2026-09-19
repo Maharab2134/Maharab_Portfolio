@@ -125,7 +125,7 @@ const ProjectCard: React.FC<{
           <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-purple-300 transition-colors mb-1.5 line-clamp-1">
             {project.title}
           </h3>
-          <p className="text-xs leading-relaxed text-slate-400 line-clamp-2 mb-3.5 font-normal">
+          <p className="text-xs leading-relaxed text-slate-400 line-clamp-1 mb-3.5 font-normal" title={project.description}>
             {project.description}
           </p>
         </div>
