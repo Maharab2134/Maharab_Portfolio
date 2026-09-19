@@ -156,8 +156,8 @@ const About: React.FC = () => {
               <a
                 href={resumeUrl}
                 target="_blank"
-                rel="noreferrer"
-                download
+                rel="noopener noreferrer"
+                download="Md_Maharab_Hosen_Resume.pdf"
                 className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all duration-300 rounded-xl shadow-lg bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:shadow-purple-500/30 hover:scale-105 active:scale-95 cursor-pointer"
               >
                 {renderIcon(FaDownload, { size: 12 })}

@@ -96,7 +96,7 @@ export const PORTFOLIO_INFO = {
   location: "Rupnagar, Mirpur 2, Dhaka",
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=Rupnagar,+Mirpur+2,+Dhaka,+Bangladesh",
   resumeUrl:
-    "https://zcmeryxyifkxbxkmgvfe.supabase.co/storage/v1/object/public/portfolio-assets/resumes/1789151663633_9bxyr9.pdf",
+    "https://zcmeryxyifkxbxkmgvfe.supabase.co/storage/v1/object/public/portfolio-assets/resumes/1789574809090_xhb481.pdf",
   introVideoId: "1BzSWgFEBgruUq-3wkTWfEiip3Rzxr-Pm",
   showIntroVideo: true,
   introVideoUrl: "https://drive.google.com/file/d/1BzSWgFEBgruUq-3wkTWfEiip3Rzxr-Pm/preview",

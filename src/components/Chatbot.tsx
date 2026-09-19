@@ -58,8 +58,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     PortfolioChatbotEngine.getInitialMessage(context),
   ]);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const modalContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Update initial message if context changes and chat hasn't started yet
@@ -78,15 +78,24 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     });
   }, [activeView, selectedProject, activeSection]);
 
-  // Scroll to bottom on new messages (keep at top on initial load so greeting is visible)
+  // Scroll strictly within messagesContainerRef (never scroll window or outer modal)
   useEffect(() => {
     if (isOpen) {
       if (messages.length > 1 || isTyping) {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTo({
+            top: messagesContainerRef.current.scrollHeight,
+            behavior: "smooth",
+          });
+        }
       } else {
         if (messagesContainerRef.current) {
           messagesContainerRef.current.scrollTop = 0;
         }
+      }
+      // Ensure the outer modal container is strictly locked at top 0 (never scroll outer modal)
+      if (modalContainerRef.current && modalContainerRef.current.scrollTop !== 0) {
+        modalContainerRef.current.scrollTop = 0;
       }
     }
   }, [messages, isTyping, isOpen]);
@@ -324,11 +333,17 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={modalContainerRef}
+            onScroll={(e) => {
+              if (e.currentTarget.scrollTop !== 0) {
+                e.currentTarget.scrollTop = 0;
+              }
+            }}
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-50 w-[95vw] sm:w-[420px] h-[640px] sm:h-[680px] max-h-[calc(100vh-2rem)] rounded-3xl bg-slate-950/95 border border-slate-800/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 flex flex-col overflow-hidden text-slate-100"
+            className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-50 w-[95vw] sm:w-[420px] h-[640px] sm:h-[680px] max-h-[calc(100dvh-2rem)] rounded-3xl bg-slate-950/95 border border-slate-800/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 flex flex-col overflow-hidden text-slate-100"
           >
             {/* Ambient Background Glows */}
             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
@@ -419,7 +434,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             {/* Messages Stream */}
             <div
               ref={messagesContainerRef}
-              className="relative z-10 flex-1 overflow-y-auto p-3.5 pt-4 space-y-3.5 text-xs scrollbar-thin scrollbar-thumb-purple-600/30 scrollbar-track-transparent"
+              className="relative z-10 flex-1 min-h-0 overflow-y-auto p-3.5 pt-4 space-y-3.5 text-xs scrollbar-thin scrollbar-thumb-purple-600/30 scrollbar-track-transparent"
             >
               {messages.map((msg) => (
                 <div
@@ -558,8 +573,6 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.3s]" />
                 </div>
               )}
-
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Pill Input Container */}
