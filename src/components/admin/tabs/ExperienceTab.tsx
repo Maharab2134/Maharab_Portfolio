@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FaBriefcase,
   FaPlus,
-  FaCheckCircle,
   FaTimes,
   FaSpinner,
   FaSave,
@@ -17,6 +16,8 @@ import {
   FaBuilding,
   FaMapMarkerAlt,
   FaCalendarAlt,
+  FaGlobe,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
 import {
   saveLiveExperience,
@@ -24,7 +25,7 @@ import {
   saveExperienceConfig,
   resetExperienceDefaults,
 } from "../../../lib/portfolioService";
-import { ExperienceItem } from "../../../data/portfolioData";
+import { ExperienceItem, getCompanyLogoUrl } from "../../../data/portfolioData";
 import { renderIcon, getFeatureList, AdminToast } from "../types";
 
 interface ExperienceTabProps {
@@ -46,12 +47,13 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
   const [subtitle, setSubtitle] = useState(config.subtitle);
   const [isSavingHeader, setIsSavingHeader] = useState(false);
 
-  // Experience modal/editor state
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // In-Page Experience Editor state (No Dialog/Modal, following Academic Degree Programs)
+  const [isAdding, setIsAdding] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [form, setForm] = useState({
     role: "",
     company: "",
+    companyUrl: "",
     location: "",
     period: "",
     employmentType: "Full-time",
@@ -105,12 +107,14 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
     }
   };
 
-  // Open Modal for Add
+  // Open In-Page Form for Add
   const handleOpenAdd = () => {
     setEditingIndex(null);
+    setIsAdding(true);
     setForm({
       role: "",
       company: "",
+      companyUrl: "",
       location: "Dhaka, Bangladesh",
       period: "2024 - Present",
       employmentType: "Full-time",
@@ -119,17 +123,18 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
       highlights: "",
       isActive: true,
     });
-    setIsModalOpen(true);
   };
 
-  // Open Modal for Edit
+  // Open In-Page Form for Edit
   const handleOpenEdit = (idx: number) => {
     const item = experienceList[idx];
     if (!item) return;
+    setIsAdding(false);
     setEditingIndex(idx);
     setForm({
       role: item.role || "",
       company: item.company || "",
+      companyUrl: item.companyUrl || "",
       location: item.location || "",
       period: item.period || "",
       employmentType: item.employmentType || "Full-time",
@@ -138,14 +143,18 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
       highlights: Array.isArray(item.highlights) ? item.highlights.join("\n") : "",
       isActive: item.isActive !== false,
     });
-    setIsModalOpen(true);
+  };
+
+  const handleCancelForm = () => {
+    setIsAdding(false);
+    setEditingIndex(null);
   };
 
   // Save Experience (Add or Edit)
   const handleSaveExperience = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.role.trim() || !form.company.trim()) {
-      alert("Please provide both Job Role and Company name.");
+      alert("Please provide both Job Role and Company / Organization name.");
       return;
     }
 
@@ -159,6 +168,7 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
     const newExpItem: ExperienceItem = {
       role: form.role.trim(),
       company: form.company.trim(),
+      companyUrl: form.companyUrl.trim() || undefined,
       location: form.location.trim(),
       period: form.period.trim() || "2024 - Present",
       employmentType: form.employmentType.trim() || "Full-time",
@@ -171,13 +181,13 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
     let updatedList: ExperienceItem[];
     if (editingIndex !== null && editingIndex >= 0) {
       updatedList = [...experienceList];
-      updatedList[editingIndex] = newExpItem;
+      updatedList[editingIndex] = { ...experienceList[editingIndex], ...newExpItem };
     } else {
       updatedList = [newExpItem, ...experienceList];
     }
 
     setExperienceList(updatedList);
-    setIsModalOpen(false);
+    setIsAdding(false);
     setEditingIndex(null);
     setSaving(true);
 
@@ -186,7 +196,7 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
       showToast(
         res.error
           ? `Saved locally! (Sync note: ${res.error})`
-          : "Experience item saved and synced successfully!"
+          : "Career role saved and synced successfully!"
       );
     } catch (err: any) {
       showToast("Failed to save experience: " + err.message, "error");
@@ -284,6 +294,9 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
     }
   };
 
+  // Preview logo for current form companyUrl
+  const liveFormLogo = form.companyUrl ? getCompanyLogoUrl(form.companyUrl) : "";
+
   return (
     <div className="space-y-6">
       {/* Toast Notification */}
@@ -367,7 +380,7 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
 
       {/* SECTION HEADERS CUSTOMIZER */}
       <div className="p-6 rounded-2xl bg-[#0b1120]/80 border border-white/10 backdrop-blur-xl shadow-xl">
-        <h3 className="text-md font-bold text-white mb-1">Section Titles & Heading</h3>
+        <h3 className="text-md font-bold text-white mb-1">Section Titles &amp; Heading</h3>
         <p className="text-xs text-slate-400 mb-4">
           Customize the badge tag, headline, and subtitle description for the Experience section.
         </p>
@@ -428,18 +441,18 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
         </form>
       </div>
 
-      {/* EXPERIENCE ITEMS MANAGEMENT */}
-      <div className="p-6 rounded-2xl bg-[#0b1120]/80 border border-white/10 backdrop-blur-xl shadow-xl space-y-4">
+      {/* EXPERIENCE ITEMS MANAGEMENT (CAREER HISTORY & ROLES) */}
+      <div className="p-6 rounded-2xl bg-[#0b1120]/80 border border-white/10 backdrop-blur-xl shadow-xl space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-white/10">
           <div>
             <h3 className="text-md font-bold text-white flex items-center gap-2">
-              <span>Career History & Roles</span>
-              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+              <span>Career History &amp; Roles</span>
+              <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
                 {experienceList.length} total
               </span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Manage, reorder, or toggle individual roles. Inactive roles will not appear on the frontend.
+              Manage, reorder, or toggle individual roles. Company website link auto-detects official company logos.
             </p>
           </div>
 
@@ -457,13 +470,238 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:opacity-90 text-white transition-opacity shadow-lg shadow-cyan-500/20"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:opacity-90 text-white transition-opacity shadow-lg shadow-cyan-500/20 cursor-pointer"
             >
               {renderIcon(FaPlus, { size: 11 })}
-              Add Experience
+              + Add Experience
             </button>
           </div>
         </div>
+
+        {/* In-Page Add / Edit Career History & Role Form (No Modal/Dialog, following Academic Degree Programs) */}
+        {(isAdding || editingIndex !== null) && (
+          <motion.form
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onSubmit={handleSaveExperience}
+            className="p-6 rounded-2xl border border-cyan-500/30 bg-[#0d1527]/95 shadow-2xl space-y-4 text-xs backdrop-blur-md"
+          >
+            <div className="flex items-center justify-between pb-2.5 border-b border-white/[0.08]">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  {renderIcon(editingIndex !== null ? FaEdit : FaPlus, { size: 12 })}
+                </div>
+                <span className="font-bold text-xs text-cyan-300 font-mono uppercase tracking-wider">
+                  {editingIndex !== null ? "Edit Career History & Role" : "Add New Career History & Role"}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCancelForm}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+                title="Close form"
+              >
+                {renderIcon(FaTimes, { size: 13 })}
+              </button>
+            </div>
+
+            {/* Row 1: Role & Company */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block font-semibold text-slate-200 mb-1 text-xs">
+                  Job Role / Title <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  placeholder="e.g. Full-Stack Software Engineer"
+                  className="w-full px-3.5 py-2.5 text-xs text-white bg-[#080d1a] border border-white/[0.1] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-200 mb-1 text-xs">
+                  Company / Organization Name <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.company}
+                  onChange={(e) => setForm({ ...form, company: e.target.value })}
+                  placeholder="e.g. Google, Tech Innovations, or BUBT"
+                  className="w-full px-3.5 py-2.5 text-xs text-white bg-[#080d1a] border border-white/[0.1] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Company Website Link & Location */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-semibold text-slate-200 text-xs flex items-center gap-1.5">
+                    {renderIcon(FaGlobe, { size: 11, className: "text-cyan-400" })}
+                    <span>Company Website Link</span>
+                  </label>
+                  {liveFormLogo && (
+                    <span className="inline-flex items-center gap-1 text-[11px] text-cyan-300 font-mono">
+                      <img
+                        src={liveFormLogo}
+                        alt="Logo preview"
+                        className="w-3.5 h-3.5 rounded object-contain bg-white/10"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
+                      <span>Logo detected</span>
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={form.companyUrl}
+                  onChange={(e) => setForm({ ...form, companyUrl: e.target.value })}
+                  placeholder="e.g. https://github.com or company.com"
+                  className="w-full px-3.5 py-2.5 text-xs text-white bg-[#080d1a] border border-white/[0.1] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Company website link will be embedded into the Company name, and its logo will be fetched and rendered automatically.
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-200 mb-1 text-xs">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  placeholder="e.g. Dhaka, Bangladesh (Hybrid) or Remote"
+                  className="w-full px-3.5 py-2.5 text-xs text-white bg-[#080d1a] border border-white/[0.1] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+
+            {/* Row 3: Period & Employment Type */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block font-semibold text-slate-200 mb-1 text-xs">
+                  Period / Timeline
+                </label>
+                <input
+                  type="text"
+                  value={form.period}
+                  onChange={(e) => setForm({ ...form, period: e.target.value })}
+                  placeholder="e.g. 2024 - Present or 2023 - 2024"
+                  className="w-full px-3.5 py-2.5 text-xs text-white bg-[#080d1a] border border-white/[0.1] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-200 mb-1 text-xs">
+                  Employment Type
+                </label>
+                <select
+                  value={form.employmentType}
+                  onChange={(e) => setForm({ ...form, employmentType: e.target.value })}
+                  className="w-full px-3.5 py-2.5 text-xs text-white bg-[#080d1a] border border-white/[0.1] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium"
+                >
+                  <option value="Full-time">Full-time</option>
+                  <option value="Contract / Remote">Contract / Remote</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Internship">Internship</option>
+                  <option value="Freelance">Freelance</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Row 4: Role Description */}
+            <div>
+              <label className="block font-semibold text-slate-200 mb-1 text-xs">
+                Role Summary / Description
+              </label>
+              <textarea
+                rows={2}
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Brief summary of your role, key duties, and scope..."
+                className="w-full px-3.5 py-2.5 text-xs text-white bg-[#080d1a] border border-white/[0.1] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500 resize-none"
+              />
+            </div>
+
+            {/* Row 5: Technologies */}
+            <div>
+              <label className="block font-semibold text-slate-200 mb-1 text-xs">
+                Technologies / Stack (Comma-separated)
+              </label>
+              <input
+                type="text"
+                value={form.technologies}
+                onChange={(e) => setForm({ ...form, technologies: e.target.value })}
+                placeholder="e.g. React, Next.js, Node.js, TypeScript, PostgreSQL, Docker"
+                className="w-full px-3.5 py-2.5 text-xs text-white bg-[#080d1a] border border-white/[0.1] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500"
+              />
+            </div>
+
+            {/* Row 6: Key Highlights */}
+            <div>
+              <label className="block font-semibold text-slate-200 mb-1 text-xs">
+                Key Highlights / Achievements (One per line)
+              </label>
+              <textarea
+                rows={3}
+                value={form.highlights}
+                onChange={(e) => setForm({ ...form, highlights: e.target.value })}
+                placeholder="Architected scalable full-stack web applications with 99.9% uptime&#10;Optimized database queries and API response times by 45%"
+                className="w-full px-3.5 py-2.5 text-xs text-white bg-[#080d1a] border border-white/[0.1] rounded-xl focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 font-medium placeholder:text-slate-500"
+              />
+            </div>
+
+            {/* Row 7: Active / Inactive checkbox */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/10">
+              <input
+                type="checkbox"
+                id="isActiveItem"
+                checked={form.isActive}
+                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                className="w-4 h-4 rounded text-cyan-500 bg-slate-800 border-white/20 focus:ring-cyan-500 cursor-pointer"
+              />
+              <label htmlFor="isActiveItem" className="text-xs text-slate-300 cursor-pointer">
+                <span className="font-semibold text-white">Item Active</span> &mdash; When checked, this role is visible on the public website (if section is active).
+              </label>
+            </div>
+
+            {/* Row 8: Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/[0.08]">
+              <button
+                type="button"
+                onClick={handleCancelForm}
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:opacity-95 shadow-md shadow-cyan-500/20 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+              >
+                {saving ? (
+                  <>
+                    {renderIcon(FaSpinner, { size: 11, className: "animate-spin" })}
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    {renderIcon(FaSave, { size: 11 })}
+                    <span>{editingIndex !== null ? "Update Experience" : "Save Experience"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.form>
+        )}
 
         {/* List of Experience items */}
         {experienceList.length === 0 ? (
@@ -473,13 +711,20 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
             </div>
             <p className="text-sm font-medium text-slate-300">No experience entries found</p>
             <p className="text-xs text-slate-500 mt-1">
-              Click &quot;Add Experience&quot; or &quot;Reset&quot; to restore defaults.
+              Click &quot;+ Add Experience&quot; or &quot;Reset&quot; to restore defaults.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {experienceList.map((exp, idx) => {
               const isItemActive = exp.isActive !== false;
+              const logoUrl = getCompanyLogoUrl(exp.companyUrl, exp.companyLogo);
+              const formattedUrl = exp.companyUrl
+                ? exp.companyUrl.trim().startsWith("http://") || exp.companyUrl.trim().startsWith("https://")
+                  ? exp.companyUrl.trim()
+                  : `https://${exp.companyUrl.trim()}`
+                : "";
+
               return (
                 <div
                   key={exp.id || idx}
@@ -489,60 +734,101 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
                       : "bg-red-950/10 border-red-500/20 opacity-70"
                   }`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                    <div className="space-y-1.5 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-base font-bold text-white">{exp.role}</h4>
-                        <span
-                          className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${
-                            isItemActive
-                              ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
-                              : "bg-rose-500/10 text-rose-300 border-rose-500/20"
-                          }`}
-                        >
-                          {isItemActive ? "ACTIVE" : "INACTIVE"}
-                        </span>
-                        {exp.employmentType && (
-                          <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                            {exp.employmentType}
-                          </span>
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    {/* Left side: Company Logo avatar + Role details */}
+                    <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                      {/* Company Logo Avatar */}
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-900 border border-white/15 p-1.5 flex items-center justify-center flex-shrink-0 shadow-md">
+                        {logoUrl ? (
+                          <img
+                            src={logoUrl}
+                            alt={exp.company}
+                            className="w-full h-full object-contain rounded"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="text-cyan-400">
+                            {renderIcon(FaBuilding, { size: 16 })}
+                          </div>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
-                        <span className="inline-flex items-center gap-1 text-slate-300 font-medium">
-                          {renderIcon(FaBuilding, { size: 11, className: "text-cyan-400" })}
-                          {exp.company}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          {renderIcon(FaCalendarAlt, { size: 11, className: "text-purple-400" })}
-                          {exp.period}
-                        </span>
-                        {exp.location && (
-                          <span className="inline-flex items-center gap-1">
-                            {renderIcon(FaMapMarkerAlt, { size: 11, className: "text-slate-500" })}
-                            {exp.location}
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-base font-bold text-white">{exp.role}</h4>
+                          <span
+                            className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${
+                              isItemActive
+                                ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+                                : "bg-rose-500/10 text-rose-300 border-rose-500/20"
+                            }`}
+                          >
+                            {isItemActive ? "ACTIVE" : "INACTIVE"}
                           </span>
-                        )}
-                      </div>
-
-                      <p className="text-xs text-slate-300/90 leading-relaxed pt-1 line-clamp-2">
-                        {exp.description}
-                      </p>
-
-                      {/* Tech badges */}
-                      {exp.technologies && exp.technologies.length > 0 && (
-                        <div className="flex flex-wrap gap-1 pt-1.5">
-                          {exp.technologies.map((t, ti) => (
-                            <span
-                              key={ti}
-                              className="px-2 py-0.5 text-[10px] rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/20"
-                            >
-                              {t}
+                          {exp.employmentType && (
+                            <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                              {exp.employmentType}
                             </span>
-                          ))}
+                          )}
                         </div>
-                      )}
+
+                        {/* Company Link and Metadata */}
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                          {formattedUrl ? (
+                            <a
+                              href={formattedUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 font-semibold underline-offset-2 hover:underline transition-colors group/link"
+                              title={`Visit ${exp.company} website: ${formattedUrl}`}
+                            >
+                              <span>{exp.company}</span>
+                              {renderIcon(FaExternalLinkAlt, {
+                                size: 9,
+                                className: "opacity-70 group-hover/link:opacity-100",
+                              })}
+                            </a>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-slate-300 font-medium">
+                              <span>{exp.company}</span>
+                            </span>
+                          )}
+
+                          <span className="inline-flex items-center gap-1">
+                            {renderIcon(FaCalendarAlt, { size: 11, className: "text-purple-400" })}
+                            <span>{exp.period}</span>
+                          </span>
+
+                          {exp.location && (
+                            <span className="inline-flex items-center gap-1">
+                              {renderIcon(FaMapMarkerAlt, { size: 11, className: "text-slate-500" })}
+                              <span>{exp.location}</span>
+                            </span>
+                          )}
+                        </div>
+
+                        {exp.description && (
+                          <p className="text-xs text-slate-300/90 leading-relaxed pt-1 line-clamp-2">
+                            {exp.description}
+                          </p>
+                        )}
+
+                        {/* Tech badges */}
+                        {exp.technologies && exp.technologies.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-1.5">
+                            {exp.technologies.map((t, ti) => (
+                              <span
+                                key={ti}
+                                className="px-2 py-0.5 text-[10px] rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/20"
+                              >
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Action Buttons */}
@@ -613,184 +899,6 @@ export const ExperienceTab: React.FC<ExperienceTabProps> = ({
           </div>
         )}
       </div>
-
-      {/* ADD / EDIT EXPERIENCE MODAL */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-2xl my-8 rounded-2xl bg-[#0e1629] border border-white/15 p-6 sm:p-8 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  {renderIcon(FaBriefcase, { className: "text-cyan-400" })}
-                  {editingIndex !== null ? "Edit Experience Entry" : "Add Experience Entry"}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
-                >
-                  {renderIcon(FaTimes, { size: 16 })}
-                </button>
-              </div>
-
-              <form onSubmit={handleSaveExperience} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Job Role / Title *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={form.role}
-                      onChange={(e) => setForm({ ...form, role: e.target.value })}
-                      placeholder="e.g. Full-Stack Software Engineer"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-500/50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Company / Organization *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={form.company}
-                      onChange={(e) => setForm({ ...form, company: e.target.value })}
-                      placeholder="e.g. Tech Solutions Inc."
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-500/50"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Period / Dates
-                    </label>
-                    <input
-                      type="text"
-                      value={form.period}
-                      onChange={(e) => setForm({ ...form, period: e.target.value })}
-                      placeholder="e.g. 2024 - Present"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-500/50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Location
-                    </label>
-                    <input
-                      type="text"
-                      value={form.location}
-                      onChange={(e) => setForm({ ...form, location: e.target.value })}
-                      placeholder="e.g. Dhaka, Bangladesh"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-500/50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Employment Type
-                    </label>
-                    <select
-                      value={form.employmentType}
-                      onChange={(e) => setForm({ ...form, employmentType: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-500/50"
-                    >
-                      <option value="Full-time">Full-time</option>
-                      <option value="Contract / Remote">Contract / Remote</option>
-                      <option value="Part-time">Part-time</option>
-                      <option value="Internship">Internship</option>
-                      <option value="Freelance">Freelance</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Role Description
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    placeholder="Brief description of your role, key duties, and scope..."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-500/50 resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Technologies / Stack (Comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={form.technologies}
-                    onChange={(e) => setForm({ ...form, technologies: e.target.value })}
-                    placeholder="e.g. React, Next.js, Node.js, TypeScript, Supabase"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-500/50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Key Achievements / Highlights (One per line)
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={form.highlights}
-                    onChange={(e) => setForm({ ...form, highlights: e.target.value })}
-                    placeholder="Engineered scalable full stack web app with 99.9% uptime&#10;Optimized REST APIs cutting response time by 40%"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-500/50"
-                  />
-                </div>
-
-                {/* Active / Inactive checkbox */}
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/10">
-                  <input
-                    type="checkbox"
-                    id="isActiveItem"
-                    checked={form.isActive}
-                    onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                    className="w-4 h-4 rounded text-cyan-500 bg-slate-800 border-white/20 focus:ring-cyan-500"
-                  />
-                  <label htmlFor="isActiveItem" className="text-xs text-slate-300 cursor-pointer">
-                    <span className="font-semibold text-white">Item Active</span> &mdash; When checked, this role is visible on the public website (if section is active).
-                  </label>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:opacity-90 text-white transition-opacity shadow-lg shadow-cyan-500/20 disabled:opacity-50"
-                  >
-                    {saving
-                      ? renderIcon(FaSpinner, { className: "animate-spin" })
-                      : renderIcon(FaCheckCircle)}
-                    {editingIndex !== null ? "Update Experience" : "Save Experience"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -3184,6 +3184,8 @@ export const getLiveExperience = async (): Promise<ExperienceItem[]> => {
           id: d.id,
           role: d.role || "",
           company: d.company || "",
+          companyUrl: d.company_url || d.companyUrl || "",
+          companyLogo: d.company_logo || d.companyLogo || "",
           location: d.location || "",
           period: d.period || "",
           employmentType: d.employment_type || d.employmentType || "",
@@ -3220,6 +3222,8 @@ export const saveLiveExperience = async (
       const rows = experienceList.map((exp, idx) => ({
         role: exp.role,
         company: exp.company,
+        company_url: exp.companyUrl || "",
+        company_logo: exp.companyLogo || "",
         location: exp.location || "",
         period: exp.period,
         employment_type: exp.employmentType || "",

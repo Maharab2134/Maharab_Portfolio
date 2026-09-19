@@ -6,8 +6,9 @@ import {
   FaMapMarkerAlt,
   FaCheckCircle,
   FaBuilding,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
-import { EXPERIENCE_DATA, ExperienceItem } from "../data/portfolioData";
+import { EXPERIENCE_DATA, ExperienceItem, getCompanyLogoUrl } from "../data/portfolioData";
 import {
   getLiveExperience,
   useExperienceConfig,
@@ -82,51 +83,110 @@ const Experience: React.FC = () => {
 
         {/* Timeline Container */}
         <div className="relative pl-6 sm:pl-10 space-y-10 border-l border-white/10 ml-4 sm:ml-8">
-          {visibleExperiences.map((exp, index) => (
-            <motion.div
-              key={exp.id || `${exp.company}-${exp.role}-${index}`}
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.12 }}
-              className="relative group"
-            >
-              {/* Timeline Icon Node */}
-              <div className="absolute -left-[37px] sm:-left-[53px] top-1.5 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-900 border border-cyan-500/50 shadow-md shadow-cyan-500/20 text-cyan-400 group-hover:scale-110 group-hover:border-purple-400 group-hover:text-purple-400 transition-all duration-300">
-                {renderIcon(FaBriefcase, { size: 16 })}
-              </div>
+          {visibleExperiences.map((exp, index) => {
+            const logoUrl = getCompanyLogoUrl(exp.companyUrl, exp.companyLogo);
+            const formattedUrl = exp.companyUrl
+              ? exp.companyUrl.trim().startsWith("http://") || exp.companyUrl.trim().startsWith("https://")
+                ? exp.companyUrl.trim()
+                : `https://${exp.companyUrl.trim()}`
+              : "";
 
-              {/* Experience Card */}
-              <div className="p-6 sm:p-7 border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl hover:border-white/20 transition-all duration-300 shadow-xl shadow-black/20">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                  <div>
-                    <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
-                      {exp.role}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-2 mt-1 text-sm font-medium text-slate-300">
-                      <span className="inline-flex items-center gap-1 text-purple-300">
-                        {renderIcon(FaBuilding, { size: 12 })}
-                        {exp.company}
-                      </span>
-                      {exp.location && (
-                        <span className="inline-flex items-center gap-1 text-slate-400 text-xs">
-                          {renderIcon(FaMapMarkerAlt, { size: 10 })}
-                          {exp.location}
-                        </span>
-                      )}
-                      {exp.employmentType && (
-                        <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                          {exp.employmentType}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-white/5 border border-white/10 text-cyan-300 self-start sm:self-auto flex-shrink-0">
-                    {renderIcon(FaCalendarAlt, { size: 10 })}
-                    {exp.period}
-                  </span>
+            return (
+              <motion.div
+                key={exp.id || `${exp.company}-${exp.role}-${index}`}
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.12 }}
+                className="relative group"
+              >
+                {/* Timeline Icon Node */}
+                <div className="absolute -left-[37px] sm:-left-[53px] top-1.5 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-900 border border-cyan-500/50 shadow-md shadow-cyan-500/20 text-cyan-400 group-hover:scale-110 group-hover:border-purple-400 group-hover:text-purple-400 transition-all duration-300 overflow-hidden">
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt={exp.company}
+                      className="w-5 h-5 sm:w-6 sm:h-6 object-contain rounded p-0.5"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    renderIcon(FaBriefcase, { size: 16 })
+                  )}
                 </div>
+
+                {/* Experience Card */}
+                <div className="p-6 sm:p-7 border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl hover:border-white/20 transition-all duration-300 shadow-xl shadow-black/20">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
+                        {exp.role}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2 mt-1 text-sm font-medium text-slate-300">
+                        {formattedUrl ? (
+                          <a
+                            href={formattedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-purple-300 hover:text-cyan-300 transition-colors group/company"
+                            title={`Visit ${exp.company} official website`}
+                          >
+                            {logoUrl && (
+                              <img
+                                src={logoUrl}
+                                alt={exp.company}
+                                className="w-4 h-4 rounded object-contain bg-white/10 p-0.5"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            )}
+                            <span className="font-semibold underline-offset-4 group-hover/company:underline">
+                              {exp.company}
+                            </span>
+                            {renderIcon(FaExternalLinkAlt, {
+                              size: 10,
+                              className: "opacity-60 group-hover/company:opacity-100",
+                            })}
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-purple-300 font-semibold">
+                            {logoUrl ? (
+                              <img
+                                src={logoUrl}
+                                alt={exp.company}
+                                className="w-4 h-4 rounded object-contain bg-white/10 p-0.5"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              renderIcon(FaBuilding, { size: 12 })
+                            )}
+                            <span>{exp.company}</span>
+                          </span>
+                        )}
+
+                        {exp.location && (
+                          <span className="inline-flex items-center gap-1 text-slate-400 text-xs">
+                            {renderIcon(FaMapMarkerAlt, { size: 10 })}
+                            {exp.location}
+                          </span>
+                        )}
+                        {exp.employmentType && (
+                          <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                            {exp.employmentType}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-white/5 border border-white/10 text-cyan-300 self-start sm:self-auto flex-shrink-0">
+                      {renderIcon(FaCalendarAlt, { size: 10 })}
+                      {exp.period}
+                    </span>
+                  </div>
 
                 <p className="text-sm leading-relaxed text-slate-400 mt-3 mb-4">
                   {exp.description}
@@ -166,7 +226,8 @@ const Experience: React.FC = () => {
                 )}
               </div>
             </motion.div>
-          ))}
+          );
+        })}
         </div>
       </div>
     </section>

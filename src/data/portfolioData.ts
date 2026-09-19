@@ -11,6 +11,8 @@ export interface ExperienceItem {
   id?: string;
   role: string;
   company: string;
+  companyUrl?: string;
+  companyLogo?: string;
   location?: string;
   period: string;
   employmentType?: string;
@@ -19,6 +21,22 @@ export interface ExperienceItem {
   highlights: string[];
   isActive?: boolean;
 }
+
+export const getCompanyLogoUrl = (companyUrl?: string, companyLogo?: string): string => {
+  if (companyLogo && companyLogo.trim()) return companyLogo.trim();
+  if (!companyUrl || !companyUrl.trim()) return "";
+  try {
+    const cleanUrl =
+      companyUrl.trim().startsWith("http://") || companyUrl.trim().startsWith("https://")
+        ? companyUrl.trim()
+        : `https://${companyUrl.trim()}`;
+    const domain = new URL(cleanUrl).hostname.replace(/^www\./, "");
+    if (!domain) return "";
+    return `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=128`;
+  } catch {
+    return "";
+  }
+};
 
 export interface ExperienceConfig {
   isActive: boolean;
@@ -162,6 +180,7 @@ export const EXPERIENCE_DATA: ExperienceItem[] = [
   {
     role: "Full-Stack Software Engineer",
     company: "Digital Solutions Lab / Freelance",
+    companyUrl: "https://github.com/Maharab2134",
     location: "Dhaka, Bangladesh (Hybrid)",
     period: "2024 - Present",
     employmentType: "Contract / Remote",
@@ -178,6 +197,7 @@ export const EXPERIENCE_DATA: ExperienceItem[] = [
   {
     role: "Frontend & Mobile Application Developer",
     company: "Tech Innovations & Open Source",
+    companyUrl: "https://flutter.dev",
     location: "Dhaka, Bangladesh",
     period: "2023 - 2024",
     employmentType: "Full-time",
@@ -194,6 +214,7 @@ export const EXPERIENCE_DATA: ExperienceItem[] = [
   {
     role: "Software Engineering Contributor & Intern",
     company: "BUBT Software Development Cell",
+    companyUrl: "https://www.bubt.edu.bd",
     location: "Mirpur, Dhaka",
     period: "2022 - 2023",
     employmentType: "Internship",
