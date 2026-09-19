@@ -10,6 +10,7 @@ import {
   getDynamicPortfolioSnapshot,
   findSkillInPortfolio,
   searchProjectsByTechnology,
+  findDynamicProjectMatches,
 } from "./chatbotKnowledge";
 import { Project } from "../data/projectsData";
 
@@ -81,14 +82,39 @@ const TECH_KEYWORDS = [
   "iot",
   "arduino",
   "esp32",
+  "mqtt",
+  "lora",
   "fastapi",
   "django",
   "machine learning",
   "ml",
   "ai",
+  "nlp",
+  "natural language processing",
+  "sentiment",
+  "sentiment analysis",
+  "bert",
+  "transformer",
+  "transformers",
+  "huggingface",
+  "nltk",
+  "scikit-learn",
+  "sklearn",
+  "pytorch",
+  "tensorflow",
+  "keras",
+  "lstm",
+  "prophet",
+  "time series",
   "deep learning",
   "opencv",
   "socket.io",
+  "jwt",
+  "rbac",
+  "oauth",
+  "oauth2",
+  "leaflet",
+  "rest api",
 ];
 
 // Common typo & alias normalization for technology queries
@@ -119,6 +145,17 @@ export const TECH_ALIASES: Record<string, string> = {
   node: "node.js",
   nodejs: "node.js",
   "node.js": "node.js",
+  nlp: "nlp",
+  sentimnt: "sentiment",
+  sentment: "sentiment",
+  analizer: "analyzer",
+  transfomer: "transformers",
+  transformer: "transformers",
+  pytroch: "pytorch",
+  "sk-learn": "scikit-learn",
+  sklearn: "scikit-learn",
+  "fast-api": "fastapi",
+  "time-series": "time series",
 };
 
 /**
@@ -421,18 +458,27 @@ export class PortfolioChatbotEngine {
     // ------------------------------------------------------------------------
     // 4. About / Who is Maharab / Bio / Intro Query
     // ------------------------------------------------------------------------
-    if (
+    const isAboutDeveloper =
+      q === "about" ||
+      q === "about me" ||
+      q === "about you" ||
+      q === "about him" ||
+      q === "about maharab" ||
       q.includes("who are you") ||
       q.includes("who is") ||
-      q.includes("about") ||
       q.includes("tell me about him") ||
-      q.includes("bio") ||
-      q.includes("summary") ||
-      q.includes("intro") ||
+      q.includes("tell me about yourself") ||
+      q.includes("about maharab") ||
+      q === "bio" ||
+      q.includes("your bio") ||
+      q.includes("his bio") ||
+      q === "intro" ||
+      q.includes("introduce yourself") ||
       q.includes("profile") ||
       q.includes("ke tumi") ||
-      q.includes("maharab ke")
-    ) {
+      q.includes("maharab ke");
+
+    if (isAboutDeveloper) {
       let text = `**${profile.name}** is a **${profile.title}** based in **${profile.location}**.\n\n`;
       text += `${profile.bio}\n\n`;
       text += `**Quick Snapshot:**\n`;
@@ -456,7 +502,100 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 5. Technology / Skill Filtering on Projects ("Show me Flutter projects", "fluttee project ache ki", etc.)
+    // 5. Dynamic Project Matching Engine
+    // (Handles Acronyms like "nlp", "iot", partial titles, technologies, and fuzzy queries)
+    // ------------------------------------------------------------------------
+    const isGeneralProjectsOverview =
+      q === "project" ||
+      q === "projects" ||
+      q === "all projects" ||
+      q === "my projects" ||
+      q === "our projects" ||
+      q === "show all projects" ||
+      q === "what projects are available?" ||
+      q === "what projects are available" ||
+      q === "what did he build" ||
+      q === "what did you build" ||
+      q.includes("what did he build") ||
+      q.includes("what did you build") ||
+      q === "works" ||
+      q === "case studies";
+
+    const dynamicMatches = findDynamicProjectMatches(projects, rawQuery);
+
+    if (!isGeneralProjectsOverview && dynamicMatches.length > 0) {
+      const topMatch = dynamicMatches[0];
+      const isSingleTargetedMatch =
+        dynamicMatches.length === 1 ||
+        (topMatch.score >= 120 && (dynamicMatches.length === 1 || dynamicMatches[1].score < 80));
+
+      if (isSingleTargetedMatch) {
+        const p = topMatch.project;
+        let text = `Are you looking for **${p.title}**? *(Apni ki eta khujchen naki onno kichu?)*\n\n`;
+        text += `Here are the verified details from the portfolio:\n\n`;
+        text += `### **${p.title}** (${p.categoryLabel})\n\n`;
+        if (p.subtitle) text += `**${p.subtitle}**\n\n`;
+        text += `${p.description}\n\n`;
+        if (p.problem) {
+          text += `**The Challenge:**\n${p.problem}\n\n`;
+        }
+        if (p.solution) {
+          text += `**How It Was Solved:**\n${p.solution}\n\n`;
+        }
+        if (p.technologies && p.technologies.length > 0) {
+          text += `**Tech Stack:** ${p.technologies.join(", ")}\n\n`;
+        }
+        if (p.features && p.features.length > 0) {
+          text += `**Key Highlights:**\n${p.features.slice(0, 4).map((f) => `- ${f}`).join("\n")}\n\n`;
+        }
+        if (p.results && p.results.length > 0) {
+          text += `**Impact & Results:**\n${p.results.slice(0, 3).map((r) => `- ${r}`).join("\n")}\n\n`;
+        }
+
+        const actions: ChatAction[] = [];
+        if (p.link) {
+          actions.push({ label: "🌐 Live Demo", type: "url", target: p.link, primary: true });
+        }
+        if (p.github) {
+          actions.push({ label: "💻 GitHub Repository", type: "url", target: p.github });
+        }
+        actions.push({ label: "🔍 Open Case Study", type: "project", target: p.id, projectData: p });
+        actions.push({ label: "Browse All Projects", type: "scroll", target: "projects" });
+
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text,
+          timestamp: new Date().toISOString(),
+          projectsList: [p],
+          actions,
+        };
+      }
+
+      // Multiple project matches (e.g. "iot", "ecommerce", "food", "ml", "flutter")
+      const matchedProjects = dynamicMatches.slice(0, 6).map((m) => m.project);
+      let text = `I found **${dynamicMatches.length} projects** related to your query:\n\n`;
+      text += `Are you looking for one of these? *(Apni ki egulor moddhe konta khujchen naki onno kichu?)*\n\n`;
+      matchedProjects.forEach((proj) => {
+        text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+      });
+      text += `\nClick any project card below to see full details or live demo!`;
+
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text,
+        timestamp: new Date().toISOString(),
+        projectsList: matchedProjects,
+        actions: [
+          { label: "🚀 Browse All Projects", type: "scroll", target: "projects", primary: true },
+          { label: "🛠️ View Skills", type: "scroll", target: "skills" },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 6. Technology / Skill Filtering on Projects fallback
     // ------------------------------------------------------------------------
     const foundTechKeyword = extractTechnologyKeyword(q);
 
@@ -476,7 +615,6 @@ export class PortfolioChatbotEngine {
       if (matchingProjects.length > 0) {
         let text = `Found **${matchingProjects.length} project(s)** built with **${foundTechKeyword.toUpperCase()}**:\n\n`;
         matchingProjects.slice(0, 6).forEach((proj) => {
-          // Prioritize showing the searched technology first
           const matched = proj.technologies.filter(
             (t) =>
               t.toLowerCase() === foundTechKeyword ||
@@ -515,61 +653,6 @@ export class PortfolioChatbotEngine {
           actions: [{ label: "Browse All Projects", type: "scroll", target: "projects", primary: true }],
         };
       }
-    }
-
-    // ------------------------------------------------------------------------
-    // 6. Specific Named Project Search ("tell me about MedAlert", "StockPulse", etc.)
-    // ------------------------------------------------------------------------
-    const techKeywordSet = new Set(TECH_KEYWORDS);
-    const matchedProject = projects.find(
-      (p) =>
-        q.includes(p.title.toLowerCase()) ||
-        q.includes(p.id.toLowerCase()) ||
-        p.title
-          .toLowerCase()
-          .split(" ")
-          .some((word) => word.length > 3 && q.includes(word) && !techKeywordSet.has(word))
-    );
-
-    if (matchedProject) {
-      const p = matchedProject;
-      let text = `### **${p.title}** (${p.categoryLabel})\n\n`;
-      if (p.subtitle) text += `${p.subtitle}\n\n`;
-      text += `${p.description}\n\n`;
-      if (p.problem) {
-        text += `**The Challenge:**\n${p.problem}\n\n`;
-      }
-      if (p.solution) {
-        text += `**How It Was Solved:**\n${p.solution}\n\n`;
-      }
-      if (p.technologies && p.technologies.length > 0) {
-        text += `**Tech Stack:** ${p.technologies.join(", ")}\n\n`;
-      }
-      if (p.features && p.features.length > 0) {
-        text += `**Key Highlights:**\n${p.features.slice(0, 4).map((f) => `- ${f}`).join("\n")}\n\n`;
-      }
-      if (p.results && p.results.length > 0) {
-        text += `**Impact & Results:**\n${p.results.slice(0, 3).map((r) => `- ${r}`).join("\n")}\n\n`;
-      }
-
-      const actions: ChatAction[] = [];
-      if (p.link) {
-        actions.push({ label: "🌐 Live Demo", type: "url", target: p.link, primary: true });
-      }
-      if (p.github) {
-        actions.push({ label: "💻 GitHub Repository", type: "url", target: p.github });
-      }
-      actions.push({ label: "🔍 Open Case Study", type: "project", target: p.id, projectData: p });
-      actions.push({ label: "Browse All Projects", type: "scroll", target: "projects" });
-
-      return {
-        id: `bot_${Date.now()}`,
-        sender: "bot",
-        text,
-        timestamp: new Date().toISOString(),
-        projectsList: [p],
-        actions,
-      };
     }
 
     // ------------------------------------------------------------------------

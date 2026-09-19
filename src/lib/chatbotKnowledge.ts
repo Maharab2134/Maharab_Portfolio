@@ -238,3 +238,205 @@ export const findSkillInPortfolio = (
     projectsUsingIt,
   };
 };
+
+export interface ProjectMatch {
+  project: Project;
+  score: number;
+  matchType: "exact" | "strong" | "partial";
+  matchedReason?: string;
+}
+
+// Conversational and filler stop words in English and Bengali/Banglish
+const CONVERSATIONAL_STOPWORDS = new Set([
+  // English
+  "tell", "me", "about", "show", "can", "you", "give", "info", "information",
+  "please", "what", "is", "the", "a", "an", "of", "to", "for", "with", "and",
+  "or", "in", "on", "at", "by", "from", "do", "does", "did", "have", "has",
+  "any", "some", "all", "project", "projects", "app", "apps", "system", "platform",
+  "details", "view", "open", "check", "how", "he", "his",
+  // Bengali / Banglish
+  "ami", "amake", "apni", "tumi", "bolo", "bolba", "bolte", "parba", "parben",
+  "dekhao", "dekhte", "chai", "kichu", "kono", "konta", "ki", "eta", "eita",
+  "ei", "ta", "ekto", "ache", "ase", "asen", "halka", "niye", "shomporke",
+  "somporke", "bistarito", "moddhe", "er", "te", "koro", "koren", "likhe",
+  "msg", "dichi", "reply", "diche", "kore", "answer", "dibo", "kujchem",
+  "khujchen", "onno", "kicho",
+]);
+
+/**
+ * Intelligent dynamic project matching engine.
+ * Dynamically evaluates all project properties (title, id, acronyms, subtitle,
+ * technologies, description, problem, solution, features, category) to accurately
+ * identify matching projects even from short acronyms ("nlp", "iot", "ml") or partial queries.
+ */
+export const findDynamicProjectMatches = (
+  projects: Project[],
+  rawQuery: string
+): ProjectMatch[] => {
+  const cleanQ = rawQuery.toLowerCase().trim();
+  if (!cleanQ) return [];
+
+  // 1. Tokenize query
+  const allTokens = cleanQ
+    .replace(/[^a-z0-9.+]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+
+  // Filter out conversational stop words if we have other meaningful terms
+  const meaningfulTokens = allTokens.filter((t) => !CONVERSATIONAL_STOPWORDS.has(t));
+  const tokens = meaningfulTokens.length > 0 ? meaningfulTokens : allTokens;
+
+  const results: ProjectMatch[] = [];
+
+  for (const p of projects) {
+    let score = 0;
+    const matchedReasons: string[] = [];
+
+    const idLower = p.id.toLowerCase();
+    const idTokens = idLower.split("-");
+    const titleLower = p.title.toLowerCase();
+    const titleTokens = titleLower
+      .replace(/[^a-z0-9.+]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+
+    // Extract title acronyms (e.g. "NLP" from "NLP Sentiment Analyzer", "BUBT", "BD")
+    const titleAcronyms = p.title
+      .split(/\s+/)
+      .map((w) => w.replace(/[^a-zA-Z]/g, ""))
+      .filter((w) => w.length >= 2 && w === w.toUpperCase())
+      .map((w) => w.toLowerCase());
+
+    const subtitleLower = (p.subtitle || "").toLowerCase();
+    const subtitleTokens = subtitleLower
+      .replace(/[^a-z0-9.+]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+
+    const techsLower = p.technologies.map((t) => t.toLowerCase());
+    const categoryLower = p.category.toLowerCase();
+    const categoryLabelLower = p.categoryLabel.toLowerCase();
+    const descLower = (p.description || "").toLowerCase();
+    const problemLower = (p.problem || "").toLowerCase();
+    const solutionLower = (p.solution || "").toLowerCase();
+    const featuresLower = (p.features || []).join(" ").toLowerCase();
+
+    // A. DIRECT EXACT / SUBSTRING MATCHES
+    if (cleanQ === idLower || cleanQ === titleLower) {
+      score += 200;
+      matchedReasons.push("Exact ID/Title match");
+    } else if (titleLower.startsWith(cleanQ) || titleLower.includes(cleanQ)) {
+      score += 150;
+      matchedReasons.push("Title contains query");
+    } else if (cleanQ.includes(idLower) || cleanQ.includes(titleLower)) {
+      score += 140;
+      matchedReasons.push("Query contains project title/id");
+    }
+
+    // B. ACRONYM MATCH (e.g. "nlp" -> "NLP Sentiment Analyzer", "iot" -> IoT projects)
+    for (const t of tokens) {
+      if (titleAcronyms.includes(t)) {
+        score += 160;
+        matchedReasons.push(`Title acronym "${t.toUpperCase()}"`);
+      }
+    }
+
+    // C. TOKEN LEVEL MATCHES IN TITLE & ID
+    for (const t of tokens) {
+      if (titleTokens.includes(t)) {
+        // Direct title word match (e.g. "sentiment", "analyzer", "purchifyshop")
+        score += t.length <= 3 ? 80 : 120;
+        matchedReasons.push(`Title word "${t}"`);
+      } else if (idTokens.includes(t)) {
+        score += 100;
+        matchedReasons.push(`ID segment "${t}"`);
+      } else {
+        // Substring match in title words (e.g. "purchify" in "purchifyshop")
+        for (const tw of titleTokens) {
+          if (tw.length >= 4 && (tw.includes(t) || t.includes(tw))) {
+            score += 90;
+            matchedReasons.push(`Partial title match "${t}" in "${tw}"`);
+            break;
+          }
+        }
+      }
+    }
+
+    // D. TECHNOLOGY MATCHES
+    for (const t of tokens) {
+      const exactTech = techsLower.find((tech) => tech === t);
+      if (exactTech) {
+        score += 85;
+        matchedReasons.push(`Technology "${exactTech}"`);
+      } else {
+        const partialTech = techsLower.find(
+          (tech) => tech.length >= 3 && (tech.includes(t) || t.includes(tech))
+        );
+        if (partialTech) {
+          score += 65;
+          matchedReasons.push(`Technology match "${partialTech}"`);
+        }
+      }
+    }
+
+    // E. SUBTITLE & CATEGORY MATCHES
+    for (const t of tokens) {
+      if (subtitleTokens.includes(t)) {
+        score += 55;
+        matchedReasons.push(`Subtitle word "${t}"`);
+      }
+    }
+
+    if (
+      tokens.some((t) => t === categoryLower || categoryLabelLower.includes(t)) ||
+      cleanQ.includes(categoryLower) ||
+      cleanQ.includes(categoryLabelLower)
+    ) {
+      score += 45;
+      matchedReasons.push(`Category match`);
+    }
+
+    // F. CONTEXTUAL / BODY MATCH ("halka kicho mile")
+    // Check description, problem, solution, features
+    for (const t of tokens) {
+      if (t.length >= 3) {
+        if (descLower.includes(t)) {
+          score += 35;
+          matchedReasons.push(`Description match "${t}"`);
+        } else if (solutionLower.includes(t)) {
+          score += 25;
+          matchedReasons.push(`Solution match "${t}"`);
+        } else if (problemLower.includes(t)) {
+          score += 20;
+          matchedReasons.push(`Problem match "${t}"`);
+        } else if (featuresLower.includes(t)) {
+          score += 20;
+          matchedReasons.push(`Feature match "${t}"`);
+        }
+      }
+    }
+
+    // Determine match confidence
+    if (score >= 35) {
+      let matchType: "exact" | "strong" | "partial" = "partial";
+      if (score >= 120) {
+        matchType = "exact";
+      } else if (score >= 65) {
+        matchType = "strong";
+      }
+
+      results.push({
+        project: p,
+        score,
+        matchType,
+        matchedReason: matchedReasons.join(", "),
+      });
+    }
+  }
+
+  // Sort by highest score first
+  results.sort((a, b) => b.score - a.score);
+
+  return results;
+};
+
