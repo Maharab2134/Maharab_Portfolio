@@ -136,5 +136,22 @@
         <div style="width: 36px; height: 36px; border: 3px solid rgba(56, 189, 248, 0.2); border-top-color: #38bdf8; border-radius: 50%; animation: appPreloaderSpin 0.9s linear infinite;"></div>
       </div>
     </div>
+
+    <!-- Google Translate Website Widget Mount Point -->
+    <div id="google_translate_element" style="position: absolute; left: -9999px; top: -9999px; width: 0; height: 0; overflow: hidden;" aria-hidden="true"></div>
+
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        if (window.google && window.google.translate) {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'en',
+            autoDisplay: false,
+            layout: (window.google.translate.TranslateElement && window.google.translate.TranslateElement.InlineLayout) ? window.google.translate.TranslateElement.InlineLayout.SIMPLE : 0
+          }, 'google_translate_element');
+        }
+      }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
   </body>
 </html>
+

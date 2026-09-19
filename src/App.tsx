@@ -22,6 +22,7 @@ import Chatbot from "./components/Chatbot";
 import { Project, getAllProjectsSync } from "./data/projectsData";
 import { trackVisitorHit } from "./lib/analyticsService";
 import { initBackgroundSync } from "./lib/backgroundSync";
+import { initGoogleTranslateScript } from "./lib/googleTranslate";
 
 type ActiveView = "home" | "hire" | "journey" | "project" | "admin" | "case-studies";
 
@@ -69,9 +70,10 @@ function App() {
     return () => observer.disconnect();
   }, [activeView]);
 
-  // Initialize background data sync engine for user panel
+  // Initialize background data sync engine and Google Translate for user panel
   useEffect(() => {
     initBackgroundSync();
+    initGoogleTranslateScript();
   }, []);
 
   // Track telemetry hit when visitor navigates across views

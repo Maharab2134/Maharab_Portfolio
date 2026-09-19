@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
 import { useLiveProfile, calculateWorkStatus } from "../lib/portfolioService";
+import LanguageSelector from "./LanguageSelector";
 
 interface NavbarProps {
   isMenuOpen: boolean;
@@ -314,6 +315,11 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
               );
             })}
 
+            {/* Language Switcher (Google Translate Real-Time Translation) */}
+            <div className="ml-1.5 lg:ml-2">
+              <LanguageSelector />
+            </div>
+
             {/* Hire Me CTA Button */}
             <a
               href="#hire"
@@ -321,32 +327,33 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
                 if (onNavigatePage) onNavigatePage("hire");
                 else window.location.hash = "#hire";
               }}
-              className="relative inline-flex items-center gap-2 px-5 py-2 ml-3 text-sm font-semibold text-white transition-all duration-300 rounded-full group bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-105 active:scale-95"
+              className="relative inline-flex items-center gap-2 px-5 py-2 ml-2 text-sm font-semibold text-white transition-all duration-300 rounded-full group bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-105 active:scale-95"
             >
               <span>Hire Me</span>
               {renderIcon(FaRocket, { size: 12, className: "transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" })}
             </a>
           </nav>
 
-          {/* Mobile Menu Button */}
-          <div className="flex items-center gap-2 md:hidden shrink-0">
+          {/* Mobile Menu Button & Language Switcher */}
+          <div className="flex items-center gap-1.5 sm:gap-2 md:hidden shrink-0">
+            <LanguageSelector isMobileCompact dropdownAlign="right" />
             <a
               href="#hire"
               onClick={() => {
                 if (onNavigatePage) onNavigatePage("hire");
                 else window.location.hash = "#hire";
               }}
-              className="shrink-0 whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold text-white rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-md shadow-purple-500/20 active:scale-95 transition-transform"
+              className="shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold text-white rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-md shadow-purple-500/20 active:scale-95 transition-transform"
             >
               Hire Me
             </a>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2.5 text-slate-300 transition-colors rounded-xl bg-white/5 border border-white/10 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 shrink-0"
+              className="p-2 text-slate-300 transition-colors rounded-xl bg-white/5 border border-white/10 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 shrink-0"
               aria-label={isMenuOpen ? "Close menu" : "Open navigation menu"}
               aria-expanded={isMenuOpen}
             >
-              {isMenuOpen ? renderIcon(FaTimes, { size: 18 }) : renderIcon(FaBars, { size: 18 })}
+              {isMenuOpen ? renderIcon(FaTimes, { size: 17 }) : renderIcon(FaBars, { size: 17 })}
             </button>
           </div>
         </div>
@@ -383,7 +390,16 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
                 );
               })}
 
-              <div className="pt-3 my-2 border-t border-white/10">
+              <div className="pt-3 my-2 border-t border-white/10 space-y-3">
+                {/* Mobile Drawer Language Row */}
+                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                  <span className="text-xs font-medium text-slate-300 flex items-center gap-2">
+                    <span className="text-purple-400">🌐</span>
+                    <span>Website Language</span>
+                  </span>
+                  <LanguageSelector dropdownAlign="right" />
+                </div>
+
                 <a
                   href="#hire"
                   onClick={() => {
