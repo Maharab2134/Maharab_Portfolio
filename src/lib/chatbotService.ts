@@ -877,12 +877,14 @@ export class PortfolioChatbotEngine {
     // 17. STRICT ZERO-HALLUCINATION FALLBACK
     // ------------------------------------------------------------------------
     const fallbackText =
-      `I don't have that specific information because my knowledge is strictly limited to the verified content on **Maharab's portfolio**.\n\n` +
-      `I do not invent external facts or unconfirmed details. Here is what I can assist you with:\n` +
-      `- **Projects & Case Studies** (e.g. Show mobile apps, Tell me about MedAlert)\n` +
-      `- **Technical Skills & Tools** (e.g. What skills does he have?, Does he know Python?)\n` +
-      `- **Work Experience & Education** (e.g. Where did he study?, Career history)\n` +
-      `- **Resume & Contact** (e.g. Download CV, How to contact?)`;
+      `I couldn't find that information in the portfolio.\n` +
+      `I only answer using verified content from this website and won't make up details.\n\n` +
+      `You can ask me about:\n` +
+      `- **Projects & Case Studies**\n` +
+      `- **Skills & Technologies**\n` +
+      `- **Experience & Education**\n` +
+      `- **Resume & Contact**\n\n` +
+      `Try another question.`;
 
     return {
       id: `bot_${Date.now()}`,

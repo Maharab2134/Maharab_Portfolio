@@ -215,8 +215,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({
         );
       }
       // Bullet list item
-      if (line.startsWith("- ")) {
-        const bulletText = line.replace("- ", "");
+      if (line.startsWith("- ") || line.startsWith("• ") || line.startsWith("•")) {
+        const bulletText = line.replace(/^[-•]\s*/, "");
         return (
           <div key={idx} className="flex items-start gap-1.5 text-xs my-0.5 text-slate-200">
             <span className="text-purple-400 mt-0.5">•</span>
