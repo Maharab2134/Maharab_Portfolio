@@ -61,6 +61,14 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const modalContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const cancelAutoCloseTimer = () => {
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+  };
 
   // Update initial message if context changes and chat hasn't started yet
   useEffect(() => {
@@ -119,7 +127,21 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
+  // Cancel auto-close timer when chat modal closes or unmounts
+  useEffect(() => {
+    if (!isOpen) {
+      cancelAutoCloseTimer();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      cancelAutoCloseTimer();
+    };
+  }, []);
+
   const handleSend = (textToSend?: string) => {
+    cancelAutoCloseTimer();
     const query = (textToSend || input).trim();
     if (!query) return;
 
@@ -140,10 +162,24 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       setMessages((prev) => [...prev, reply]);
       setIsTyping(false);
       if (!isOpen) setHasUnread(true);
+
+      // If reply specifies auto-closing after inactivity (e.g. on thank you)
+      if (reply.autoCloseAfterSeconds && reply.autoCloseAfterSeconds > 0) {
+        cancelAutoCloseTimer();
+        autoCloseTimerRef.current = setTimeout(() => {
+          // If the user hasn't typed anything in the input, auto close the chatbot
+          const currentText = inputRef.current ? inputRef.current.value.trim() : "";
+          if (!currentText) {
+            setIsOpen(false);
+          }
+          autoCloseTimerRef.current = null;
+        }, reply.autoCloseAfterSeconds * 1000);
+      }
     }, 220);
   };
 
   const handleActionClick = (action: ChatAction) => {
+    cancelAutoCloseTimer();
     if (action.type === "url") {
       if (action.target) {
         window.open(action.target, "_blank", "noopener,noreferrer");
@@ -186,6 +222,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   };
 
   const handleResetChat = () => {
+    cancelAutoCloseTimer();
     setMessages([PortfolioChatbotEngine.getInitialMessage(context)]);
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = 0;
@@ -590,7 +627,25 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   ref={inputRef}
                   type="text"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    if (e.target.value.trim().length > 0) {
+                      cancelAutoCloseTimer();
+                    } else {
+                      // If user cleared text and last bot message had auto-close, restart timer
+                      const lastMsg = messages[messages.length - 1];
+                      if (lastMsg && lastMsg.sender === "bot" && lastMsg.autoCloseAfterSeconds) {
+                        cancelAutoCloseTimer();
+                        autoCloseTimerRef.current = setTimeout(() => {
+                          const currentText = inputRef.current ? inputRef.current.value.trim() : "";
+                          if (!currentText) {
+                            setIsOpen(false);
+                          }
+                          autoCloseTimerRef.current = null;
+                        }, lastMsg.autoCloseAfterSeconds * 1000);
+                      }
+                    }
+                  }}
                   placeholder="Ask me anything..."
                   className="flex-1 bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none py-1.5 px-1"
                 />

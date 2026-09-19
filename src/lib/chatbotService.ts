@@ -30,6 +30,7 @@ export interface ChatMessage {
   contextTag?: string;
   projectsList?: Project[];
   showQuickActionGrid?: boolean;
+  autoCloseAfterSeconds?: number;
 }
 
 /**
@@ -248,23 +249,38 @@ export class PortfolioChatbotEngine {
     // ------------------------------------------------------------------------
     // B. Gratitude / Polite Response ("thank you", "thanks", "dhonnobad", etc.)
     // ------------------------------------------------------------------------
-    if (
-      q === "thanks" ||
-      q === "thank you" ||
-      q.includes("thank you") ||
-      q.includes("thanks a lot") ||
-      q.includes("dhonnobad") ||
-      q.includes("shukriya")
-    ) {
+    const cleanQ = q.replace(/[!?,.:;~]+$/, "").trim();
+    const isGratitude =
+      cleanQ === "thanks" ||
+      cleanQ === "thank you" ||
+      cleanQ === "thank u" ||
+      cleanQ === "ty" ||
+      cleanQ === "tysm" ||
+      cleanQ === "thx" ||
+      cleanQ === "many thanks" ||
+      cleanQ.includes("thank you") ||
+      cleanQ.includes("thanks") ||
+      cleanQ.includes("dhonnobad") ||
+      cleanQ.includes("danyabad") ||
+      cleanQ.includes("shukriya") ||
+      cleanQ.includes("ধন্যবাদ") ||
+      cleanQ.includes("থ্যাংকস") ||
+      cleanQ.includes("থ্যাংক ইউ") ||
+      cleanQ.includes("থ্যাঙ্ক ইউ") ||
+      cleanQ.includes("শুকরিয়া");
+
+    if (isGratitude) {
       return {
         id: `bot_${Date.now()}`,
         sender: "bot",
-        text: `You're very welcome! 😊 If you have any other questions about Maharab's work or want to get in touch with him, I'm right here.`,
+        text: `You're very welcome! 😊 If you have any other questions about Maharab's work or want to get in touch with him, feel free to ask anytime.`,
         timestamp: new Date().toISOString(),
         actions: [
           { label: "🚀 Browse Projects", type: "scroll", target: "projects" },
           { label: "📬 Contact Maharab", type: "scroll", target: "contact", primary: true },
         ],
+        contextTag: "gratitude",
+        autoCloseAfterSeconds: 20,
       };
     }
 
