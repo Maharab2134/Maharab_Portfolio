@@ -5,16 +5,24 @@ import {
   FaPaperPlane,
   FaRedo,
   FaExternalLinkAlt,
-  FaMagic,
-  FaLightbulb,
+  FaMinus,
+  FaUser,
+  FaFolder,
+  FaCode,
+  FaBriefcase,
+  FaAward,
+  FaEnvelope,
+  FaFileAlt,
+  FaCompass,
 } from "react-icons/fa";
 import {
   ChatMessage,
   ChatAction,
   PortfolioChatbotEngine,
+  formatOneLineDescription,
 } from "../lib/chatbotService";
 import { ActiveContext } from "../lib/chatbotKnowledge";
-import { Project, getAllProjectsSync } from "../data/projectsData";
+import { Project, getAllProjectsSync, toProxyImageUrl } from "../data/projectsData";
 
 interface ChatbotProps {
   activeView: "home" | "hire" | "journey" | "project" | "admin" | "case-studies";
@@ -53,7 +61,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Update initial message or add context hint if context changes
+  // Update initial message if context changes and chat hasn't started yet
   useEffect(() => {
     setMessages((prev) => {
       if (prev.length === 1 && prev[0].id.includes("init")) {
@@ -110,7 +118,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     setInput("");
     setIsTyping(true);
 
-    // Natural responsive delay (150ms-300ms) to give a polished assistant feel
+    // Responsive assistant delay to provide a polished interactive feel
     setTimeout(() => {
       const reply = PortfolioChatbotEngine.processQuery(query, context);
       setMessages((prev) => [...prev, reply]);
@@ -171,7 +179,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       // Heading 3
       if (line.startsWith("### ")) {
         return (
-          <h4 key={idx} className="font-bold text-white text-sm mt-2 mb-1">
+          <h4 key={idx} className="font-bold text-white text-xs sm:text-sm mt-2 mb-1">
             {line.replace("### ", "").replace(/\*\*/g, "")}
           </h4>
         );
@@ -211,7 +219,6 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   };
 
   const renderInlineFormatting = (text: string) => {
-    // Basic bold and markdown link formatting
     const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
     return parts.map((part, i) => {
       if (part.startsWith("**") && part.endsWith("**")) {
@@ -239,58 +246,65 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     });
   };
 
-  // Quick suggestion prompts
-  const quickPrompts = [
-    "Tell me about him",
-    "What projects are available?",
-    "Show Flutter projects",
-    "What skills does he have?",
-    "What experience does he have?",
-    "Where can I find his CV?",
-    "How can I contact him?",
+  // Prototype Quick Action Buttons
+  const quickActions = [
+    { label: "About me", icon: FaUser, prompt: "Tell me about yourself" },
+    { label: "My projects", icon: FaFolder, prompt: "What projects are available?" },
+    { label: "Skills", icon: FaCode, prompt: "What skills do you have?" },
+    { label: "Experience", icon: FaBriefcase, prompt: "What is your career experience?" },
+    { label: "Certifications", icon: FaAward, prompt: "Show certifications" },
+    { label: "Contact", icon: FaEnvelope, prompt: "How can I contact you?" },
+    { label: "Download CV", icon: FaFileAlt, prompt: "Where can I find your CV?" },
+    { label: "Guide me", icon: FaCompass, prompt: "Guide me through the portfolio" },
   ];
 
   return (
     <>
-      {/* Floating Launcher Button */}
-      <div className="fixed bottom-6 right-6 z-50 pointer-events-auto">
+      {/* Floating Launcher Button - Positioned directly above SmartScrollButton */}
+      <div className="fixed bottom-20 sm:bottom-22 right-6 z-40 pointer-events-auto flex items-center gap-3">
+        {/* Prototype-style Speech Bubble Callout */}
+        <motion.div
+          initial={{ opacity: 0, x: 8, scale: 0.92 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="hidden sm:flex flex-col items-end relative pointer-events-none"
+        >
+          <div className="relative px-3.5 py-2 rounded-2xl bg-slate-900/95 border border-purple-500/30 shadow-xl shadow-purple-950/50 text-right backdrop-blur-xl">
+            <span className="text-[11px] text-slate-300 font-medium block leading-tight">
+              Have a question?
+            </span>
+            <span className="text-[12px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-indigo-300 to-cyan-300 leading-tight">
+              Ask Maharab!
+            </span>
+            {/* Arrow tail */}
+            <span className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 bg-slate-900 border-t border-r border-purple-500/30 rotate-45" />
+          </div>
+        </motion.div>
+
+        {/* Floating Robot Launcher Button */}
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
-          whileHover={{ scale: 1.06 }}
-          whileTap={{ scale: 0.94 }}
-          aria-label="Open Portfolio AI Assistant"
-          className="relative group flex items-center gap-2.5 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white shadow-xl shadow-purple-900/40 border border-white/25 backdrop-blur-xl transition-all duration-300 hover:shadow-cyan-500/25"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          aria-label="Open Ask Maharab AI Assistant"
+          className="relative group w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-950/90 border border-purple-500/40 p-2 shadow-xl shadow-purple-950/60 backdrop-blur-xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:border-cyan-400 hover:shadow-cyan-500/30"
         >
-          {/* Subtle Ambient Pulse Ring */}
-          <span className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 opacity-60 blur-sm group-hover:opacity-100 transition duration-500 -z-10 animate-pulse" />
+          {/* Ambient Glow */}
+          <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 opacity-60 blur-md group-hover:opacity-100 transition duration-500 -z-10 animate-pulse" />
 
-          {/* Assistant Icon */}
-          <div className="relative flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-950/60 text-white shadow-inner">
-            <img
-              src="/chatbot.png"
-              alt="AI Assistant"
-              className="w-full h-full object-contain rounded-full"
-              onError={(e) => {
-                (e.target as HTMLElement).style.display = "none";
-              }}
-            />
-            {/* Live Green Online Dot */}
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-950 animate-pulse" />
-          </div>
+          {/* Robot Icon Image */}
+          <img
+            src="/chatbot.png"
+            alt="Ask Maharab"
+            className="w-full h-full object-contain rounded-full"
+          />
 
-          <div className="hidden sm:flex flex-col text-left">
-            <span className="text-[12px] font-bold tracking-wide leading-tight flex items-center gap-1">
-              Ask AI Assistant {renderIcon(FaMagic, { className: "text-[10px] text-amber-300" })}
-            </span>
-            <span className="text-[10px] text-purple-200 font-medium leading-none">
-              Dynamic Portfolio Guide
-            </span>
-          </div>
-
-          {/* Unread Alert Dot */}
-          {hasUnread && (
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-slate-950" />
-          )}
+          {/* Red / Coral Notification Dot */}
+          <span
+            className={`absolute top-0 right-0 w-3.5 h-3.5 bg-rose-500 border-2 border-slate-950 rounded-full shadow-sm ${
+              hasUnread ? "animate-bounce" : ""
+            }`}
+          />
         </motion.button>
       </div>
 
@@ -302,57 +316,65 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="fixed bottom-20 sm:bottom-24 right-3 sm:right-6 z-50 w-[94vw] sm:w-[420px] h-[580px] max-h-[82vh] rounded-2xl bg-slate-950/95 border border-purple-500/25 backdrop-blur-2xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden text-slate-100"
+            className="fixed bottom-24 sm:bottom-28 right-3 sm:right-6 z-50 w-[95vw] sm:w-[420px] h-[600px] max-h-[82vh] rounded-3xl bg-slate-950/95 border border-slate-800/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/50 flex flex-col overflow-hidden text-slate-100"
           >
-            {/* Background Ambient Grid & Glow */}
+            {/* Ambient Background Glows */}
             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
-            <div className="absolute -top-20 -right-20 w-44 h-44 rounded-full bg-purple-600/30 blur-3xl pointer-events-none" />
+            <div className="absolute -top-20 -right-20 w-44 h-44 rounded-full bg-purple-600/25 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-20 -left-20 w-44 h-44 rounded-full bg-cyan-600/20 blur-3xl pointer-events-none" />
 
-            {/* Chat Header */}
-            <div className="relative z-10 px-4 py-3 border-b border-white/10 bg-slate-900/60 backdrop-blur-md flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="relative w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 via-indigo-500 to-cyan-400 p-[1.5px] shadow-md">
-                  <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
-                    <img
-                      src="/chatbot.png"
-                      alt="Maharab's Assistant"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full" />
+            {/* Prototype Header */}
+            <div className="relative z-10 px-4 py-3.5 border-b border-white/10 bg-slate-900/80 backdrop-blur-md flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* Developer Profile Avatar with Online Dot */}
+                <div className="relative w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 via-indigo-500 to-cyan-400 p-[1.5px] shadow-md flex-shrink-0">
+                  <img
+                    src="/images/img.jpg"
+                    alt="Maharab"
+                    className="w-full h-full object-cover rounded-full"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/chatbot.png";
+                    }}
+                  />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-slate-950 rounded-full shadow-sm" />
                 </div>
+
+                {/* Name & Title */}
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="text-xs sm:text-sm font-bold text-white tracking-wide">
-                      Maharab's Assistant
-                    </h3>
-                    <span className="px-1.5 py-0.2 text-[9px] font-semibold text-cyan-300 bg-cyan-950/70 border border-cyan-800/50 rounded">
-                      Live Data
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-slate-400">
-                    Single Source of Truth • 0 Hallucinations
+                  <h3 className="text-sm font-bold text-white tracking-wide leading-tight">
+                    Ask Maharab
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-medium leading-tight">
+                    Portfolio Assistant
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 text-slate-400">
+              {/* Controls: Reset, Minimize, Close */}
+              <div className="flex items-center gap-1.5 text-slate-400">
                 <button
                   onClick={handleResetChat}
-                  title="Clear conversation"
-                  aria-label="Clear chat"
-                  className="p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+                  title="Reset conversation"
+                  aria-label="Reset chat"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors"
                 >
                   {renderIcon(FaRedo, { size: 12 })}
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
+                  title="Minimize Assistant"
+                  aria-label="Minimize chat"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  {renderIcon(FaMinus, { size: 12 })}
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
                   title="Close Assistant (Esc)"
                   aria-label="Close chat"
-                  className="p-1.5 rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors"
                 >
-                  {renderIcon(FaTimes, { size: 14 })}
+                  {renderIcon(FaTimes, { size: 13 })}
                 </button>
               </div>
             </div>
@@ -382,7 +404,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
               </div>
             )}
 
-            {/* Message Stream */}
+            {/* Messages Stream */}
             <div className="relative z-10 flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs scrollbar-thin scrollbar-thumb-purple-600/30 scrollbar-track-transparent">
               {messages.map((msg) => (
                 <div
@@ -404,6 +426,84 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                       <p className="text-xs leading-relaxed">{msg.text}</p>
                     )}
                   </div>
+
+                  {/* Prototype 2-Column Quick Action Grid */}
+                  {msg.showQuickActionGrid && (
+                    <div className="grid grid-cols-2 gap-2 mt-3 w-full">
+                      {quickActions.map((action, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSend(action.prompt)}
+                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800/80 hover:border-purple-500/50 text-slate-300 hover:text-white transition-all duration-200 cursor-pointer text-left shadow-sm group"
+                        >
+                          <span className="text-purple-400 group-hover:text-cyan-300 text-xs transition-colors flex-shrink-0">
+                            {renderIcon(action.icon, { size: 12 })}
+                          </span>
+                          <span className="text-[11px] font-semibold tracking-tight truncate">
+                            {action.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Prototype Project Cards: Strictly 1 Line Description with ... */}
+                  {msg.projectsList && msg.projectsList.length > 0 && (
+                    <div className="space-y-2 mt-2.5 w-full">
+                      {msg.projectsList.map((p) => (
+                        <div
+                          key={p.id}
+                          onClick={() => {
+                            if (onSelectProject) {
+                              onSelectProject(p);
+                            }
+                          }}
+                          className="group relative flex items-center gap-3 p-2.5 rounded-2xl bg-slate-900/95 hover:bg-slate-850 border border-slate-800/90 hover:border-purple-500/50 transition-all duration-200 cursor-pointer shadow-md overflow-hidden"
+                        >
+                          {/* Project Thumbnail */}
+                          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-slate-950 flex-shrink-0 border border-white/10">
+                            <img
+                              src={toProxyImageUrl(p.image)}
+                              alt={p.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = "none";
+                              }}
+                            />
+                          </div>
+
+                          {/* Project Details */}
+                          <div className="flex-1 min-w-0 pr-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <h4 className="text-xs sm:text-sm font-bold text-white group-hover:text-purple-300 transition-colors truncate">
+                                {p.title}
+                              </h4>
+                              <span className="text-slate-400 group-hover:text-cyan-300 text-[11px] transition-colors flex-shrink-0">
+                                {renderIcon(FaExternalLinkAlt, { size: 10 })}
+                              </span>
+                            </div>
+
+                            {/* STRICTLY ONE-LINE DESCRIPTION ENDING IN ... */}
+                            <p className="text-[11px] text-slate-400 truncate line-clamp-1 leading-normal my-0.5">
+                              {formatOneLineDescription(p.description)}
+                            </p>
+
+                            {/* Tech Stack Pills */}
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {p.technologies.slice(0, 3).map((tech, tIdx) => (
+                                <span
+                                  key={tIdx}
+                                  className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-800 text-purple-200 border border-purple-500/20"
+                                >
+                                  {tech}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Interactive Action Pills */}
                   {msg.actions && msg.actions.length > 0 && (
@@ -447,48 +547,42 @@ export const Chatbot: React.FC<ChatbotProps> = ({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Suggestions Chips */}
-            <div className="relative z-10 px-3 py-1.5 border-t border-white/5 bg-slate-950/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-              <span className="text-[10px] text-slate-400 flex items-center gap-1 shrink-0">
-                {renderIcon(FaLightbulb, { className: "text-amber-400" })} Ask:
-              </span>
-              {quickPrompts.map((prompt, pIdx) => (
-                <button
-                  key={pIdx}
-                  onClick={() => handleSend(prompt)}
-                  className="shrink-0 px-2 py-0.5 rounded-md text-[10px] bg-slate-900 text-slate-300 border border-white/10 hover:border-purple-400 hover:text-white transition-colors whitespace-nowrap"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-
-            {/* Input Bar */}
-            <div className="relative z-10 p-2.5 border-t border-white/10 bg-slate-900/80 backdrop-blur-md">
+            {/* Pill Input Container */}
+            <div className="relative z-10 p-3 border-t border-white/10 bg-slate-900/90 backdrop-blur-md">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSend();
                 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-slate-800 focus-within:border-purple-500/60 shadow-inner transition-colors"
               >
                 <input
                   ref={inputRef}
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about projects, skills, experience, or CV..."
-                  className="flex-1 bg-slate-950/90 border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/50 transition-all"
+                  placeholder="Ask me anything..."
+                  className="flex-1 bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none py-1.5"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || isTyping}
                   aria-label="Send message"
-                  className="w-8 h-8 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all shadow-md shadow-purple-900/40"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-md shadow-purple-950/50 flex-shrink-0"
                 >
-                  {renderIcon(FaPaperPlane, { size: 11 })}
+                  {renderIcon(FaPaperPlane, { size: 10 })}
                 </button>
               </form>
+
+              {/* Footer Caption */}
+              <div className="text-center mt-2 flex items-center justify-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                <span>Powered by portfolio content</span>
+                <span>•</span>
+                <span className="flex items-center gap-1 text-slate-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                  Always up to date
+                </span>
+              </div>
             </div>
           </motion.div>
         )}

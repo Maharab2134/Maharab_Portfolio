@@ -28,7 +28,26 @@ export interface ChatMessage {
   timestamp: string;
   actions?: ChatAction[];
   contextTag?: string;
+  projectsList?: Project[];
+  showQuickActionGrid?: boolean;
 }
+
+/**
+ * Formats a project description into strictly 1 concise line ending with "..."
+ * Ensures chatbot acts as a streamlined guide-liner without overwhelming users with text.
+ */
+export const formatOneLineDescription = (desc?: string, maxChars: number = 72): string => {
+  if (!desc) return "...";
+  let clean = desc.replace(/^[#\-*\s]+/, "").trim();
+  const firstSentenceEnd = clean.search(/[.!?](\s|$)/);
+  if (firstSentenceEnd > 20 && firstSentenceEnd <= maxChars) {
+    clean = clean.slice(0, firstSentenceEnd);
+  } else if (clean.length > maxChars) {
+    clean = clean.slice(0, maxChars).trim();
+  }
+  clean = clean.replace(/[.,\s]+$/, "");
+  return clean + "...";
+};
 
 // Common technology keywords for entity extraction
 const TECH_KEYWORDS = [
@@ -79,21 +98,10 @@ export class PortfolioChatbotEngine {
     const snapshot = getDynamicPortfolioSnapshot(context);
     const { profile, context: ctx } = snapshot;
 
-    let welcomeText = `Hello! I'm **${profile.shortName || profile.name}'s AI Assistant**, powered by dynamic real-time portfolio data.\n\n`;
+    let welcomeText = `Hi! 👋 I'm **${profile.shortName || profile.name}'s AI Assistant**.\n\nYou can ask me anything about my portfolio — projects, skills, experience, or just explore around.`;
 
     if (ctx.project) {
-      welcomeText += `You are currently viewing the **${ctx.project.title}** (${ctx.project.categoryLabel}) case study. Ask me anything about its architecture, problem statement, technology stack, or live demo!`;
-    } else if (ctx.view === "case-studies") {
-      welcomeText += `You are currently browsing the **Case Studies & Architecture Blueprint** page. Ask me about system designs, engineering metrics, or project flows!`;
-    } else if (ctx.view === "journey") {
-      welcomeText += `You are on Maharab's **Journey & Milestone Roadmap** page. Ask me about his background, career path, or vision!`;
-    } else if (ctx.view === "hire") {
-      welcomeText += `You are on the **Hire & Collaboration** page. I can help you with services, rates, availability, or immediate contact!`;
-    } else if (ctx.section) {
-      const secName = ctx.section.charAt(0).toUpperCase() + ctx.section.slice(1);
-      welcomeText += `You are currently browsing the **${secName}** section. How can I help you today?`;
-    } else {
-      welcomeText += `I can answer questions about Maharab's **projects, skills, career experience, education, certifications, development methodology**, or help you get in touch.`;
+      welcomeText = `Hi! 👋 You are currently viewing the **${ctx.project.title}** (${ctx.project.categoryLabel}) project.\n\nAsk me anything about its architecture, stack, features, or live demo!`;
     }
 
     const defaultActions: ChatAction[] = ctx.project
@@ -140,6 +148,7 @@ export class PortfolioChatbotEngine {
       timestamp: new Date().toISOString(),
       actions: defaultActions,
       contextTag: ctx.project ? `Project: ${ctx.project.title}` : undefined,
+      showQuickActionGrid: !ctx.project,
     };
   }
 
@@ -169,37 +178,18 @@ export class PortfolioChatbotEngine {
     if (isRelativeProjectQuery) {
       if (ctx.project) {
         const p = ctx.project;
-        let text = `### **${p.title}** (${p.categoryLabel})\n\n`;
-        text += `${p.description}\n\n`;
-
-        if (p.problem) {
-          text += `**Problem Addressed:**\n${p.problem}\n\n`;
-        }
-        if (p.solution) {
-          text += `**Engineered Solution:**\n${p.solution}\n\n`;
-        }
-        if (p.technologies && p.technologies.length > 0) {
-          text += `**Technologies:** ${p.technologies.join(", ")}\n\n`;
-        }
-        if (p.features && p.features.length > 0) {
-          text += `**Key Features:**\n${p.features.slice(0, 4).map((f) => `- ${f}`).join("\n")}\n\n`;
-        }
-
-        const actions: ChatAction[] = [];
-        if (p.link) {
-          actions.push({ label: "🌐 Live Demo", type: "url", target: p.link, primary: true });
-        }
-        if (p.github) {
-          actions.push({ label: "💻 GitHub Code", type: "url", target: p.github });
-        }
-        actions.push({ label: "🔍 Full Case Study", type: "project", target: p.id, projectData: p });
-
         return {
           id: `bot_${Date.now()}`,
           sender: "bot",
-          text,
+          text: `Here is the project you are currently viewing:`,
           timestamp: new Date().toISOString(),
-          actions,
+          projectsList: [p],
+          actions: [
+            ...(p.link ? [{ label: "🌐 Live Demo", type: "url" as const, target: p.link, primary: true }] : []),
+            ...(p.github ? [{ label: "💻 GitHub Code", type: "url" as const, target: p.github }] : []),
+            { label: "🔍 Full Case Study", type: "project" as const, target: p.id, projectData: p },
+            { label: "Browse All Projects", type: "scroll" as const, target: "projects" },
+          ],
           contextTag: `Project: ${p.title}`,
         };
       } else {
@@ -342,22 +332,6 @@ export class PortfolioChatbotEngine {
 
     if (matchedProject) {
       const p = matchedProject;
-      let text = `### **${p.title}** (${p.categoryLabel})\n\n`;
-      text += `${p.description}\n\n`;
-
-      if (p.problem) {
-        text += `**Problem:** ${p.problem}\n\n`;
-      }
-      if (p.solution) {
-        text += `**Solution:** ${p.solution}\n\n`;
-      }
-      if (p.technologies && p.technologies.length > 0) {
-        text += `**Tech Stack:** ${p.technologies.join(", ")}\n\n`;
-      }
-      if (p.features && p.features.length > 0) {
-        text += `**Key Features:**\n${p.features.slice(0, 3).map((f) => `- ${f}`).join("\n")}\n\n`;
-      }
-
       const actions: ChatAction[] = [];
       if (p.link) {
         actions.push({ label: "🌐 Live Demo", type: "url", target: p.link, primary: true });
@@ -366,12 +340,14 @@ export class PortfolioChatbotEngine {
         actions.push({ label: "💻 GitHub Repository", type: "url", target: p.github });
       }
       actions.push({ label: "🔍 Open Case Study", type: "project", target: p.id, projectData: p });
+      actions.push({ label: "Browse All Projects", type: "scroll", target: "projects" });
 
       return {
         id: `bot_${Date.now()}`,
         sender: "bot",
-        text,
+        text: `Here is the project overview for **${p.title}** (${p.categoryLabel}):`,
         timestamp: new Date().toISOString(),
+        projectsList: [p],
         actions,
       };
     }
@@ -387,26 +363,16 @@ export class PortfolioChatbotEngine {
     ) {
       const matchingProjects = searchProjects(projects, foundTechKeyword);
       if (matchingProjects.length > 0) {
-        let text = `### **${foundTechKeyword.toUpperCase()} Projects** (${matchingProjects.length} found)\n\n`;
-        text += matchingProjects
-          .slice(0, 4)
-          .map((p) => `- **${p.title}** (${p.categoryLabel}): ${p.description}`)
-          .join("\n\n");
-
-        const actions: ChatAction[] = matchingProjects.slice(0, 3).map((p) => ({
-          label: `View ${p.title}`,
-          type: "project",
-          target: p.id,
-          projectData: p,
-        }));
-        actions.push({ label: "Browse All Projects", type: "scroll", target: "projects" });
-
         return {
           id: `bot_${Date.now()}`,
           sender: "bot",
-          text,
+          text: `Here are the **${foundTechKeyword.toUpperCase()}** projects from the portfolio:`,
           timestamp: new Date().toISOString(),
-          actions,
+          projectsList: matchingProjects.slice(0, 4),
+          actions: [
+            { label: "Browse All Projects", type: "scroll", target: "projects", primary: true },
+            { label: "View Skills", type: "scroll", target: "skills" },
+          ],
         };
       } else {
         return {
@@ -420,7 +386,7 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 7. General Projects Query ("What projects are available?", "Projects overview")
+    // 7. General Projects Query ("What projects are available?", "Projects overview", "My projects")
     // ------------------------------------------------------------------------
     if (
       q.includes("project") ||
@@ -430,42 +396,16 @@ export class PortfolioChatbotEngine {
       q.includes("works") ||
       q.includes("case studies")
     ) {
-      const webProjects = projects.filter((p) => p.category === "web");
-      const mobileProjects = projects.filter((p) => p.category === "mobile");
-      const mlProjects = projects.filter((p) => p.category === "ml");
-      const iotProjects = projects.filter((p) => p.category === "iot");
-
-      let text = `### **Portfolio Projects** (${projects.length} Total Built)\n\n`;
-      text += `Maharab has engineered applications across four core disciplines:\n\n`;
-      text += `- **Web Applications (${webProjects.length}):** e.g., ${webProjects.slice(0, 2).map((p) => p.title).join(", ")}\n`;
-      text += `- **Cross-Platform Mobile Apps (${mobileProjects.length}):** e.g., ${mobileProjects.slice(0, 2).map((p) => p.title).join(", ")}\n`;
-      if (mlProjects.length > 0) {
-        text += `- **Machine Learning & AI (${mlProjects.length}):** e.g., ${mlProjects.slice(0, 2).map((p) => p.title).join(", ")}\n`;
-      }
-      if (iotProjects.length > 0) {
-        text += `- **IoT & Embedded Systems (${iotProjects.length}):** e.g., ${iotProjects.slice(0, 2).map((p) => p.title).join(", ")}\n`;
-      }
-      text += `\nYou can click below to explore all projects, filter by tech stack, or open a specific case study.`;
-
-      const actions: ChatAction[] = [
-        { label: "🚀 Browse Projects Section", type: "scroll", target: "projects", primary: true },
-        { label: "📐 Case Studies Blueprint", type: "view", target: "case-studies" },
-      ];
-      if (projects[0]) {
-        actions.push({
-          label: `Featured: ${projects[0].title}`,
-          type: "project",
-          target: projects[0].id,
-          projectData: projects[0],
-        });
-      }
-
       return {
         id: `bot_${Date.now()}`,
         sender: "bot",
-        text,
+        text: `Here are featured engineering projects from Maharab's portfolio:`,
         timestamp: new Date().toISOString(),
-        actions,
+        projectsList: projects.slice(0, 4),
+        actions: [
+          { label: "🚀 Browse All Projects", type: "scroll", target: "projects", primary: true },
+          { label: "📐 Case Studies Blueprint", type: "view", target: "case-studies" },
+        ],
       };
     }
 
@@ -788,35 +728,31 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 16. What information is available / Help
+    // 16. What information is available / Help / Guide me
     // ------------------------------------------------------------------------
     if (
+      q.includes("guide") ||
+      q.includes("explore") ||
+      q.includes("tour") ||
       q.includes("what information is available") ||
       q.includes("help") ||
       q.includes("what can you do") ||
       q.includes("options") ||
       q.includes("ki ache")
     ) {
-      const text = `I can provide verified information on any of the following topics directly from Maharab's portfolio:\n\n` +
-        `- **Projects:** All 18+ Web, Mobile, ML, and IoT projects, their problems, solutions, tech stacks, and live links.\n` +
-        `- **Skills:** Technologies, libraries, frameworks, tools, and proficiency levels.\n` +
-        `- **Experience:** Career history, roles, companies, and technical contributions.\n` +
-        `- **Education:** Academic background at BUBT (B.Sc. in CSE), HSC, SSC, and achievements.\n` +
-        `- **Certificates:** Industry credentials and verification links.\n` +
-        `- **Development Process:** 5-step engineering methodology.\n` +
-        `- **Contact & Resume:** Direct email, WhatsApp, social profiles, and downloadable CV.\n\n` +
-        `Try asking: *"What skills does he have?"*, *"Show Flutter projects"*, or *"Where can I find his CV?"*`;
-
       return {
         id: `bot_${Date.now()}`,
         sender: "bot",
-        text,
+        text: `I'm your personal interactive guide to Maharab's portfolio! Select any topic below or ask me directly:`,
         timestamp: new Date().toISOString(),
+        showQuickActionGrid: true,
         actions: [
           { label: "🚀 Projects", type: "scroll", target: "projects" },
           { label: "🛠️ Skills", type: "scroll", target: "skills" },
           { label: "💼 Experience", type: "scroll", target: "experience" },
+          { label: "🎓 Education", type: "scroll", target: "education" },
           { label: "📄 Download CV", type: "url", target: profile.resumeUrl },
+          { label: "📬 Contact", type: "scroll", target: "contact", primary: true },
         ],
       };
     }

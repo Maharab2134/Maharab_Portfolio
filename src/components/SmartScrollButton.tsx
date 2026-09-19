@@ -90,7 +90,7 @@ export const SmartScrollButton: React.FC = () => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 12 }}
           transition={{ duration: 0.25 }}
-          className="fixed z-40 bottom-20 sm:bottom-24 right-6 flex items-center gap-2 pointer-events-auto"
+          className="fixed z-40 bottom-6 right-6 flex items-center gap-2 pointer-events-auto"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
