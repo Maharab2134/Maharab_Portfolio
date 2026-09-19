@@ -1,6 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Early Third-Party Error Capture: Prevent Google Translate internal script errors from triggering CRA development overlay -->
+    <script>
+      (function () {
+        function isGoogleTranslateError(msg, filename, stack) {
+          var text = (String(msg || "") + " " + String(filename || "") + " " + String(stack || "")).toLowerCase();
+          return (
+            text.indexOf("translate.googleapis.com") !== -1 ||
+            text.indexOf("translate.google.com") !== -1 ||
+            text.indexOf("translate_http") !== -1 ||
+            text.indexOf("ka`prod") !== -1 ||
+            text.indexOf("goog-te") !== -1 ||
+            text.indexOf("element.js") !== -1
+          );
+        }
+
+        window.addEventListener(
+          "error",
+          function (e) {
+            var msg = e.message || (e.error && e.error.message) || "";
+            var filename = e.filename || "";
+            var stack = (e.error && e.error.stack) || "";
+            if (isGoogleTranslateError(msg, filename, stack)) {
+              e.stopImmediatePropagation();
+              e.preventDefault();
+              return true;
+            }
+          },
+          true
+        );
+
+        window.addEventListener(
+          "unhandledrejection",
+          function (e) {
+            var reason = e.reason;
+            var msg = String(reason || "");
+            var stack = reason && reason.stack ? String(reason.stack) : "";
+            if (isGoogleTranslateError(msg, "", stack)) {
+              e.stopImmediatePropagation();
+              e.preventDefault();
+              return true;
+            }
+          },
+          true
+        );
+      })();
+    </script>
     <meta charset="utf-8" />
     <link rel="icon" type="image/png" href="%PUBLIC_URL%/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />

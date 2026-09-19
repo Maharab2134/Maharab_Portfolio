@@ -96,7 +96,11 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   };
 
   return (
-    <div ref={dropdownRef} className={`relative inline-block ${className}`}>
+    <div
+      ref={dropdownRef}
+      className={`relative inline-block notranslate ${className}`}
+      translate="no"
+    >
       {/* Trigger Button */}
       <button
         type="button"

@@ -60,6 +60,49 @@ export function applyGoogleTranslateReactSafeguard() {
   if (typeof window === "undefined" || (window as any).__gt_safeguard_installed) return;
   (window as any).__gt_safeguard_installed = true;
 
+  // Intercept & swallow third-party Google Translate errors from triggering CRA overlay
+  const isTranslationError = (msg?: string, filename?: string, stack?: string) => {
+    const text = `${msg || ""} ${filename || ""} ${stack || ""}`.toLowerCase();
+    return (
+      text.includes("translate.googleapis.com") ||
+      text.includes("translate.google.com") ||
+      text.includes("translate_http") ||
+      text.includes("ka`prod") ||
+      text.includes("goog-te") ||
+      text.includes("element.js")
+    );
+  };
+
+  window.addEventListener(
+    "error",
+    (e: ErrorEvent) => {
+      const msg = e.message || (e.error && e.error.message) || "";
+      const filename = e.filename || "";
+      const stack = (e.error && e.error.stack) || "";
+      if (isTranslationError(msg, filename, stack)) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        return true;
+      }
+    },
+    true
+  );
+
+  window.addEventListener(
+    "unhandledrejection",
+    (e: PromiseRejectionEvent) => {
+      const reason = e.reason;
+      const msg = String(reason || "");
+      const stack = reason && reason.stack ? String(reason.stack) : "";
+      if (isTranslationError(msg, "", stack)) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        return true;
+      }
+    },
+    true
+  );
+
   const originalRemoveChild = Node.prototype.removeChild;
   Node.prototype.removeChild = function <T extends Node>(child: T): T {
     if (child.parentNode !== this) {
@@ -74,6 +117,14 @@ export function applyGoogleTranslateReactSafeguard() {
       return newNode;
     }
     return originalInsertBefore.call(this, newNode, referenceNode) as T;
+  };
+
+  const originalReplaceChild = Node.prototype.replaceChild;
+  Node.prototype.replaceChild = function <T extends Node>(newChild: Node, oldChild: T): T {
+    if (oldChild.parentNode !== this) {
+      return oldChild;
+    }
+    return originalReplaceChild.call(this, newChild, oldChild) as T;
   };
 
   // Prevent Google Translate from shifting body top position by 40px

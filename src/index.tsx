@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { applyGoogleTranslateReactSafeguard } from './lib/googleTranslate';
+
+// Initialize React DOM reconciliation safeguards & error filters early
+applyGoogleTranslateReactSafeguard();
 
 // DevTools Security Warning
 if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
