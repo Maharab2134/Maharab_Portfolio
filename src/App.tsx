@@ -18,6 +18,7 @@ import CaseStudies from "./pages/CaseStudies";
 import SmartScrollButton from "./components/SmartScrollButton";
 import Testimonials from "./components/Testimonials";
 import SplashScreen from "./components/SplashScreen";
+import Chatbot from "./components/Chatbot";
 import { Project, getAllProjectsSync } from "./data/projectsData";
 import { trackVisitorHit } from "./lib/analyticsService";
 import { initBackgroundSync } from "./lib/backgroundSync";
@@ -27,8 +28,46 @@ type ActiveView = "home" | "hire" | "journey" | "project" | "admin" | "case-stud
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeView, setActiveView] = useState<ActiveView>("home");
-
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
+  // Track active visible homepage section for context-aware assistant
+  useEffect(() => {
+    if (activeView !== "home") {
+      setActiveSection(null);
+      return;
+    }
+
+    const sections = [
+      "hero",
+      "about",
+      "education",
+      "experience",
+      "certificates",
+      "skills",
+      "development-process",
+      "projects",
+      "testimonials",
+      "contact",
+    ];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries.find((entry) => entry.isIntersecting);
+        if (visibleEntry) {
+          setActiveSection(visibleEntry.target.id);
+        }
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+    );
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [activeView]);
 
   // Initialize background data sync engine for user panel
   useEffect(() => {
@@ -432,6 +471,19 @@ function App() {
         </div>
       )}
       <SmartScrollButton />
+      <Chatbot
+        activeView={activeView}
+        selectedProject={selectedProject}
+        activeSection={activeSection}
+        onNavigateView={(view) => {
+          if (view === "case-studies") {
+            setActiveView("case-studies");
+          } else if (view === "home" || view === "hire" || view === "journey") {
+            handleNavigatePage(view);
+          }
+        }}
+        onSelectProject={handleSelectProject}
+      />
     </>
   );
 }
