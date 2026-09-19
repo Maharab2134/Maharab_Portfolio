@@ -59,6 +59,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Update initial message if context changes and chat hasn't started yet
@@ -77,10 +78,16 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     });
   }, [activeView, selectedProject, activeSection]);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages (keep at top on initial load so greeting is visible)
   useEffect(() => {
     if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      if (messages.length > 1 || isTyping) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = 0;
+        }
+      }
     }
   }, [messages, isTyping, isOpen]);
 
@@ -171,6 +178,9 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
   const handleResetChat = () => {
     setMessages([PortfolioChatbotEngine.getInitialMessage(context)]);
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = 0;
+    }
   };
 
   const renderFormattedText = (rawText: string) => {
@@ -318,7 +328,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-50 w-[95vw] sm:w-[410px] h-[550px] max-h-[calc(100vh-2.5rem)] rounded-3xl bg-slate-950/95 border border-slate-800/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 flex flex-col overflow-hidden text-slate-100"
+            className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-50 w-[95vw] sm:w-[420px] h-[640px] sm:h-[680px] max-h-[calc(100vh-2rem)] rounded-3xl bg-slate-950/95 border border-slate-800/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 flex flex-col overflow-hidden text-slate-100"
           >
             {/* Ambient Background Glows */}
             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
@@ -407,7 +417,10 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             )}
 
             {/* Messages Stream */}
-            <div className="relative z-10 flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs scrollbar-thin scrollbar-thumb-purple-600/30 scrollbar-track-transparent">
+            <div
+              ref={messagesContainerRef}
+              className="relative z-10 flex-1 overflow-y-auto p-3.5 pt-4 space-y-3.5 text-xs scrollbar-thin scrollbar-thumb-purple-600/30 scrollbar-track-transparent"
+            >
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -431,21 +444,50 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
                   {/* Prototype 2-Column Quick Action Grid */}
                   {msg.showQuickActionGrid && (
-                    <div className="grid grid-cols-2 gap-2 mt-3 w-full">
-                      {quickActions.map((action, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleSend(action.prompt)}
-                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800/80 hover:border-purple-500/50 text-slate-300 hover:text-white transition-all duration-200 cursor-pointer text-left shadow-sm group"
-                        >
-                          <span className="text-purple-400 group-hover:text-cyan-300 text-xs transition-colors flex-shrink-0">
-                            {renderIcon(action.icon, { size: 12 })}
+                    <div className="mt-3 w-full space-y-3">
+                      <div className="grid grid-cols-2 gap-2 w-full">
+                        {quickActions.map((action, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleSend(action.prompt)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800/80 hover:border-purple-500/50 text-slate-300 hover:text-white transition-all duration-200 cursor-pointer text-left shadow-sm group"
+                          >
+                            <span className="text-purple-400 group-hover:text-cyan-300 text-xs transition-colors flex-shrink-0">
+                              {renderIcon(action.icon, { size: 12 })}
+                            </span>
+                            <span className="text-[11px] font-semibold tracking-tight truncate">
+                              {action.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Prototype Suggested / Example Questions */}
+                      <div className="pt-1">
+                        <div className="flex items-center gap-1.5 mb-2 px-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Suggested Questions
                           </span>
-                          <span className="text-[11px] font-semibold tracking-tight truncate">
-                            {action.label}
-                          </span>
-                        </button>
-                      ))}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            "Tell me about you",
+                            "What projects are available?",
+                            "What technologies do you use?",
+                            "How can I contact you?",
+                            "Where can I find your CV?",
+                          ].map((suggested, sIdx) => (
+                            <button
+                              key={sIdx}
+                              onClick={() => handleSend(suggested)}
+                              className="text-[10.5px] px-2.5 py-1 rounded-full bg-slate-900/80 hover:bg-purple-900/30 border border-slate-800/90 hover:border-purple-500/40 text-slate-300 hover:text-purple-200 transition-all duration-150 cursor-pointer text-left"
+                            >
+                              "{suggested}"
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -550,13 +592,13 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             </div>
 
             {/* Pill Input Container */}
-            <div className="relative z-10 p-3 border-t border-white/10 bg-slate-900/90 backdrop-blur-md">
+            <div className="relative z-10 px-3.5 pt-2.5 pb-2 border-t border-white/10 bg-slate-950/95 backdrop-blur-md shrink-0">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSend();
                 }}
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-slate-800 focus-within:border-purple-500/60 shadow-inner transition-colors"
+                className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 focus-within:border-purple-500/60 focus-within:ring-1 focus-within:ring-purple-500/30 shadow-inner transition-all"
               >
                 <input
                   ref={inputRef}
@@ -564,24 +606,24 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask me anything..."
-                  className="flex-1 bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none py-1.5"
+                  className="flex-1 bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none py-1.5 px-1"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || isTyping}
                   aria-label="Send message"
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-md shadow-purple-950/50 flex-shrink-0"
+                  className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-md shadow-purple-950/50 flex-shrink-0 hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   {renderIcon(FaPaperPlane, { size: 10 })}
                 </button>
               </form>
 
               {/* Footer Caption */}
-              <div className="text-center mt-2 flex items-center justify-center gap-1.5 text-[10px] text-slate-500 font-medium">
+              <div className="text-center mt-1.5 flex items-center justify-center gap-1.5 text-[9.5px] text-slate-400 font-medium">
                 <span>Powered by portfolio content</span>
                 <span>•</span>
-                <span className="flex items-center gap-1 text-slate-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
                   Always up to date
                 </span>
               </div>

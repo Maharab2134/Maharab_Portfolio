@@ -171,10 +171,29 @@ export class PortfolioChatbotEngine {
     if (isRelativeProjectQuery) {
       if (ctx.project) {
         const p = ctx.project;
+        let text = `### **${p.title}** (${p.categoryLabel})\n\n`;
+        if (p.subtitle) text += `*${p.subtitle}*\n\n`;
+        text += `${p.description}\n\n`;
+        if (p.problem) {
+          text += `**Problem Addressed:**\n${p.problem}\n\n`;
+        }
+        if (p.solution) {
+          text += `**Engineered Solution:**\n${p.solution}\n\n`;
+        }
+        if (p.technologies && p.technologies.length > 0) {
+          text += `**Technologies:** ${p.technologies.join(", ")}\n\n`;
+        }
+        if (p.features && p.features.length > 0) {
+          text += `**Key Features:**\n${p.features.slice(0, 4).map((f) => `- ${f}`).join("\n")}\n\n`;
+        }
+        if (p.results && p.results.length > 0) {
+          text += `**Results & Impact:**\n${p.results.slice(0, 3).map((r) => `- ${r}`).join("\n")}\n\n`;
+        }
+
         return {
           id: `bot_${Date.now()}`,
           sender: "bot",
-          text: `Here is the project you are currently viewing:`,
+          text,
           timestamp: new Date().toISOString(),
           projectsList: [p],
           actions: [
@@ -325,6 +344,25 @@ export class PortfolioChatbotEngine {
 
     if (matchedProject) {
       const p = matchedProject;
+      let text = `### **${p.title}** (${p.categoryLabel})\n\n`;
+      if (p.subtitle) text += `*${p.subtitle}*\n\n`;
+      text += `${p.description}\n\n`;
+      if (p.problem) {
+        text += `**Problem Addressed:**\n${p.problem}\n\n`;
+      }
+      if (p.solution) {
+        text += `**Engineered Solution:**\n${p.solution}\n\n`;
+      }
+      if (p.technologies && p.technologies.length > 0) {
+        text += `**Technologies:** ${p.technologies.join(", ")}\n\n`;
+      }
+      if (p.features && p.features.length > 0) {
+        text += `**Key Features:**\n${p.features.slice(0, 4).map((f) => `- ${f}`).join("\n")}\n\n`;
+      }
+      if (p.results && p.results.length > 0) {
+        text += `**Results & Impact:**\n${p.results.slice(0, 3).map((r) => `- ${r}`).join("\n")}\n\n`;
+      }
+
       const actions: ChatAction[] = [];
       if (p.link) {
         actions.push({ label: "🌐 Live Demo", type: "url", target: p.link, primary: true });
@@ -338,7 +376,7 @@ export class PortfolioChatbotEngine {
       return {
         id: `bot_${Date.now()}`,
         sender: "bot",
-        text: `Here is the project overview for **${p.title}** (${p.categoryLabel}):`,
+        text,
         timestamp: new Date().toISOString(),
         projectsList: [p],
         actions,
@@ -356,10 +394,16 @@ export class PortfolioChatbotEngine {
     ) {
       const matchingProjects = searchProjects(projects, foundTechKeyword);
       if (matchingProjects.length > 0) {
+        let text = `### **${foundTechKeyword.toUpperCase()} Projects** (${matchingProjects.length} Found)\n\n`;
+        text += `Here are the engineering projects built with **${foundTechKeyword.toUpperCase()}**:\n\n`;
+        matchingProjects.slice(0, 4).forEach((proj) => {
+          text += `- **${proj.title}** (${proj.categoryLabel}) — *${proj.technologies.slice(0, 3).join(", ")}*\n`;
+        });
+
         return {
           id: `bot_${Date.now()}`,
           sender: "bot",
-          text: `Here are the **${foundTechKeyword.toUpperCase()}** projects from the portfolio:`,
+          text,
           timestamp: new Date().toISOString(),
           projectsList: matchingProjects.slice(0, 4),
           actions: [
@@ -389,10 +433,16 @@ export class PortfolioChatbotEngine {
       q.includes("works") ||
       q.includes("case studies")
     ) {
+      let text = `### **Engineering Projects Portfolio** (${projects.length} Total)\n\n`;
+      text += `Maharab has developed **${projects.length} verified projects** spanning Mobile (Flutter), Full-Stack Web (Next.js/React), Machine Learning, and IoT. Featured projects include:\n\n`;
+      projects.slice(0, 4).forEach((proj) => {
+        text += `- **${proj.title}** (${proj.categoryLabel}) — *${proj.technologies.slice(0, 3).join(", ")}*\n`;
+      });
+
       return {
         id: `bot_${Date.now()}`,
         sender: "bot",
-        text: `Here are featured engineering projects from Maharab's portfolio:`,
+        text,
         timestamp: new Date().toISOString(),
         projectsList: projects.slice(0, 4),
         actions: [
