@@ -153,3 +153,13 @@ font {
   display: none !important;
 }
 
+/* Prevent development error overlay iframe from blocking UI on cross-origin script warnings */
+iframe[style*="z-index: 2147483647"],
+iframe#webpack-dev-server-client-overlay,
+div#webpack-dev-server-client-overlay {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+

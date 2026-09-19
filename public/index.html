@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Early Third-Party Error Capture: Prevent Google Translate internal script errors from triggering CRA development overlay -->
+    <!-- Early Third-Party Error Capture: Prevent Google Translate & cross-origin "Script error." from triggering CRA overlay -->
     <script>
       (function () {
-        function isGoogleTranslateError(msg, filename, stack) {
+        function shouldSuppressError(msg, filename, stack) {
           var text = (String(msg || "") + " " + String(filename || "") + " " + String(stack || "")).toLowerCase();
           return (
+            text.indexOf("script error") !== -1 ||
             text.indexOf("translate.googleapis.com") !== -1 ||
             text.indexOf("translate.google.com") !== -1 ||
             text.indexOf("translate_http") !== -1 ||
@@ -22,7 +23,7 @@
             var msg = e.message || (e.error && e.error.message) || "";
             var filename = e.filename || "";
             var stack = (e.error && e.error.stack) || "";
-            if (isGoogleTranslateError(msg, filename, stack)) {
+            if (shouldSuppressError(msg, filename, stack)) {
               e.stopImmediatePropagation();
               e.preventDefault();
               return true;
@@ -37,7 +38,7 @@
             var reason = e.reason;
             var msg = String(reason || "");
             var stack = reason && reason.stack ? String(reason.stack) : "";
-            if (isGoogleTranslateError(msg, "", stack)) {
+            if (shouldSuppressError(msg, "", stack)) {
               e.stopImmediatePropagation();
               e.preventDefault();
               return true;
@@ -45,6 +46,16 @@
           },
           true
         );
+
+        // Fallback global handler to swallow cross-origin Script error
+        window.onerror = function (msg, url, line, col, error) {
+          var messageStr = String(msg || "");
+          var urlStr = String(url || "");
+          var stackStr = (error && error.stack) ? String(error.stack) : "";
+          if (shouldSuppressError(messageStr, urlStr, stackStr)) {
+            return true; // Prevents default error overlay
+          }
+        };
       })();
     </script>
     <meta charset="utf-8" />

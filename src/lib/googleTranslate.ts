@@ -60,10 +60,11 @@ export function applyGoogleTranslateReactSafeguard() {
   if (typeof window === "undefined" || (window as any).__gt_safeguard_installed) return;
   (window as any).__gt_safeguard_installed = true;
 
-  // Intercept & swallow third-party Google Translate errors from triggering CRA overlay
+  // Intercept & swallow third-party Google Translate & cross-origin "Script error."
   const isTranslationError = (msg?: string, filename?: string, stack?: string) => {
     const text = `${msg || ""} ${filename || ""} ${stack || ""}`.toLowerCase();
     return (
+      text.includes("script error") ||
       text.includes("translate.googleapis.com") ||
       text.includes("translate.google.com") ||
       text.includes("translate_http") ||
@@ -102,6 +103,15 @@ export function applyGoogleTranslateReactSafeguard() {
     },
     true
   );
+
+  window.onerror = function (msg, url, line, col, error) {
+    const messageStr = String(msg || "");
+    const urlStr = String(url || "");
+    const stackStr = (error && error.stack) ? String(error.stack) : "";
+    if (isTranslationError(messageStr, urlStr, stackStr)) {
+      return true;
+    }
+  };
 
   const originalRemoveChild = Node.prototype.removeChild;
   Node.prototype.removeChild = function <T extends Node>(child: T): T {

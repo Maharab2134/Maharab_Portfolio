@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FaBars,
   FaTimes,
-  FaHome,
   FaUser,
   FaGraduationCap,
   FaCode,
@@ -26,7 +25,6 @@ const renderIcon = (Icon: any, props: any = {}) => {
 };
 
 const navLinks = [
-  { name: "Home", href: "#home", id: "home", icon: FaHome },
   { name: "About", href: "#about", id: "about", icon: FaUser },
   { name: "Education", href: "#education", id: "education", icon: FaGraduationCap },
   { name: "Skills", href: "#skills", id: "skills", icon: FaCode },
