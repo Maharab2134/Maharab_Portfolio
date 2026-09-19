@@ -9,6 +9,7 @@ import {
   ActiveContext,
   getDynamicPortfolioSnapshot,
   findSkillInPortfolio,
+  searchProjects,
 } from "./chatbotKnowledge";
 import { Project } from "../data/projectsData";
 
@@ -332,8 +333,7 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 5. Technology / Skill Filtering on Projects (BEFORE named project search)
-    //    "Show me Flutter projects", "React apps", "flutter all project", etc.
+    // 5. Technology / Skill Filtering on Projects ("Show me Flutter projects", "React apps", etc.)
     // ------------------------------------------------------------------------
     const foundTechKeyword = TECH_KEYWORDS.find((t) => q.includes(t));
 
@@ -341,15 +341,7 @@ export class PortfolioChatbotEngine {
       (q.includes("project") || q.includes("app") || q.includes("work") || q.includes("built") || q.includes("all") || q.includes("show")) &&
       foundTechKeyword
     ) {
-      // Strict tech-only filtering: only match projects whose technologies array contains the keyword
-      const matchingProjects = projects.filter((p) =>
-        p.technologies.some(
-          (t) =>
-            t.toLowerCase() === foundTechKeyword ||
-            t.toLowerCase().includes(foundTechKeyword) ||
-            foundTechKeyword.includes(t.toLowerCase())
-        )
-      );
+      const matchingProjects = searchProjects(projects, foundTechKeyword);
       if (matchingProjects.length > 0) {
         let text = `### **${foundTechKeyword.toUpperCase()} Projects** (${matchingProjects.length} Found)\n\n`;
         text += `Here are the engineering projects built with **${foundTechKeyword.toUpperCase()}**:\n\n`;
@@ -381,7 +373,6 @@ export class PortfolioChatbotEngine {
 
     // ------------------------------------------------------------------------
     // 6. Specific Named Project Search ("tell me about MedAlert", "StockPulse", etc.)
-    //    Excludes tech keyword words from title word matching to prevent false positives
     // ------------------------------------------------------------------------
     const techKeywordSet = new Set(TECH_KEYWORDS);
     const matchedProject = projects.find(

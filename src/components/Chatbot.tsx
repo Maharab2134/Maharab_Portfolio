@@ -444,50 +444,21 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
                   {/* Prototype 2-Column Quick Action Grid */}
                   {msg.showQuickActionGrid && (
-                    <div className="mt-3 w-full space-y-3">
-                      <div className="grid grid-cols-2 gap-2 w-full">
-                        {quickActions.map((action, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => handleSend(action.prompt)}
-                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800/80 hover:border-purple-500/50 text-slate-300 hover:text-white transition-all duration-200 cursor-pointer text-left shadow-sm group"
-                          >
-                            <span className="text-purple-400 group-hover:text-cyan-300 text-xs transition-colors flex-shrink-0">
-                              {renderIcon(action.icon, { size: 12 })}
-                            </span>
-                            <span className="text-[11px] font-semibold tracking-tight truncate">
-                              {action.label}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Prototype Suggested / Example Questions */}
-                      <div className="pt-1">
-                        <div className="flex items-center gap-1.5 mb-2 px-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                            Suggested Questions
+                    <div className="grid grid-cols-2 gap-2 mt-3 w-full">
+                      {quickActions.map((action, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSend(action.prompt)}
+                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800/80 hover:border-purple-500/50 text-slate-300 hover:text-white transition-all duration-200 cursor-pointer text-left shadow-sm group"
+                        >
+                          <span className="text-purple-400 group-hover:text-cyan-300 text-xs transition-colors flex-shrink-0">
+                            {renderIcon(action.icon, { size: 12 })}
                           </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {[
-                            "Tell me about you",
-                            "What projects are available?",
-                            "What technologies do you use?",
-                            "How can I contact you?",
-                            "Where can I find your CV?",
-                          ].map((suggested, sIdx) => (
-                            <button
-                              key={sIdx}
-                              onClick={() => handleSend(suggested)}
-                              className="text-[10.5px] px-2.5 py-1 rounded-full bg-slate-900/80 hover:bg-purple-900/30 border border-slate-800/90 hover:border-purple-500/40 text-slate-300 hover:text-purple-200 transition-all duration-150 cursor-pointer text-left"
-                            >
-                              "{suggested}"
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                          <span className="text-[11px] font-semibold tracking-tight truncate">
+                            {action.label}
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   )}
 
@@ -591,8 +562,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Pill Input Container — absolute last element, no gap below */}
-            <div className="relative z-10 px-3 py-2 border-t border-white/10 bg-slate-950/95 backdrop-blur-md shrink-0">
+            {/* Pill Input Container */}
+            <div className="relative z-10 px-3.5 pt-2.5 pb-2 border-t border-white/10 bg-slate-950/95 backdrop-blur-md shrink-0">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -617,6 +588,16 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   {renderIcon(FaPaperPlane, { size: 10 })}
                 </button>
               </form>
+
+              {/* Footer Caption */}
+              <div className="text-center mt-1.5 flex items-center justify-center gap-1.5 text-[9.5px] text-slate-400 font-medium">
+                <span>Powered by portfolio content</span>
+                <span>•</span>
+                <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                  Always up to date
+                </span>
+              </div>
             </div>
           </motion.div>
         )}
