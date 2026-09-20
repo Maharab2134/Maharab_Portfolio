@@ -32,36 +32,28 @@ import { renderIcon, AdminToast } from "../types";
 
 const PROFICIENCY_OPTIONS = [
   {
-    value: "Core",
-    label: "Core",
-    bengaliTag: "Core (বেশি ভালো)",
+    value: "Advanced",
+    label: "Advanced",
+    bengaliTag: "Advanced (বেশি ভালো)",
     desc: "Primary production stack, architectural mastery, battle-tested in real systems",
     badgeColor: "border-purple-500/40 bg-purple-500/10 text-purple-300",
     borderActive: "border-purple-400 ring-2 ring-purple-500/30 bg-purple-500/10",
   },
   {
-    value: "Advanced",
-    label: "Advanced",
-    bengaliTag: "Advanced (ভালো)",
+    value: "Proficient",
+    label: "Proficient",
+    bengaliTag: "Proficient (ভালো)",
     desc: "Strong daily engineering, clean production code, robust understanding",
     badgeColor: "border-cyan-500/40 bg-cyan-500/10 text-cyan-300",
     borderActive: "border-cyan-400 ring-2 ring-cyan-500/30 bg-cyan-500/10",
   },
   {
-    value: "Working Knowledge",
-    label: "Working Knowledge",
-    bengaliTag: "Working Knowledge (মিডিয়াম)",
-    desc: "Comfortable implementation, working integration knowledge, expanding",
+    value: "Foundational",
+    label: "Foundational",
+    bengaliTag: "Foundational (পরিচিত)",
+    desc: "Foundational concepts, explored in practical environments and prototypes",
     badgeColor: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
     borderActive: "border-emerald-400 ring-2 ring-emerald-500/30 bg-emerald-500/10",
-  },
-  {
-    value: "Familiar",
-    label: "Familiar",
-    bengaliTag: "Familiar (পরিচিত)",
-    desc: "Foundational concepts, explored in practical environments and prototypes",
-    badgeColor: "border-amber-500/40 bg-amber-500/10 text-amber-300",
-    borderActive: "border-amber-400 ring-2 ring-amber-500/30 bg-amber-500/10",
   },
 ];
 
@@ -115,7 +107,7 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
   const [skillForm, setSkillForm] = useState({
     name: "",
     category: "frontend",
-    level: "Core",
+    level: "Proficient",
     color: "#61DAFB",
     iconName: "FaReact",
   });
@@ -397,7 +389,7 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
     setSkillForm({
       name: "",
       category: skillCategoriesList[0]?.id || "frontend",
-      level: "Core",
+      level: "Proficient",
       color: "#61DAFB",
       iconName: "FaReact",
     });
@@ -409,7 +401,7 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
     setSkillForm({
       name: skill.name || "",
       category: skill.category || "frontend",
-      level: skill.level || "Core",
+      level: skill.level || "Proficient",
       color: skill.color || "#a855f7",
       iconName: skill.iconName || "",
     });
@@ -431,7 +423,7 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
           .replace(/^-|-$/g, "")}-${Date.now()}`,
       name: skillForm.name.trim(),
       category: skillForm.category || "frontend",
-      level: skillForm.level.trim() || "Core",
+      level: skillForm.level.trim() || "Proficient",
       color: skillForm.color || "#a855f7",
       iconName: skillForm.iconName || "",
     };
@@ -827,7 +819,7 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
                 {/* Row 2: Proficiency Level Tier */}
                 <div className="space-y-2">
                   <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
-                    Proficiency Level Tier (Core / Advanced / Working Knowledge / Familiar) *
+                    Proficiency Level Tier (Advanced / Proficient / Foundational) *
                   </label>
                   <p className="text-[11px] text-slate-400">
                     Select how well you know this skill. It controls the glowing badge on your live portfolio.
@@ -874,7 +866,7 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
                     <span className="text-[10px] text-slate-400 font-mono">Custom Level:</span>
                     <input
                       type="text"
-                      placeholder="Or type custom level (e.g. Core, Advanced, Working Knowledge, Familiar)"
+                      placeholder="Or type custom level (e.g. Advanced, Proficient, Foundational)"
                       value={skillForm.level}
                       onChange={(e) => setSkillForm({ ...skillForm, level: e.target.value })}
                       className="flex-1 px-3 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400 transition-all font-mono"
@@ -1367,9 +1359,9 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
 
                   <span
                     className={`inline-block mt-2 px-2.5 py-0.5 text-[10px] font-semibold rounded-full border ${
-                      skillForm.level === "Core" ||
+                      skillForm.level === "Advanced" ||
                       skillForm.level === "Core Production" ||
-                      skillForm.level.toLowerCase().includes("core") ||
+                      skillForm.level.toLowerCase().includes("advanced") ||
                       skillForm.level.toLowerCase().includes("beshi")
                         ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                         : skillForm.level === "Advanced" ||
@@ -1384,7 +1376,7 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
                         : "bg-amber-500/10 border-amber-500/30 text-amber-300"
                     }`}
                   >
-                    {skillForm.level || "Core"}
+                    {skillForm.level || "Proficient"}
                   </span>
                 </div>
 
@@ -1488,9 +1480,9 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
             {filteredAdminSkills.map((skill) => {
               const skillIcon = resolveSkillIcon(skill.name, skill.iconName, skill.category);
               const isCore =
-                skill.level === "Core" ||
+                skill.level === "Advanced" ||
                 skill.level === "Core Production" ||
-                skill.level.toLowerCase().includes("core") ||
+                skill.level.toLowerCase().includes("advanced") ||
                 skill.level.toLowerCase().includes("beshi");
               const isAdvanced =
                 skill.level === "Advanced" ||
