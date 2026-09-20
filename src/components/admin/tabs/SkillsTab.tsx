@@ -294,8 +294,12 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
 
     let updatedList: SkillCategory[];
     if (editingCategoryId) {
+      if (slug !== editingCategoryId && skillCategoriesList.some((c) => c.id === slug)) {
+        alert("A category with this ID already exists. Please use a unique ID.");
+        return;
+      }
       updatedList = skillCategoriesList.map((c) =>
-        c.id === editingCategoryId ? { ...newCat, id: editingCategoryId } : c
+        c.id === editingCategoryId ? { ...newCat, id: slug } : c
       );
     } else {
       if (skillCategoriesList.some((c) => c.id === slug)) {
@@ -305,13 +309,23 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
       updatedList = [...skillCategoriesList, newCat];
     }
 
-    setSkillCategoriesList(updatedList);
-    setIsAddingCategory(false);
-    setEditingCategoryId(null);
     setSkillSaving(true);
 
     try {
+      if (editingCategoryId && slug !== editingCategoryId) {
+        // ID changed! Update all skills that reference the old ID
+        const remappedSkills = skillsList.map((s) =>
+          s.category === editingCategoryId ? { ...s, category: slug } : s
+        );
+        setSkillsList(remappedSkills);
+        await saveLiveSkills(remappedSkills);
+      }
+
+      setSkillCategoriesList(updatedList);
       const res = await saveLiveSkillCategories(updatedList);
+      setIsAddingCategory(false);
+      setEditingCategoryId(null);
+      
       setSkillToast({
         message: res.error
           ? `Category saved locally! (Cloud note: ${res.error})`
@@ -686,8 +700,7 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
                     placeholder="auto-generated from label (e.g. cloud-devops)"
                     value={categoryForm.id}
                     onChange={(e) => setCategoryForm({ ...categoryForm, id: e.target.value })}
-                    disabled={Boolean(editingCategoryId)}
-                    className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-purple-400 transition-all font-mono disabled:opacity-50"
+                    className="w-full px-3.5 py-2 text-xs text-white bg-[#0c101d] border border-white/10 rounded-xl focus:outline-none focus:border-purple-400 transition-all font-mono"
                   />
                 </div>
 
