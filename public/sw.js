@@ -19,9 +19,23 @@ self.addEventListener('install', event => {
 
 // Cache and return requests
 self.addEventListener('fetch', event => {
+  // Only handle GET requests from http/https schemes
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request).catch(() => {
-      return caches.match(event.request);
+      return caches.match(event.request).then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // Fallback response for when both network and cache fail (e.g., offline or blocked requests)
+        return new Response('Network error or offline', {
+          status: 503,
+          statusText: 'Service Unavailable'
+        });
+      });
     })
   );
 });
