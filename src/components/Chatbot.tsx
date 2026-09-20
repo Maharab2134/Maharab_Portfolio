@@ -371,7 +371,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     <>
       {/* Floating Launcher Button - Positioned with clear gap directly above SmartScrollButton */}
       {!isOpen && (
-        <div className="fixed bottom-[140px] sm:bottom-[100px] right-4 sm:right-6 z-40 pointer-events-auto flex items-center gap-3">
+        <div className="fixed bottom-[160px] sm:bottom-[100px] right-4 sm:right-6 z-40 pointer-events-auto flex items-center gap-3">
           {/* Prototype-style Speech Bubble Callout */}
           <motion.div
             initial={{ opacity: 0, x: 8, scale: 0.92 }}

@@ -24,13 +24,20 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Bypass Service Worker for cross-origin requests (like images.weserv.nl or googleusercontent)
+  // This prevents CORS issues where fetch() fails but the browser would normally succeed.
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) {
+    return; // Let the browser handle it normally
+  }
+
   event.respondWith(
     fetch(event.request).catch(() => {
       return caches.match(event.request).then(cachedResponse => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        // Fallback response for when both network and cache fail (e.g., offline or blocked requests)
+        // Fallback response for when both network and cache fail
         return new Response('Network error or offline', {
           status: 503,
           statusText: 'Service Unavailable'
