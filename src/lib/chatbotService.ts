@@ -13,6 +13,7 @@ import {
   findDynamicProjectMatches,
 } from "./chatbotKnowledge";
 import { Project } from "../data/projectsData";
+import gnChatData from "../data/gn_chat.json";
 
 export interface ChatAction {
   label: string;
@@ -1222,7 +1223,66 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 17. STRICT ZERO-HALLUCINATION FALLBACK
+    // 18. GN_CHAT.JSON FALLBACK
+    // ------------------------------------------------------------------------
+    const fallbackItems = gnChatData.items || [];
+    let bestMatch = null;
+    let maxScore = 0;
+    
+    const qTokens = q.split(/[\s?!.,]+/).filter(Boolean);
+    
+    for (const item of fallbackItems) {
+      for (const question of item.questions) {
+        const qst = question.toLowerCase();
+        
+        // Exact match
+        if (qst === q) {
+          bestMatch = item;
+          maxScore = 100;
+          break;
+        }
+        
+        // Scoring
+        let score = 0;
+        const qstTokens = qst.split(/[\s?!.,]+/).filter(Boolean);
+        
+        for (const token of qTokens) {
+          if (token.length > 2) {
+            if (qstTokens.includes(token)) {
+               score += 10;
+            } else if (token.length > 3 && qst.includes(token)) {
+               score += 5;
+            }
+          }
+        }
+        
+        // Sequence bonus
+        if (q.length > 4 && qst.includes(q)) score += 20;
+        if (qst.length > 4 && q.includes(qst)) score += 20;
+        
+        // Length penalty to avoid matching very long questions with a single short word
+        score = score - Math.abs(qTokens.length - qstTokens.length);
+        
+        if (score > maxScore) {
+          maxScore = score;
+          bestMatch = item;
+        }
+      }
+      if (maxScore === 100) break;
+    }
+    
+    // Threshold for accepting a match
+    if (bestMatch && maxScore > 15) {
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text: bestMatch.answer,
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 19. STRICT ZERO-HALLUCINATION FALLBACK
     // ------------------------------------------------------------------------
     const fallbackText =
       `I couldn't find that information in the portfolio.\n` +
