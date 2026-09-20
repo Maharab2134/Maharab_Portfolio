@@ -43,7 +43,7 @@ const MyJourney: React.FC = () => {
   ];
 
   return (
-    <main className="relative min-h-screen py-10 sm:py-16 bg-[#030014] text-white overflow-x-hidden">
+    <main className="relative min-h-screen py-10 pb-24 sm:py-16 sm:pb-16 bg-[#030014] text-white overflow-x-hidden">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none opacity-20 -z-0">
         <div className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full bg-purple-600/15 blur-[150px]" />
@@ -52,7 +52,7 @@ const MyJourney: React.FC = () => {
 
       <div className="relative z-10 px-4 mx-auto max-w-5xl sm:px-6 lg:px-8">
         {/* Top Return Navigation */}
-        <div className="flex items-center justify-between gap-4 mb-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <a
             href="/"
             onClick={handleReturnHome}

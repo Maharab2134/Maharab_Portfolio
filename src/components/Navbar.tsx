@@ -7,7 +7,6 @@ import {
   FaProjectDiagram,
   FaEnvelope,
   FaRocket,
-  FaHome,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
 import { toProxyImageUrl } from "../data/projectsData";
@@ -337,54 +336,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigatePage }) => {
       </div>
     </motion.header>
 
-    {/* Mobile App-Style Bottom Navigation */}
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-[100]">
-      <div className="bg-[#030014]/90 backdrop-blur-2xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.6)] flex items-center justify-around px-2 py-2 pb-safe sm:pb-2">
-        {/* Home */}
-        <a
-          href="#home"
-          onClick={(e) => handleLinkClick(e, "#home")}
-          className={`flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all active:scale-90 relative ${
-            activeSection === "home" ? "text-cyan-400" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          {renderIcon(FaHome, { size: 20, className: "mb-1 z-10 relative" })}
-          <span className="text-[10px] font-medium z-10 relative">Home</span>
-          {activeSection === "home" && (
-            <motion.div
-              layoutId="activeBottomNav"
-              className="absolute inset-0 rounded-xl bg-white/10"
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            />
-          )}
-        </a>
-        
-        {/* Other Links */}
-        {navLinks.filter(l => ["about", "skills", "projects", "contact"].includes(l.id)).map((link) => {
-          const isActive = activeSection === link.id;
-          return (
-            <a
-              key={link.id}
-              href={link.href}
-              onClick={(e) => handleLinkClick(e, link.href)}
-              className={`flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all active:scale-90 relative ${
-                isActive ? "text-cyan-400" : "text-slate-400 hover:text-white"
-              }`}
-            >
-              {renderIcon(link.icon, { size: 20, className: "mb-1 z-10 relative" })}
-              <span className="text-[10px] font-medium z-10 relative">{link.name}</span>
-              {isActive && (
-                <motion.div
-                  layoutId="activeBottomNav"
-                  className="absolute inset-0 rounded-xl bg-white/10"
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                />
-              )}
-            </a>
-          );
-        })}
-      </div>
-    </div>
+
     </>
   );
 };

@@ -326,7 +326,7 @@ const CaseStudies: React.FC<CaseStudiesProps> = ({ onBack, onSelectProject }) =>
   ];
 
   return (
-    <main className="relative min-h-screen bg-[#030014] text-slate-100 pb-16 overflow-x-hidden selection:bg-purple-500/30 selection:text-white">
+    <main className="relative min-h-screen bg-[#030014] text-slate-100 pb-24 sm:pb-16 overflow-x-hidden selection:bg-purple-500/30 selection:text-white">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none opacity-20 -z-0">
         <div className="absolute top-10 left-1/4 w-[600px] h-[600px] rounded-full bg-cyan-600/15 blur-[170px]" />

@@ -74,18 +74,18 @@ const resolveProjectSync = (initial?: Project | null): Project | null => {
             features: Array.isArray(found.features)
               ? found.features
               : typeof found.features === "string"
-              ? found.features.split("\n").map((f: string) => f.trim()).filter(Boolean)
-              : [],
+                ? found.features.split("\n").map((f: string) => f.trim()).filter(Boolean)
+                : [],
             results: Array.isArray(found.results)
               ? found.results
               : typeof found.results === "string"
-              ? found.results.split("\n").map((r: string) => r.trim()).filter(Boolean)
-              : ["100% responsive", "Production ready"],
+                ? found.results.split("\n").map((r: string) => r.trim()).filter(Boolean)
+                : ["100% responsive", "Production ready"],
             technologies: Array.isArray(found.technologies)
               ? found.technologies
               : typeof found.technologies === "string"
-              ? found.technologies.split(",").map((t: string) => t.trim()).filter(Boolean)
-              : ["React"],
+                ? found.technologies.split(",").map((t: string) => t.trim()).filter(Boolean)
+                : ["React"],
             image: found.image || found.image_url || "",
             fallbackGradient: found.fallbackGradient || "from-purple-600/30 to-blue-600/30",
             link: found.link || found.live_url || "",
@@ -365,29 +365,29 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   const technologiesList: string[] = Array.isArray(project.technologies)
     ? project.technologies
     : typeof project.technologies === "string"
-    ? (project.technologies as string)
+      ? (project.technologies as string)
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean)
-    : ["Full-Stack"];
+      : ["Full-Stack"];
 
   const featuresList: string[] = Array.isArray(project.features)
     ? project.features
     : typeof project.features === "string"
-    ? (project.features as string)
+      ? (project.features as string)
         .split("\n")
         .map((f) => f.trim())
         .filter(Boolean)
-    : [];
+      : [];
 
   const resultsList: string[] = Array.isArray(project.results)
     ? project.results
     : typeof project.results === "string"
-    ? (project.results as string)
+      ? (project.results as string)
         .split("\n")
         .map((r) => r.trim())
         .filter(Boolean)
-    : [];
+      : [];
 
   // Next and Previous project navigation across all live & static projects
   const allProjects = getAllProjectsSync();
@@ -414,14 +414,14 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     imageError || !project.image
       ? fallbackSvg
       : directFallbackTried
-      ? toGoogleDriveDirectUrl(project.image)
-      : toProxyImageUrl(project.image);
+        ? toGoogleDriveDirectUrl(project.image)
+        : toProxyImageUrl(project.image);
 
   return (
     <main
       ref={topRef}
       id="project-details-root"
-      className="relative min-h-screen py-10 sm:py-16 bg-[#030014] text-white overflow-x-hidden"
+      className="relative min-h-screen py-10 pb-24 sm:py-16 sm:pb-16 bg-[#030014] text-white overflow-x-hidden"
     >
       <div
         id="project-details-top-anchor"
@@ -522,7 +522,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                 <span>📋</span>
                 <span>Project Overview</span>
               </h2>
-              <ExpandableText 
+              <ExpandableText
                 text={project.longDescription || project.description}
                 className="text-base leading-relaxed text-slate-300 whitespace-pre-line"
               />
@@ -536,7 +536,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                     <h3 className="text-base font-bold text-rose-300 mb-2">
                       The Challenge
                     </h3>
-                    <ExpandableText 
+                    <ExpandableText
                       text={project.problem}
                       className="text-sm leading-relaxed text-slate-400"
                     />
@@ -547,7 +547,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                     <h3 className="text-base font-bold text-emerald-300 mb-2">
                       The Solution
                     </h3>
-                    <ExpandableText 
+                    <ExpandableText
                       text={project.solution}
                       className="text-sm leading-relaxed text-slate-400"
                     />
@@ -563,7 +563,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                   <span>⚡</span>
                   <span>Key Architectural Features</span>
                 </h2>
-                <ExpandableList 
+                <ExpandableList
                   items={featuresList}
                   className="space-y-3"
                   renderItem={(feature, i) => (
@@ -586,7 +586,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                   <span>🏆</span>
                   <span>Results &amp; Impact</span>
                 </h2>
-                <ExpandableList 
+                <ExpandableList
                   items={resultsList}
                   className="space-y-2.5"
                   renderItem={(res, i) => (

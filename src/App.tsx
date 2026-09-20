@@ -23,6 +23,7 @@ import { Project, getAllProjectsSync } from "./data/projectsData";
 import { trackVisitorHit } from "./lib/analyticsService";
 import { initBackgroundSync } from "./lib/backgroundSync";
 import { initGoogleTranslateScript } from "./lib/googleTranslate";
+import MobileBottomNav from "./components/MobileBottomNav";
 
 type ActiveView = "home" | "hire" | "journey" | "project" | "admin" | "case-studies";
 
@@ -469,6 +470,11 @@ function App() {
           <Footer />
         </div>
       )}
+      <MobileBottomNav 
+        activeView={activeView} 
+        activeSection={activeSection} 
+        onNavigatePage={handleNavigatePage} 
+      />
       <SmartScrollButton />
       <Chatbot
         activeView={activeView}
