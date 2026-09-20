@@ -5,6 +5,8 @@ export interface Project {
   category: "web" | "mobile" | "ml" | "iot";
   categoryLabel: string;
   description: string;
+  short_desc?: string;
+  shortDescription?: string;
   longDescription?: string;
   problem?: string;
   solution?: string;
@@ -630,7 +632,9 @@ export const getAllProjectsSync = (): Project[] => {
             subtitle: item.subtitle || item.short_desc || item.description || "",
             category: item.category || "web",
             categoryLabel: item.categoryLabel || "Web App",
-            description: item.description || item.short_desc || "",
+            description: item.short_desc || item.description || "",
+            short_desc: item.short_desc || item.description || item.subtitle || "",
+            shortDescription: item.short_desc || item.description || item.subtitle || "",
             longDescription:
               item.longDescription ||
               item.full_desc ||

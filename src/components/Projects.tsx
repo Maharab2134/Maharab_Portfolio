@@ -109,13 +109,17 @@ const ProjectCard: React.FC<{
         <div>
           <h3
             onClick={handleOpenDetails}
-            className="text-base sm:text-lg font-bold text-white group-hover:text-purple-300 transition-colors cursor-pointer mb-2"
+            title={project.title}
+            className="text-base sm:text-lg font-bold text-white group-hover:text-purple-300 transition-colors cursor-pointer mb-2 truncate block"
           >
             {project.title}
           </h3>
 
-          <p className="text-xs sm:text-sm text-slate-400 line-clamp-2 leading-relaxed mb-4">
-            {project.description}
+          <p
+            className="text-xs sm:text-sm text-slate-400 line-clamp-2 leading-relaxed mb-4"
+            title={project.short_desc || project.shortDescription || project.description}
+          >
+            {project.short_desc || project.shortDescription || project.description}
           </p>
         </div>
 

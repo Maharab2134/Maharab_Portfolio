@@ -179,6 +179,8 @@ export const mapSupabaseToProject = (raw: any): ExtendedProject => {
     category: cat,
     categoryLabel: catLabel,
     description: raw.short_desc || raw.description || "",
+    short_desc: raw.short_desc || raw.description || "",
+    shortDescription: raw.short_desc || raw.description || "",
     longDescription: raw.full_desc || raw.longDescription || raw.description || "",
     problem: raw.problem || "Solving user accessibility and automated real-time workflows.",
     solution: raw.solution || "Architected a scalable, responsive system with modern design patterns.",
