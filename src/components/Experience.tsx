@@ -88,21 +88,8 @@ const Experience: React.FC = () => {
                 className="relative group"
               >
                 {/* Timeline Icon Node */}
-                <div className="absolute -left-[37px] sm:-left-[53px] top-1.5 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-900 border border-cyan-500/50 shadow-md shadow-cyan-500/20 text-cyan-400 group-hover:scale-110 group-hover:border-purple-400 group-hover:text-purple-400 transition-all duration-300 overflow-hidden">
-                  {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt={exp.company}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-5 h-5 sm:w-6 sm:h-6 object-contain rounded p-0.5"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    renderIcon(FaBriefcase, { size: 16 })
-                  )}
+                <div className="absolute -left-[37px] sm:-left-[53px] top-1.5 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-900 border border-cyan-500/50 shadow-md shadow-cyan-500/20 text-cyan-400 group-hover:scale-110 group-hover:border-purple-400 group-hover:text-purple-400 transition-all duration-300">
+                  {renderIcon(FaBriefcase, { size: 15 })}
                 </div>
 
                 {/* Experience Card */}
