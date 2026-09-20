@@ -129,5 +129,40 @@ describe("PortfolioChatbotEngine - Dynamic Project Matching & Clarification", ()
     expect(res.text).toContain("I only answer using verified content from this website");
     expect(res.projectsList).toBeUndefined();
   });
+
+  test("matches 'Ai & Ml project' only to genuine AI/ML projects and excludes web projects", () => {
+    const res = PortfolioChatbotEngine.processQuery("Ai & Ml project", defaultContext);
+    expect(res.text).toContain("AI & Machine Learning");
+    expect(res.projectsList).toBeDefined();
+    expect(res.projectsList!.length).toBeGreaterThanOrEqual(2);
+
+    const ids = res.projectsList!.map((p) => p.id);
+    // Verified AI/ML projects
+    expect(
+      ids.some(
+        (id) =>
+          id.includes("careerpath") ||
+          id.includes("sentiment") ||
+          id.includes("image") ||
+          id.includes("forecasting") ||
+          id.includes("heart")
+      )
+    ).toBe(true);
+
+    // Unrelated web projects MUST NEVER be present
+    expect(ids).not.toContain("saytica");
+    expect(ids).not.toContain("amin-webtech");
+    expect(ids).not.toContain("tripfly-bd");
+    expect(ids).not.toContain("midtown-aabashon");
+    expect(ids).not.toContain("purchifyshop");
+  });
+
+  test("matches 'ai projects' and does not leak Tailwind CSS web projects", () => {
+    const res = PortfolioChatbotEngine.processQuery("ai projects", defaultContext);
+    const ids = (res.projectsList || []).map((p) => p.id);
+    expect(ids).not.toContain("saytica");
+    expect(ids).not.toContain("amin-webtech");
+    expect(ids).not.toContain("tripfly-bd");
+  });
 });
 

@@ -502,6 +502,127 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
+    // 4.5. Category-Specific Project Inquiries (AI & ML, Mobile, IoT, Web)
+    // ------------------------------------------------------------------------
+    const queryTokens = q.replace(/[^a-z0-9.+]/g, " ").split(/\s+/).filter(Boolean);
+    const mentionsProjects =
+      q.includes("project") ||
+      q.includes("app") ||
+      q.includes("work") ||
+      q.includes("built") ||
+      queryTokens.includes("project") ||
+      queryTokens.includes("projects") ||
+      queryTokens.includes("works");
+
+    const isAiMlCategory =
+      q.includes("ai & ml") ||
+      q.includes("ai and ml") ||
+      q.includes("ai/ml") ||
+      q.includes("machine learning") ||
+      q.includes("deep learning") ||
+      q.includes("artificial intelligence") ||
+      (queryTokens.includes("ai") && (queryTokens.includes("ml") || mentionsProjects)) ||
+      (queryTokens.includes("ml") && (queryTokens.includes("ai") || mentionsProjects));
+
+    if (isAiMlCategory) {
+      const aiMlProjects = projects.filter((p) => {
+        if (p.category === "ml") return true;
+        const catLabel = p.categoryLabel.toLowerCase();
+        if (catLabel.includes("ai") || catLabel.includes("ml") || catLabel.includes("machine learning")) return true;
+        const hasAiTech = p.technologies.some((t) => {
+          const tl = t.toLowerCase();
+          return [
+            "python", "machine learning", "deep learning", "ai", "artificial intelligence",
+            "nlp", "tensorflow", "pytorch", "keras", "transformers", "bert", "lstm",
+            "prophet", "scikit-learn", "opencv", "data science"
+          ].includes(tl);
+        });
+        const hasAiTitle = /\b(ai|ml|nlp|machine learning|deep learning|classifier|sentiment|forecast)\b/i.test(p.title);
+        return hasAiTech || hasAiTitle;
+      });
+
+      if (aiMlProjects.length > 0) {
+        let text = `I found **${aiMlProjects.length} projects** in **AI & Machine Learning**:\n\n`;
+        text += `Are you looking for one of these? *(Apni ki egulor moddhe konta khujchen naki onno kichu?)*\n\n`;
+        aiMlProjects.slice(0, 6).forEach((proj) => {
+          text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+        });
+        text += `\nClick any project card below to see full details or live demo!`;
+
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text,
+          timestamp: new Date().toISOString(),
+          projectsList: aiMlProjects.slice(0, 6),
+          actions: [
+            { label: "🚀 Browse All Projects", type: "scroll", target: "projects", primary: true },
+            { label: "🛠️ View AI / ML Skills", type: "scroll", target: "skills" },
+          ],
+        };
+      }
+    }
+
+    const isIotCategory =
+      (q.includes("iot") || q.includes("hardware") || q.includes("robotics") || q.includes("arduino") || q.includes("esp32")) &&
+      mentionsProjects;
+    if (isIotCategory) {
+      const iotProjects = projects.filter((p) => p.category === "iot" || p.categoryLabel.toLowerCase().includes("iot"));
+      if (iotProjects.length > 0) {
+        let text = `I found **${iotProjects.length} projects** in **IoT & Hardware**:\n\n`;
+        text += `Are you looking for one of these? *(Apni ki egulor moddhe konta khujchen naki onno kichu?)*\n\n`;
+        iotProjects.slice(0, 6).forEach((proj) => {
+          text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+        });
+        text += `\nClick any project card below to see full details or live demo!`;
+
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text,
+          timestamp: new Date().toISOString(),
+          projectsList: iotProjects.slice(0, 6),
+          actions: [
+            { label: "🚀 Browse All Projects", type: "scroll", target: "projects", primary: true },
+            { label: "🛠️ View IoT Skills", type: "scroll", target: "skills" },
+          ],
+        };
+      }
+    }
+
+    const isMobileCategory =
+      (q.includes("mobile") || q.includes("flutter") || q.includes("android") || q.includes("ios") || q.includes("cross-platform")) &&
+      mentionsProjects;
+    if (isMobileCategory) {
+      const mobileProjects = projects.filter(
+        (p) =>
+          p.category === "mobile" ||
+          p.categoryLabel.toLowerCase().includes("mobile") ||
+          p.technologies.some((t) => ["flutter", "dart", "android", "ios"].includes(t.toLowerCase()))
+      );
+      if (mobileProjects.length > 0) {
+        let text = `I found **${mobileProjects.length} projects** in **Mobile App Development**:\n\n`;
+        text += `Are you looking for one of these? *(Apni ki egulor moddhe konta khujchen naki onno kichu?)*\n\n`;
+        mobileProjects.slice(0, 6).forEach((proj) => {
+          text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+        });
+        text += `\nClick any project card below to see full details or live demo!`;
+
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text,
+          timestamp: new Date().toISOString(),
+          projectsList: mobileProjects.slice(0, 6),
+          actions: [
+            { label: "🚀 Browse All Projects", type: "scroll", target: "projects", primary: true },
+            { label: "🛠️ View Mobile Skills", type: "scroll", target: "skills" },
+          ],
+        };
+      }
+    }
+
+    // ------------------------------------------------------------------------
     // 5. Dynamic Project Matching Engine
     // (Handles Acronyms like "nlp", "iot", partial titles, technologies, and fuzzy queries)
     // ------------------------------------------------------------------------
@@ -615,18 +736,17 @@ export class PortfolioChatbotEngine {
       if (matchingProjects.length > 0) {
         let text = `Found **${matchingProjects.length} project(s)** built with **${foundTechKeyword.toUpperCase()}**:\n\n`;
         matchingProjects.slice(0, 6).forEach((proj) => {
-          const matched = proj.technologies.filter(
-            (t) =>
-              t.toLowerCase() === foundTechKeyword ||
-              t.toLowerCase().includes(foundTechKeyword) ||
-              foundTechKeyword.includes(t.toLowerCase())
-          );
-          const others = proj.technologies.filter(
-            (t) =>
-              t.toLowerCase() !== foundTechKeyword &&
-              !t.toLowerCase().includes(foundTechKeyword) &&
-              !foundTechKeyword.includes(t.toLowerCase())
-          );
+          const matched = proj.technologies.filter((t) => {
+            const tl = t.toLowerCase();
+            if (tl === foundTechKeyword) return true;
+            const tWords = tl.split(/[^a-z0-9.+]/).filter(Boolean);
+            if (tWords.includes(foundTechKeyword)) return true;
+            if (foundTechKeyword.length >= 4 && tl.length >= 4) {
+              return tl.includes(foundTechKeyword) || foundTechKeyword.includes(tl);
+            }
+            return false;
+          });
+          const others = proj.technologies.filter((t) => !matched.includes(t));
           const prioritizedTechs = [...matched, ...others].slice(0, 3).join(", ");
 
           text += `- **${proj.title}** (${proj.categoryLabel}) — ${prioritizedTechs}\n`;

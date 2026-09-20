@@ -156,20 +156,26 @@ export const searchProjectsByTechnology = (
   if (!clean) return projects;
 
   return projects.filter((p) => {
-    // 1. Strict match in technologies array
+    // 1. Match in technologies array (strict word boundary or exact for short tokens)
     const techMatch = p.technologies.some((t) => {
       const tClean = t.toLowerCase().trim();
-      return (
-        tClean === clean ||
-        tClean.includes(clean) ||
-        clean.includes(tClean)
-      );
+      if (tClean === clean) return true;
+      const tWords = tClean.split(/[^a-z0-9.+]/).filter(Boolean);
+      if (tWords.includes(clean)) return true;
+      if (clean.length >= 4 && tClean.length >= 4) {
+        return tClean.includes(clean) || clean.includes(tClean);
+      }
+      return false;
     });
 
-    // 2. Direct title match (e.g. "Islamic Life Assistant Flutter Application")
-    const titleMatch = p.title.toLowerCase().includes(clean);
+    // 2. Direct title match (word boundary or min 4 chars)
+    const titleLower = p.title.toLowerCase();
+    const titleWords = titleLower.split(/[^a-z0-9.+]/).filter(Boolean);
+    const titleMatch =
+      titleWords.includes(clean) ||
+      (clean.length >= 4 && titleLower.includes(clean));
 
-    // 3. Category match if searching for general categories (e.g. "mobile", "iot", "web", "ml")
+    // 3. Category match if searching for general categories (e.g. "mobile", "iot", "web", "ml", "ai")
     const isCategory =
       clean === "mobile" ||
       clean === "web" ||
@@ -179,6 +185,7 @@ export const searchProjectsByTechnology = (
     const catMatch =
       isCategory &&
       (p.category.toLowerCase() === clean ||
+        (clean === "ai" && (p.category === "ml" || p.categoryLabel.toLowerCase().includes("ai"))) ||
         p.categoryLabel.toLowerCase().includes(clean));
 
     return techMatch || titleMatch || catMatch;
@@ -201,7 +208,14 @@ export const searchProjects = (
     const catMatch =
       p.category.toLowerCase().includes(clean) ||
       p.categoryLabel.toLowerCase().includes(clean);
-    const techMatch = p.technologies.some((t) => t.toLowerCase().includes(clean));
+    const techMatch = p.technologies.some((t) => {
+      const tl = t.toLowerCase();
+      if (tl === clean) return true;
+      const tWords = tl.split(/[^a-z0-9.+]/).filter(Boolean);
+      if (tWords.includes(clean)) return true;
+      if (clean.length >= 4 && tl.length >= 4) return tl.includes(clean);
+      return false;
+    });
     const featureMatch = p.features.some((f) => f.toLowerCase().includes(clean));
     return titleMatch || descMatch || catMatch || techMatch || featureMatch;
   });
@@ -214,20 +228,28 @@ export const findSkillInPortfolio = (
 ): { found: boolean; skillItem?: SkillItemData; projectsUsingIt: Project[] } => {
   const clean = techName.toLowerCase().trim();
 
-  const skillItem = skills.find(
-    (s) =>
-      s.name.toLowerCase() === clean ||
-      s.name.toLowerCase().includes(clean) ||
-      clean.includes(s.name.toLowerCase())
-  );
+  const skillItem = skills.find((s) => {
+    const sClean = s.name.toLowerCase().trim();
+    if (sClean === clean) return true;
+    const sWords = sClean.split(/[^a-z0-9.+]/).filter(Boolean);
+    if (sWords.includes(clean)) return true;
+    if (clean.length >= 4 && sClean.length >= 4) {
+      return sClean.includes(clean) || clean.includes(sClean);
+    }
+    return false;
+  });
 
   const projectsUsingIt = projects.filter((p) =>
-    p.technologies.some(
-      (t) =>
-        t.toLowerCase() === clean ||
-        t.toLowerCase().includes(clean) ||
-        clean.includes(t.toLowerCase())
-    )
+    p.technologies.some((t) => {
+      const tClean = t.toLowerCase().trim();
+      if (tClean === clean) return true;
+      const tWords = tClean.split(/[^a-z0-9.+]/).filter(Boolean);
+      if (tWords.includes(clean)) return true;
+      if (clean.length >= 4 && tClean.length >= 4) {
+        return tClean.includes(clean) || clean.includes(tClean);
+      }
+      return false;
+    })
   );
 
   const found = Boolean(skillItem || projectsUsingIt.length > 0);
@@ -350,8 +372,8 @@ export const findDynamicProjectMatches = (
       } else if (idTokens.includes(t)) {
         score += 100;
         matchedReasons.push(`ID segment "${t}"`);
-      } else {
-        // Substring match in title words (e.g. "purchify" in "purchifyshop")
+      } else if (t.length >= 4) {
+        // Substring match in title words (only for 4+ character tokens)
         for (const tw of titleTokens) {
           if (tw.length >= 4 && (tw.includes(t) || t.includes(tw))) {
             score += 90;
@@ -369,9 +391,15 @@ export const findDynamicProjectMatches = (
         score += 85;
         matchedReasons.push(`Technology "${exactTech}"`);
       } else {
-        const partialTech = techsLower.find(
-          (tech) => tech.length >= 3 && (tech.includes(t) || t.includes(tech))
-        );
+        // Word boundary check or 4+ char substring
+        const partialTech = techsLower.find((tech) => {
+          const techWords = tech.split(/[^a-z0-9.+]/).filter(Boolean);
+          if (techWords.includes(t)) return true;
+          if (t.length >= 4 && tech.length >= 4) {
+            return tech.includes(t) || t.includes(tech);
+          }
+          return false;
+        });
         if (partialTech) {
           score += 65;
           matchedReasons.push(`Technology match "${partialTech}"`);
@@ -387,29 +415,32 @@ export const findDynamicProjectMatches = (
       }
     }
 
-    if (
-      tokens.some((t) => t === categoryLower || categoryLabelLower.includes(t)) ||
-      cleanQ.includes(categoryLower) ||
-      cleanQ.includes(categoryLabelLower)
-    ) {
-      score += 45;
+    const cleanTokens = cleanQ.split(/[^a-z0-9]/).filter(Boolean);
+    const isCategoryMatch =
+      tokens.some((t) => t === categoryLower || categoryLabelLower.split(/[^a-z0-9]/).includes(t)) ||
+      cleanTokens.includes(categoryLower) ||
+      (categoryLower === "ml" && (cleanTokens.includes("ai") || cleanTokens.includes("ml") || cleanQ.includes("machine learning") || cleanQ.includes("deep learning")));
+
+    if (isCategoryMatch) {
+      score += 70;
       matchedReasons.push(`Category match`);
     }
 
     // F. CONTEXTUAL / BODY MATCH ("halka kicho mile")
-    // Check description, problem, solution, features
+    // Check description, problem, solution, features with whole word boundary
     for (const t of tokens) {
       if (t.length >= 3) {
-        if (descLower.includes(t)) {
+        const wordRegex = new RegExp(`\\b${t}\\b`, "i");
+        if (wordRegex.test(descLower)) {
           score += 35;
           matchedReasons.push(`Description match "${t}"`);
-        } else if (solutionLower.includes(t)) {
+        } else if (wordRegex.test(solutionLower)) {
           score += 25;
           matchedReasons.push(`Solution match "${t}"`);
-        } else if (problemLower.includes(t)) {
+        } else if (wordRegex.test(problemLower)) {
           score += 20;
           matchedReasons.push(`Problem match "${t}"`);
-        } else if (featuresLower.includes(t)) {
+        } else if (wordRegex.test(featuresLower)) {
           score += 20;
           matchedReasons.push(`Feature match "${t}"`);
         }
