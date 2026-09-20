@@ -259,7 +259,7 @@ WHERE NOT EXISTS (SELECT 1 FROM public.experience LIMIT 1);
 
 -- Seed Profile Info
 INSERT INTO public.profile_info (
-  name, short_name, title, tagline, bio, email, phone, location, resume_url,
+  name, short_name, title, tagline, bio, email, phone, location, resume_url, profile_image,
   years_experience, projects_completed, satisfaction_rate, github_url, linkedin_url,
   experience_config, development_process, working_hours
 )
@@ -273,6 +273,7 @@ SELECT
   '+8801586282609',
   'Dhaka, Bangladesh',
   'https://zcmeryxyifkxbxkmgvfe.supabase.co/storage/v1/object/public/portfolio-assets/resumes/1789574809090_xhb481.pdf',
+  '/images/img.jpg',
   '2+',
   '18+',
   '100%',

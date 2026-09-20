@@ -154,6 +154,7 @@ const Admin: React.FC = () => {
     maps_url: (PORTFOLIO_INFO as any).mapsUrl || "",
     resume_url: PORTFOLIO_INFO.resumeUrl,
     profile_image: PORTFOLIO_INFO.profileImage,
+    profileImage: PORTFOLIO_INFO.profileImage,
     show_intro_video: (PORTFOLIO_INFO as any).showIntroVideo ?? true,
     intro_video_url: (PORTFOLIO_INFO as any).introVideoUrl || PORTFOLIO_INFO.introVideoId || "",
     typewriter_prefix: (PORTFOLIO_INFO as any).typewriterPrefix || "I engineer",
@@ -489,6 +490,8 @@ const Admin: React.FC = () => {
           "",
         resume_url: liveProfile.resumeUrl || PORTFOLIO_INFO.resumeUrl,
         profile_image:
+          (liveProfile as any).profile_image || liveProfile.profileImage || PORTFOLIO_INFO.profileImage,
+        profileImage:
           (liveProfile as any).profile_image || liveProfile.profileImage || PORTFOLIO_INFO.profileImage,
         show_intro_video:
           (liveProfile as any).show_intro_video !== undefined
@@ -937,7 +940,7 @@ const Admin: React.FC = () => {
             messages: messagesList.length,
             reviews: reviewsList.length,
           }}
-          profileImage={profileForm.profile_image || PORTFOLIO_INFO.profileImage}
+          profileImage={profileForm.profile_image || profileForm.profileImage || PORTFOLIO_INFO.profileImage}
           profileName={profileForm.name || PORTFOLIO_INFO.name}
           onLogout={handleLogout}
           isMobileNavOpen={isMobileNavOpen}

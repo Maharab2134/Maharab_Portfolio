@@ -1065,90 +1065,7 @@ export const STORAGE_PROFILE_KEY = "maharab_cached_profile";
 
 // Profile Info Service
 export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
-  try {
-    const cached = localStorage.getItem(STORAGE_PROFILE_KEY);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed && (parsed.name || parsed.resume_url || parsed.resumeUrl)) {
-        return {
-          ...PORTFOLIO_INFO,
-          ...parsed,
-          name: parsed.name || PORTFOLIO_INFO.name,
-          shortName: parsed.short_name || parsed.shortName || PORTFOLIO_INFO.shortName,
-          title: parsed.title || PORTFOLIO_INFO.title,
-          typewriterPrefix:
-            parsed.typewriter_prefix !== undefined
-              ? parsed.typewriter_prefix
-              : parsed.typewriterPrefix !== undefined
-              ? parsed.typewriterPrefix
-              : PORTFOLIO_INFO.typewriterPrefix,
-          typewriterPhrases: parseTypewriterPhrases(
-            parsed.typewriter_phrases !== undefined
-              ? parsed.typewriter_phrases
-              : parsed.typewriterPhrases
-          ),
-          bio: parsed.bio || PORTFOLIO_INFO.bio,
-          footerBio:
-            parsed.footer_bio ||
-            parsed.footerBio ||
-            (PORTFOLIO_INFO as any).footerBio ||
-            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
-          footer_bio:
-            parsed.footer_bio ||
-            parsed.footerBio ||
-            (PORTFOLIO_INFO as any).footerBio ||
-            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
-          email: parsed.email || PORTFOLIO_INFO.email,
-          phone: parsed.phone || PORTFOLIO_INFO.phone,
-          location: parsed.location || PORTFOLIO_INFO.location,
-          mapsUrl:
-            parsed.maps_url ||
-            parsed.mapsUrl ||
-            (parsed.location
-              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
-              : PORTFOLIO_INFO.mapsUrl),
-          maps_url:
-            parsed.maps_url ||
-            parsed.mapsUrl ||
-            (parsed.location
-              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
-              : PORTFOLIO_INFO.mapsUrl),
-          resumeUrl: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
-          stats: {
-            ...PORTFOLIO_INFO.stats,
-            yearsExperience: parsed.years_experience || parsed.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
-            projectsCompleted: parsed.projects_completed || parsed.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
-            satisfactionRate: parsed.satisfaction_rate || parsed.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
-          },
-          aboutStats:
-            parsed.aboutStats ||
-            parsed.about_stats ||
-            (parsed.about_stat1_val ? [
-              { value: parsed.about_stat1_val, label: parsed.about_stat1_lbl || "Project Experience" },
-              { value: parsed.about_stat2_val || "15+", label: parsed.about_stat2_lbl || "Projects" },
-              { value: parsed.about_stat3_val || "10+", label: parsed.about_stat3_lbl || "Technologies" },
-              { value: parsed.about_stat4_val || "CSE", label: parsed.about_stat4_lbl || "Academic Background" },
-            ] : (PORTFOLIO_INFO as any).aboutStats),
-          about_stat1_val: parsed.about_stat1_val || (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years",
-          about_stat1_lbl: parsed.about_stat1_lbl || (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience",
-          about_stat2_val: parsed.about_stat2_val || (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+",
-          about_stat2_lbl: parsed.about_stat2_lbl || (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects",
-          about_stat3_val: parsed.about_stat3_val || (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+",
-          about_stat3_lbl: parsed.about_stat3_lbl || (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies",
-          about_stat4_val: parsed.about_stat4_val || (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE",
-          about_stat4_lbl: parsed.about_stat4_lbl || (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background",
-          socials: {
-            ...PORTFOLIO_INFO.socials,
-            github: parsed.github_url || parsed.github || parsed.socials?.github || PORTFOLIO_INFO.socials.github,
-            linkedin: parsed.linkedin_url || parsed.linkedin || parsed.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
-            twitter: parsed.twitter_url || parsed.twitter || parsed.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
-          },
-          workingHours: parsed.workingHours || parsed.working_hours || (PORTFOLIO_INFO as any).workingHours,
-        };
-      }
-    }
-  } catch (e) {}
-
+  // 1. If Supabase is configured, fetch live profile from cloud first
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -1158,6 +1075,7 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
 
       if (!error && data && data.length > 0) {
         const row = data[0];
+        const resolvedImage = row.profile_image || row.profileImage || PORTFOLIO_INFO.profileImage;
         const profileMapped = {
           ...PORTFOLIO_INFO,
           name: row.name || PORTFOLIO_INFO.name,
@@ -1204,8 +1122,9 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
               ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.location)}`
               : PORTFOLIO_INFO.mapsUrl),
           resumeUrl: row.resume_url || PORTFOLIO_INFO.resumeUrl,
-          profileImage: row.profile_image || row.profileImage || PORTFOLIO_INFO.profileImage,
-          profile_image: row.profile_image || row.profileImage || PORTFOLIO_INFO.profileImage,
+          resume_url: row.resume_url || PORTFOLIO_INFO.resumeUrl,
+          profileImage: resolvedImage,
+          profile_image: resolvedImage,
           showIntroVideo:
             row.show_intro_video !== undefined
               ? Boolean(row.show_intro_video)
@@ -1282,12 +1201,105 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
           } : (PORTFOLIO_INFO as any).workingHours),
         };
         try {
-          localStorage.setItem("maharab_cached_profile", JSON.stringify(profileMapped));
+          localStorage.setItem(STORAGE_PROFILE_KEY, JSON.stringify(profileMapped));
         } catch (e) {}
         return profileMapped;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Supabase fetch profile failed, using local cache fallback:", e);
+    }
   }
+
+  // 2. Fallback to localStorage cache if offline or Supabase unavailable
+  try {
+    const cached = localStorage.getItem(STORAGE_PROFILE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && (parsed.name || parsed.resume_url || parsed.resumeUrl || parsed.profile_image || parsed.profileImage)) {
+        const resolvedImage = parsed.profile_image || parsed.profileImage || PORTFOLIO_INFO.profileImage;
+        return {
+          ...PORTFOLIO_INFO,
+          ...parsed,
+          name: parsed.name || PORTFOLIO_INFO.name,
+          shortName: parsed.short_name || parsed.shortName || PORTFOLIO_INFO.shortName,
+          title: parsed.title || PORTFOLIO_INFO.title,
+          typewriterPrefix:
+            parsed.typewriter_prefix !== undefined
+              ? parsed.typewriter_prefix
+              : parsed.typewriterPrefix !== undefined
+              ? parsed.typewriterPrefix
+              : PORTFOLIO_INFO.typewriterPrefix,
+          typewriterPhrases: parseTypewriterPhrases(
+            parsed.typewriter_phrases !== undefined
+              ? parsed.typewriter_phrases
+              : parsed.typewriterPhrases
+          ),
+          bio: parsed.bio || PORTFOLIO_INFO.bio,
+          footerBio:
+            parsed.footer_bio ||
+            parsed.footerBio ||
+            (PORTFOLIO_INFO as any).footerBio ||
+            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
+          footer_bio:
+            parsed.footer_bio ||
+            parsed.footerBio ||
+            (PORTFOLIO_INFO as any).footerBio ||
+            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
+          email: parsed.email || PORTFOLIO_INFO.email,
+          phone: parsed.phone || PORTFOLIO_INFO.phone,
+          whatsappNumber: (parsed.phone || PORTFOLIO_INFO.phone || "").replace(/[^0-9]/g, ""),
+          whatsappUrl: `https://wa.me/${(parsed.phone || PORTFOLIO_INFO.phone || "").replace(/[^0-9]/g, "")}`,
+          location: parsed.location || PORTFOLIO_INFO.location,
+          mapsUrl:
+            parsed.maps_url ||
+            parsed.mapsUrl ||
+            (parsed.location
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
+              : PORTFOLIO_INFO.mapsUrl),
+          maps_url:
+            parsed.maps_url ||
+            parsed.mapsUrl ||
+            (parsed.location
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
+              : PORTFOLIO_INFO.mapsUrl),
+          resumeUrl: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+          resume_url: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+          profileImage: resolvedImage,
+          profile_image: resolvedImage,
+          stats: {
+            ...PORTFOLIO_INFO.stats,
+            yearsExperience: parsed.years_experience || parsed.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
+            projectsCompleted: parsed.projects_completed || parsed.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
+            satisfactionRate: parsed.satisfaction_rate || parsed.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
+          },
+          aboutStats:
+            parsed.aboutStats ||
+            parsed.about_stats ||
+            (parsed.about_stat1_val ? [
+              { value: parsed.about_stat1_val, label: parsed.about_stat1_lbl || "Project Experience" },
+              { value: parsed.about_stat2_val || "15+", label: parsed.about_stat2_lbl || "Projects" },
+              { value: parsed.about_stat3_val || "10+", label: parsed.about_stat3_lbl || "Technologies" },
+              { value: parsed.about_stat4_val || "CSE", label: parsed.about_stat4_lbl || "Academic Background" },
+            ] : (PORTFOLIO_INFO as any).aboutStats),
+          about_stat1_val: parsed.about_stat1_val || (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years",
+          about_stat1_lbl: parsed.about_stat1_lbl || (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience",
+          about_stat2_val: parsed.about_stat2_val || (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+",
+          about_stat2_lbl: parsed.about_stat2_lbl || (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects",
+          about_stat3_val: parsed.about_stat3_val || (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+",
+          about_stat3_lbl: parsed.about_stat3_lbl || (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies",
+          about_stat4_val: parsed.about_stat4_val || (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE",
+          about_stat4_lbl: parsed.about_stat4_lbl || (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background",
+          socials: {
+            ...PORTFOLIO_INFO.socials,
+            github: parsed.github_url || parsed.github || parsed.socials?.github || PORTFOLIO_INFO.socials.github,
+            linkedin: parsed.linkedin_url || parsed.linkedin || parsed.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
+            twitter: parsed.twitter_url || parsed.twitter || parsed.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
+          },
+          workingHours: parsed.workingHours || parsed.working_hours || (PORTFOLIO_INFO as any).workingHours,
+        };
+      }
+    }
+  } catch (e) {}
 
   return PORTFOLIO_INFO;
 };
@@ -1488,7 +1500,14 @@ export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
       const cached = localStorage.getItem("maharab_cached_profile");
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed && (parsed.name || parsed.resume_url || parsed.resumeUrl)) {
+        if (
+          parsed &&
+          (parsed.name ||
+            parsed.resume_url ||
+            parsed.resumeUrl ||
+            parsed.profile_image ||
+            parsed.profileImage)
+        ) {
           return {
             ...PORTFOLIO_INFO,
             ...parsed,

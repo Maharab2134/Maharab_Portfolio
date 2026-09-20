@@ -367,6 +367,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                       setProfileForm((prev: any) => ({
                         ...prev,
                         profile_image: PORTFOLIO_INFO.profileImage,
+                        profileImage: PORTFOLIO_INFO.profileImage,
                       }));
                     }}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl transition-all cursor-pointer"
@@ -384,9 +385,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={profileForm.profile_image || ""}
+                  value={profileForm.profile_image || profileForm.profileImage || ""}
                   onChange={(e) =>
-                    setProfileForm({ ...profileForm, profile_image: e.target.value })
+                    setProfileForm({
+                      ...profileForm,
+                      profile_image: e.target.value,
+                      profileImage: e.target.value,
+                    })
                   }
                   placeholder="https://images.unsplash.com/... or upload directly from file above"
                   className="w-full px-3.5 py-2 text-xs text-white bg-[#090d16] border border-white/10 rounded-xl focus:outline-none focus:border-indigo-400 font-mono transition-all"
@@ -946,7 +951,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                   <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.03] border border-white/10 w-fit">
                     <div className="w-7 h-7 rounded-lg overflow-hidden border border-white/20 shrink-0">
                       <img
-                        src={toProxyImageUrl(profileForm.profile_image || PORTFOLIO_INFO.profileImage)}
+                        src={toProxyImageUrl(profileForm.profile_image || (profileForm as any).profileImage || PORTFOLIO_INFO.profileImage)}
                         alt="avatar"
                         className="w-full h-full object-cover"
                       />

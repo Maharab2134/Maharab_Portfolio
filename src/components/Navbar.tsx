@@ -11,6 +11,7 @@ import {
   FaRocket,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { toProxyImageUrl } from "../data/projectsData";
 import { useLiveProfile, calculateWorkStatus } from "../lib/portfolioService";
 import LanguageSelector from "./LanguageSelector";
 
@@ -239,11 +240,11 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
           >
             <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 shrink-0 overflow-hidden font-bold text-white transition-transform duration-300 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 group-hover:scale-105 shadow-md shadow-purple-500/20 border border-white/20">
               <img
-                src={profile.profileImage || PORTFOLIO_INFO.profileImage}
+                src={toProxyImageUrl(profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage)}
                 alt={profile.name || PORTFOLIO_INFO.name}
                 className="object-cover object-top w-full h-full"
                 onError={(e) => {
-                  e.currentTarget.style.display = "none";
+                  (e.currentTarget as HTMLImageElement).src = "/images/img.jpg";
                 }}
               />
               <span className="absolute inset-0 flex items-center justify-center text-base tracking-wider -z-10">

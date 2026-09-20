@@ -122,7 +122,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           <div className="shrink-0 flex items-center gap-4 p-3.5 rounded-2xl bg-black/25 border border-white/[0.08] backdrop-blur-md self-start lg:self-auto">
             <div className="w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-br from-indigo-500 to-cyan-400 overflow-hidden shrink-0 shadow-lg shadow-indigo-500/20">
               <img
-                src={toProxyImageUrl(profileForm.profile_image || PORTFOLIO_INFO.profileImage)}
+                src={toProxyImageUrl(profileForm.profile_image || (profileForm as any).profileImage || PORTFOLIO_INFO.profileImage)}
                 alt={profileForm.name}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/images/img.jpg";

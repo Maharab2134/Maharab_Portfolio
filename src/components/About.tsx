@@ -26,13 +26,17 @@ const AVATAR_FALLBACK = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
 const About: React.FC = () => {
   const profile = useLiveProfile();
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const [imgSrc, setImgSrc] = useState(toProxyImageUrl(profile.profileImage));
+  const activeProfileImage =
+    profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage;
+  const [imgSrc, setImgSrc] = useState(toProxyImageUrl(activeProfileImage));
 
   useEffect(() => {
-    if (profile.profileImage) {
-      setImgSrc(toProxyImageUrl(profile.profileImage));
+    const currentImg =
+      profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage;
+    if (currentImg) {
+      setImgSrc(toProxyImageUrl(currentImg));
     }
-  }, [profile.profileImage]);
+  }, [profile.profileImage, (profile as any).profile_image]);
 
   const rawVideoUrl =
     (profile as any).intro_video_url ||
@@ -99,7 +103,13 @@ const About: React.FC = () => {
                 <img
                   src={imgSrc}
                   alt={profile.name || PORTFOLIO_INFO.name}
-                  onError={() => setImgSrc(AVATAR_FALLBACK)}
+                  onError={() => {
+                    if (imgSrc !== "/images/img.jpg") {
+                      setImgSrc("/images/img.jpg");
+                    } else {
+                      setImgSrc(AVATAR_FALLBACK);
+                    }
+                  }}
                   className="object-cover object-top w-full h-80 sm:h-96 rounded-2xl transition-transform duration-500 group-hover:scale-[1.02]"
                 />
               </div>

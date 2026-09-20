@@ -16,6 +16,7 @@ import {
   FaPaperPlane,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { toProxyImageUrl } from "../data/projectsData";
 import { useLiveProfile } from "../lib/portfolioService";
 import LanguageSelector from "./LanguageSelector";
 
@@ -32,7 +33,8 @@ const Footer: React.FC = () => {
   const phone = profile.phone || PORTFOLIO_INFO.phone;
   const location = profile.location || PORTFOLIO_INFO.location;
   const mapsUrl = profile.mapsUrl || (profile as any).maps_url || PORTFOLIO_INFO.mapsUrl;
-  const profileImage = profile.profileImage || PORTFOLIO_INFO.profileImage;
+  const profileImage =
+    profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage;
   const github = profile.socials?.github || PORTFOLIO_INFO.socials.github;
   const linkedin = profile.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin;
   const twitter = profile.socials?.twitter || PORTFOLIO_INFO.socials.twitter;
@@ -97,11 +99,11 @@ const Footer: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="relative flex items-center justify-center w-10 h-10 overflow-hidden font-bold text-white rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-cyan-400 shadow-md shadow-purple-500/20 border border-white/20">
                 <img
-                  src={profileImage}
+                  src={toProxyImageUrl(profileImage)}
                   alt={name}
                   className="object-cover object-top w-full h-full"
                   onError={(e) => {
-                    e.currentTarget.style.display = "none";
+                    (e.currentTarget as HTMLImageElement).src = "/images/img.jpg";
                   }}
                 />
                 <span className="absolute inset-0 flex items-center justify-center -z-10">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { toProxyImageUrl } from "../data/projectsData";
 import { useLiveProfile } from "../lib/portfolioService";
 
 interface SplashScreenProps {
@@ -98,7 +99,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
 
   if (!isVisible) return null;
 
-  const profileImg = profile.profileImage || PORTFOLIO_INFO.profileImage;
+  const profileImg =
+    profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage;
   const name = profile.name || PORTFOLIO_INFO.name;
   const title = profile.title || "Full-Stack Software Engineer & Mobile Developer";
 
@@ -163,7 +165,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
               {/* Avatar Container */}
               <div className="relative w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 shadow-[0_0_35px_rgba(168,85,247,0.35)] overflow-hidden">
                 <img
-                  src={profileImg}
+                  src={toProxyImageUrl(profileImg)}
                   alt={name}
                   className="w-full h-full rounded-full object-cover object-top bg-[#0a0520]"
                   onError={(e) => {

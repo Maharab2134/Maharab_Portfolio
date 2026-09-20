@@ -19,6 +19,8 @@ import {
 import { SiReact, SiFlutter, SiNodedotjs } from "react-icons/si";
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { TypeAnimation } from "react-type-animation";
+import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { toProxyImageUrl } from "../data/projectsData";
 import { useLiveProfile } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
@@ -412,11 +414,11 @@ const Hero: React.FC = () => {
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden p-0.5 bg-gradient-to-tr from-purple-500 via-pink-500 to-cyan-400 shadow-lg shadow-purple-500/20">
                     <div className="w-full h-full rounded-[14px] overflow-hidden bg-slate-900 relative flex items-center justify-center">
                       <img
-                        src={profile.profileImage || "/images/img.jpg"}
-                        alt={profile.name}
+                        src={toProxyImageUrl(profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage)}
+                        alt={profile.name || PORTFOLIO_INFO.name}
                         className="w-full h-full object-cover object-top"
                         onError={(e) => {
-                          e.currentTarget.style.display = "none";
+                          (e.currentTarget as HTMLImageElement).src = "/images/img.jpg";
                         }}
                       />
                       <span className="absolute inset-0 flex items-center justify-center font-bold text-white text-base bg-gradient-to-tr from-purple-600 to-cyan-500 -z-10">

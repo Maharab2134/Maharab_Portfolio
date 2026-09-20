@@ -23,6 +23,8 @@ import {
 } from "../lib/chatbotService";
 import { ActiveContext } from "../lib/chatbotKnowledge";
 import { Project, getAllProjectsSync, toProxyImageUrl } from "../data/projectsData";
+import { PORTFOLIO_INFO } from "../data/portfolioData";
+import { useLiveProfile } from "../lib/portfolioService";
 
 interface ChatbotProps {
   activeView: "home" | "hire" | "journey" | "project" | "admin" | "case-studies";
@@ -43,6 +45,11 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   onNavigateView,
   onSelectProject,
 }) => {
+  const profile = useLiveProfile();
+  const profileImg =
+    profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage;
+  const developerName = profile.shortName || profile.name || "Maharab";
+
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -395,11 +402,11 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                 {/* Developer Profile Avatar with Online Dot */}
                 <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-purple-500 via-indigo-500 to-cyan-400 p-[1.5px] shadow-md flex-shrink-0">
                   <img
-                    src="/images/img.jpg"
-                    alt="Maharab"
+                    src={toProxyImageUrl(profileImg)}
+                    alt={developerName}
                     className="w-full h-full object-cover rounded-full"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/chatbot.png";
+                      (e.target as HTMLImageElement).src = "/images/img.jpg";
                     }}
                   />
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full shadow-sm" />
@@ -408,7 +415,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                 {/* Name & Title */}
                 <div>
                   <h3 className="text-sm font-bold text-white tracking-wide leading-tight">
-                    Ask Maharab
+                    Ask {developerName}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-medium leading-tight">
                     Portfolio Assistant
