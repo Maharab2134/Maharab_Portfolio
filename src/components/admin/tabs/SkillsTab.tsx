@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FaPlus,
@@ -10,6 +10,10 @@ import {
   FaSave,
   FaCheck,
   FaSearch,
+  FaGlobe,
+  FaLink,
+  FaExternalLinkAlt,
+  FaSyncAlt,
 } from "react-icons/fa";
 import {
   SkillCategory,
@@ -119,6 +123,120 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
   // Visual Icon Picker state
   const [skillIconSearch, setSkillIconSearch] = useState("");
   const [skillIconCategory, setSkillIconCategory] = useState("all");
+
+  // Google & Web Icon Search state
+  const [iconMode, setIconMode] = useState<"curated" | "web">("curated");
+  const [webIcons, setWebIcons] = useState<
+    Array<{ id: string; label: string; url: string; source: string }>
+  >([]);
+  const [isSearchingWeb, setIsSearchingWeb] = useState(false);
+  const [customIconInput, setCustomIconInput] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
+
+  const handleSearchWebIcons = useCallback(
+    async (searchQuery?: string) => {
+      const raw = (searchQuery ?? skillIconSearch ?? skillForm.name).trim();
+      if (!raw) return;
+
+      setIsSearchingWeb(true);
+      const query = raw.toLowerCase();
+      const cleanSlug = query.replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+      const cleanHyphen = query.replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+      const results: Array<{ id: string; label: string; url: string; source: string }> = [];
+
+      // 1. Google High-Res Favicons (128px) for official tech domains
+      const domains = [
+        `${cleanSlug}.com`,
+        `${cleanSlug}.io`,
+        `${cleanSlug}.dev`,
+        `${cleanSlug}.org`,
+        `${cleanSlug}.ai`,
+        `${cleanSlug}.app`,
+        `${cleanHyphen}.dev`,
+        `${cleanHyphen}.org`,
+      ];
+
+      domains.forEach((dom) => {
+        results.push({
+          id: `google-${dom}`,
+          label: `${raw} (${dom})`,
+          url: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${dom}&size=128`,
+          source: "Google Favicon",
+        });
+      });
+
+      // 2. Devicon & SimpleIcons direct CDN vector SVGs
+      if (cleanSlug) {
+        results.push({
+          id: `devicon-${cleanSlug}`,
+          label: `${raw} (Devicon)`,
+          url: `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${cleanSlug}/${cleanSlug}-original.svg`,
+          source: "Devicon SVG",
+        });
+        results.push({
+          id: `simpleicons-${cleanSlug}`,
+          label: `${raw} (SimpleIcons)`,
+          url: `https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${cleanSlug}.svg`,
+          source: "SimpleIcons SVG",
+        });
+      }
+
+      // 3. Iconify live search API (covers over 200,000 vector tech icons)
+      try {
+        const res = await fetch(
+          `https://api.iconify.design/search?query=${encodeURIComponent(raw)}&limit=24`
+        );
+        if (res.ok) {
+          const json = await res.json();
+          if (json && Array.isArray(json.icons)) {
+            json.icons.forEach((icKey: string) => {
+              const parts = icKey.split(":");
+              const prefix = parts[0];
+              const icName = parts[1] || prefix;
+              results.push({
+                id: `iconify-${icKey}`,
+                label: icName.replace(/-/g, " "),
+                url: `https://api.iconify.design/${icKey}.svg`,
+                source: `Vector (${prefix})`,
+              });
+            });
+          }
+        }
+      } catch (e) {
+        // Network fallback
+      }
+
+      setWebIcons(results);
+      setIsSearchingWeb(false);
+    },
+    [skillIconSearch, skillForm.name]
+  );
+
+  // Auto-search Google & Web if user searches for an icon that is not in the curated 114+ list
+  useEffect(() => {
+    const trimmed = skillIconSearch.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    const localMatches = AVAILABLE_SKILL_ICONS.filter((ic) => {
+      const matchesCat =
+        skillIconCategory === "all" || (ic as any).category === skillIconCategory;
+      const matchesSearch =
+        ic.label.toLowerCase().includes(trimmed.toLowerCase()) ||
+        ic.id.toLowerCase().includes(trimmed.toLowerCase());
+      return matchesCat && matchesSearch;
+    });
+
+    if (localMatches.length === 0) {
+      setIconMode("web");
+      const timer = setTimeout(() => {
+        handleSearchWebIcons(trimmed);
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [skillIconSearch, skillIconCategory, handleSearchWebIcons]);
 
   // Filter skills
   const filteredAdminSkills = skillsList.filter((skill) => {
@@ -791,11 +909,11 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
                   </div>
                 </div>
 
-                {/* Row 4: Comprehensive Icon Selector with Live Search & Categories */}
+                {/* Row 4: Comprehensive Icon Selector with Live Search, Categories & Google/Web Search */}
                 <div className="space-y-3 pt-1 border-t border-white/[0.06]">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <label className="block font-semibold text-slate-300 text-[11px] uppercase tracking-wider">
-                      Technology Icon ({AVAILABLE_SKILL_ICONS.length}+ Curated Icons)
+                      Technology Icon ({AVAILABLE_SKILL_ICONS.length}+ Curated &amp; Google Search)
                     </label>
                     <div className="flex items-center gap-2 text-[11px] text-slate-400">
                       <span>Auto-resolved:</span>
@@ -804,15 +922,34 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
                           size: 15,
                           style: { color: skillForm.color },
                         })}
-                        <span className="font-semibold text-cyan-300">
-                          {skillForm.iconName || "Auto-Matched"}
+                        <span className="font-semibold text-cyan-300 truncate max-w-[150px]">
+                          {skillForm.iconName ? (
+                            skillForm.iconName.startsWith("http") ? (
+                              "🌐 Google/Web Icon"
+                            ) : (
+                              skillForm.iconName
+                            )
+                          ) : (
+                            "Auto-Matched"
+                          )}
                         </span>
+                        {skillForm.iconName && (
+                          <button
+                            type="button"
+                            onClick={() => setSkillForm({ ...skillForm, iconName: "" })}
+                            className="ml-1 text-slate-400 hover:text-rose-400 cursor-pointer"
+                            title="Reset to Auto"
+                          >
+                            {renderIcon(FaTimes, { size: 10 })}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Quick Icon Search & Category Filter */}
+                  {/* Icon Selector Container */}
                   <div className="space-y-2.5 p-3.5 rounded-xl bg-[#090d16] border border-white/[0.08]">
+                    {/* Search bar & Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
                       <div className="relative flex-1">
                         <span className="absolute left-3 top-2.5 text-slate-500">
@@ -822,19 +959,59 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
                           type="text"
                           value={skillIconSearch}
                           onChange={(e) => setSkillIconSearch(e.target.value)}
-                          placeholder="Search icon (e.g., VS Code, Postman, Python, Docker, React)..."
+                          placeholder="Search icon (e.g., VS Code, LangChain, Python, Astro, Pinecone)..."
                           className="w-full pl-8 pr-7 py-1.5 text-xs text-white bg-[#0c101d] border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400 placeholder:text-slate-500 transition-all font-sans"
                         />
                         {skillIconSearch && (
                           <button
                             type="button"
-                            onClick={() => setSkillIconSearch("")}
+                            onClick={() => {
+                              setSkillIconSearch("");
+                              setIconMode("curated");
+                            }}
                             className="absolute right-2 top-2 text-slate-400 hover:text-white cursor-pointer"
                           >
                             {renderIcon(FaTimes, { size: 10 })}
                           </button>
                         )}
                       </div>
+
+                      {/* Google & Web Search Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIconMode("web");
+                          handleSearchWebIcons();
+                        }}
+                        disabled={isSearchingWeb}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 border ${
+                          iconMode === "web"
+                            ? "bg-purple-500/20 text-purple-300 border-purple-500/40 shadow-sm"
+                            : "bg-white/[0.04] text-slate-300 border-white/[0.08] hover:bg-white/[0.08] hover:text-white"
+                        }`}
+                        title="Search Google & Web Icon APIs"
+                      >
+                        {renderIcon(FaGlobe, {
+                          size: 11,
+                          className: isSearchingWeb ? "animate-spin text-cyan-400" : "text-cyan-400",
+                        })}
+                        <span>{isSearchingWeb ? "Searching..." : "Search Google & Web"}</span>
+                      </button>
+
+                      {/* Custom URL Input Toggle Button */}
+                      <button
+                        type="button"
+                        onClick={() => setShowCustomInput(!showCustomInput)}
+                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap border flex items-center gap-1 ${
+                          showCustomInput
+                            ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
+                            : "bg-white/[0.03] text-slate-400 border-white/[0.06] hover:text-white hover:bg-white/[0.06]"
+                        }`}
+                        title="Paste Custom Image or Google URL"
+                      >
+                        {renderIcon(FaLink, { size: 10 })}
+                        <span>Paste URL</span>
+                      </button>
 
                       {/* Reset to Auto button */}
                       <button
@@ -846,70 +1023,279 @@ export const SkillsTab: React.FC<SkillsTabProps> = ({
                             : "bg-white/[0.03] text-slate-400 border-white/[0.06] hover:text-white hover:bg-white/[0.06]"
                         }`}
                       >
-                        ✨ Auto from Name
+                        ✨ Auto
                       </button>
                     </div>
 
-                    {/* Category Filter Pills for Icons */}
-                    <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px]">
-                      {[
-                        { id: "all", label: "All" },
-                        { id: "tools", label: "IDEs & Tools" },
-                        { id: "languages", label: "Languages" },
-                        { id: "frontend", label: "Frontend" },
-                        { id: "backend", label: "Backend" },
-                        { id: "database", label: "Database" },
-                        { id: "cloud", label: "Cloud & DevOps" },
-                        { id: "ai", label: "AI / ML" },
-                        { id: "iot", label: "IoT" },
-                      ].map((cat) => (
+                    {/* Custom URL Input Drawer */}
+                    {showCustomInput && (
+                      <div className="p-2.5 rounded-lg bg-[#070a12] border border-cyan-500/30 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 transition-all">
+                        <input
+                          type="url"
+                          value={customIconInput}
+                          onChange={(e) => setCustomIconInput(e.target.value)}
+                          placeholder="Paste Google Image URL / SVG link (https://...)..."
+                          className="flex-1 px-2.5 py-1 text-xs text-white bg-[#0c101d] border border-white/10 rounded-md focus:outline-none focus:border-cyan-400 font-mono"
+                        />
+                        <div className="flex items-center gap-2 shrink-0">
+                          {customIconInput.trim() && (
+                            <div className="w-6 h-6 rounded bg-white/10 p-0.5 flex items-center justify-center">
+                              <img
+                                src={customIconInput.trim()}
+                                alt="Preview"
+                                className="w-5 h-5 object-contain"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.opacity = "0.3";
+                                }}
+                              />
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (customIconInput.trim()) {
+                                setSkillForm({ ...skillForm, iconName: customIconInput.trim() });
+                                setShowCustomInput(false);
+                              }
+                            }}
+                            className="px-3 py-1 text-xs font-semibold rounded-md bg-gradient-to-r from-cyan-500 to-blue-500 text-black hover:opacity-90 transition-all cursor-pointer"
+                          >
+                            Apply Icon
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Icon Source Mode Switcher & Category Filter */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/[0.04]">
+                      {/* Tabs: Curated vs Google & Web */}
+                      <div className="flex items-center gap-1 text-[11px]">
                         <button
-                          key={cat.id}
                           type="button"
-                          onClick={() => setSkillIconCategory(cat.id)}
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                            skillIconCategory === cat.id
-                              ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
-                              : "text-slate-400 hover:text-slate-200 bg-white/[0.02]"
+                          onClick={() => setIconMode("curated")}
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${
+                            iconMode === "curated"
+                              ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                              : "text-slate-400 hover:text-white bg-white/[0.02]"
                           }`}
                         >
-                          {cat.label}
+                          Curated ({AVAILABLE_SKILL_ICONS.length}+)
                         </button>
-                      ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIconMode("web");
+                            if (webIcons.length === 0) handleSearchWebIcons();
+                          }}
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                            iconMode === "web"
+                              ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                              : "text-slate-400 hover:text-white bg-white/[0.02]"
+                          }`}
+                        >
+                          {renderIcon(FaGlobe, { size: 10, className: "text-purple-400" })}
+                          <span>Google &amp; Web Search</span>
+                          {webIcons.length > 0 && (
+                            <span className="ml-0.5 px-1 py-0.2 bg-purple-500/30 rounded text-[9px] text-purple-200">
+                              {webIcons.length}
+                            </span>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Google Images External Link */}
+                      <a
+                        href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(
+                          (skillIconSearch || skillForm.name || "technology") + " logo icon svg transparent png"
+                        )}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-slate-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                        title="Search transparent PNG / SVG on Google Images"
+                      >
+                        <span>Search Google Images</span>
+                        {renderIcon(FaExternalLinkAlt, { size: 8 })}
+                      </a>
                     </div>
 
-                    {/* Scrollable Visual Icon Grid */}
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 max-h-48 overflow-y-auto pr-1 pt-1">
-                      {AVAILABLE_SKILL_ICONS.filter((ic) => {
-                        const matchesCat =
-                          skillIconCategory === "all" || (ic as any).category === skillIconCategory;
-                        const matchesSearch =
-                          !skillIconSearch ||
-                          ic.label.toLowerCase().includes(skillIconSearch.toLowerCase()) ||
-                          ic.id.toLowerCase().includes(skillIconSearch.toLowerCase());
-                        return matchesCat && matchesSearch;
-                      }).map((ic) => {
-                        const isSelected = skillForm.iconName === ic.id;
-                        return (
-                          <button
-                            key={ic.id}
-                            type="button"
-                            onClick={() => setSkillForm({ ...skillForm, iconName: ic.id })}
-                            className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer text-center ${
-                              isSelected
-                                ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-md ring-1 ring-cyan-400/40 scale-95"
-                                : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.06] text-slate-300 hover:text-white"
-                            }`}
-                            title={`${ic.label} (${ic.id})`}
-                          >
-                            <div className="text-base">{renderIcon(ic.icon, { size: 16 })}</div>
-                            <span className="text-[9px] font-medium truncate max-w-[70px] leading-tight">
-                              {ic.label.split(" ")[0]}
+                    {/* Mode 1: Curated Icons */}
+                    {iconMode === "curated" && (
+                      <>
+                        {/* Category Filter Pills for Curated Icons */}
+                        <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px]">
+                          {[
+                            { id: "all", label: "All" },
+                            { id: "tools", label: "IDEs & Tools" },
+                            { id: "languages", label: "Languages" },
+                            { id: "frontend", label: "Frontend" },
+                            { id: "backend", label: "Backend" },
+                            { id: "database", label: "Database" },
+                            { id: "cloud", label: "Cloud & DevOps" },
+                            { id: "ai", label: "AI / ML" },
+                            { id: "iot", label: "IoT" },
+                          ].map((cat) => (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => setSkillIconCategory(cat.id)}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+                                skillIconCategory === cat.id
+                                  ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
+                                  : "text-slate-400 hover:text-slate-200 bg-white/[0.02]"
+                              }`}
+                            >
+                              {cat.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Scrollable Curated Icon Grid */}
+                        {(() => {
+                          const curatedFiltered = AVAILABLE_SKILL_ICONS.filter((ic) => {
+                            const matchesCat =
+                              skillIconCategory === "all" || (ic as any).category === skillIconCategory;
+                            const matchesSearch =
+                              !skillIconSearch ||
+                              ic.label.toLowerCase().includes(skillIconSearch.toLowerCase()) ||
+                              ic.id.toLowerCase().includes(skillIconSearch.toLowerCase());
+                            return matchesCat && matchesSearch;
+                          });
+
+                          if (curatedFiltered.length === 0) {
+                            return (
+                              <div className="p-4 rounded-xl bg-purple-900/10 border border-purple-500/20 text-center space-y-2">
+                                <p className="text-xs text-purple-200 font-medium">
+                                  No curated icon found for &ldquo;{skillIconSearch}&rdquo;.
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIconMode("web");
+                                    handleSearchWebIcons(skillIconSearch);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-xs font-semibold cursor-pointer transition-all"
+                                >
+                                  {renderIcon(FaGlobe, { size: 11 })}
+                                  <span>Search &amp; Fetch from Google &amp; Web</span>
+                                </button>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 max-h-48 overflow-y-auto pr-1 pt-1">
+                              {curatedFiltered.map((ic) => {
+                                const isSelected = skillForm.iconName === ic.id;
+                                return (
+                                  <button
+                                    key={ic.id}
+                                    type="button"
+                                    onClick={() => setSkillForm({ ...skillForm, iconName: ic.id })}
+                                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer text-center ${
+                                      isSelected
+                                        ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-md ring-1 ring-cyan-400/40 scale-95"
+                                        : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.06] text-slate-300 hover:text-white"
+                                    }`}
+                                    title={`${ic.label} (${ic.id})`}
+                                  >
+                                    <div className="text-base">{renderIcon(ic.icon, { size: 16 })}</div>
+                                    <span className="text-[9px] font-medium truncate max-w-[70px] leading-tight">
+                                      {ic.label.split(" ")[0]}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </>
+                    )}
+
+                    {/* Mode 2: Google & Web Icons */}
+                    {iconMode === "web" && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                          <span className="flex items-center gap-1 text-purple-300 font-medium">
+                            {renderIcon(FaGlobe, { size: 11 })}
+                            <span>
+                              Web Results for &ldquo;{skillIconSearch || skillForm.name || "technology"}&rdquo;
                             </span>
+                            {webIcons.length > 0 && ` (${webIcons.length})`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleSearchWebIcons()}
+                            disabled={isSearchingWeb}
+                            className="text-cyan-400 hover:text-cyan-300 cursor-pointer flex items-center gap-1 text-[10px]"
+                          >
+                            {renderIcon(FaSyncAlt, {
+                              size: 9,
+                              className: isSearchingWeb ? "animate-spin" : "",
+                            })}
+                            <span>Refresh</span>
                           </button>
-                        );
-                      })}
-                    </div>
+                        </div>
+
+                        {isSearchingWeb ? (
+                          <div className="p-6 text-center text-xs text-cyan-300 space-y-1 animate-pulse">
+                            {renderIcon(FaGlobe, {
+                              size: 20,
+                              className: "mx-auto mb-2 animate-spin text-cyan-400",
+                            })}
+                            <p>Searching Google Favicons, Vector SVGs &amp; Devicons...</p>
+                          </div>
+                        ) : webIcons.length === 0 ? (
+                          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center space-y-2">
+                            <p className="text-xs text-slate-400">
+                              No web icons loaded yet. Click below to search Google and online icon APIs.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => handleSearchWebIcons()}
+                              className="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-semibold cursor-pointer"
+                            >
+                              Search Now
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 max-h-52 overflow-y-auto pr-1 pt-1">
+                            {webIcons.map((wIcon) => {
+                              const isSelected = skillForm.iconName === wIcon.url;
+                              return (
+                                <button
+                                  key={wIcon.id}
+                                  type="button"
+                                  onClick={() => setSkillForm({ ...skillForm, iconName: wIcon.url })}
+                                  className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer text-center relative ${
+                                    isSelected
+                                      ? "bg-purple-500/25 border-purple-400 text-purple-200 shadow-md ring-1 ring-purple-400/50 scale-95"
+                                      : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.06] text-slate-300 hover:text-white"
+                                  }`}
+                                  title={`${wIcon.label} - Click to select this icon`}
+                                >
+                                  <div className="w-6 h-6 flex items-center justify-center overflow-hidden">
+                                    <img
+                                      src={wIcon.url}
+                                      alt={wIcon.label}
+                                      className="w-5 h-5 object-contain"
+                                      onError={(e) => {
+                                        (e.target as HTMLElement).closest("button")?.remove();
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="text-[9px] font-medium truncate max-w-[70px] leading-tight">
+                                    {wIcon.label.split(" ")[0]}
+                                  </span>
+                                  <span className="text-[7px] text-cyan-400/70 uppercase">
+                                    {wIcon.source}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 

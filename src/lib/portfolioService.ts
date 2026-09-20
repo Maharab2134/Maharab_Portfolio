@@ -2316,10 +2316,28 @@ export const resolveCategoryIcon = (categoryId: string, iconName?: string): any 
 };
 
 export const resolveSkillIcon = (name: string, iconName?: string, category?: string): any => {
-  if (iconName && ICON_REGISTRY[iconName]) {
-    return ICON_REGISTRY[iconName];
+  if (iconName) {
+    if (
+      iconName.startsWith("http://") ||
+      iconName.startsWith("https://") ||
+      iconName.startsWith("data:") ||
+      iconName.includes("/")
+    ) {
+      return iconName;
+    }
+    if (ICON_REGISTRY[iconName]) {
+      return ICON_REGISTRY[iconName];
+    }
   }
   const n = (name || "").toLowerCase().trim();
+
+  // Modern Frameworks & AI fallbacks
+  if (n.includes("langchain")) return "https://api.iconify.design/logos:langchain-icon.svg";
+  if (n.includes("pinecone")) return "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://pinecone.io&size=128";
+  if (n.includes("qdrant")) return "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://qdrant.tech&size=128";
+  if (n.includes("astro")) return "https://api.iconify.design/logos:astro-icon.svg";
+  if (n.includes("zustand")) return "https://api.iconify.design/logos:zustand.svg";
+  if (n.includes("tauri")) return "https://api.iconify.design/logos:tauri.svg";
 
   // 1. IDEs, Editors & CLI
   if (n.includes("vs code") || n.includes("vscode") || n.includes("visual studio code") || n === "vsc") return VscVscode;

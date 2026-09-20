@@ -51,7 +51,31 @@ export interface AdminToast {
 }
 
 export const renderIcon = (Icon: any, props: any = {}) => {
-  return React.createElement(Icon || FaCode, props);
+  if (!Icon) return React.createElement(FaCode as any, props);
+  if (
+    typeof Icon === "string" &&
+    (Icon.startsWith("http://") ||
+      Icon.startsWith("https://") ||
+      Icon.startsWith("data:image/") ||
+      Icon.includes("/"))
+  ) {
+    return React.createElement("img", {
+      src: Icon,
+      alt: "icon",
+      className: `object-contain ${props.className || ""}`,
+      style: {
+        width: props.size || 20,
+        height: props.size || 20,
+        display: "inline-block",
+        verticalAlign: "middle",
+        ...props.style,
+      },
+      onError: (e: any) => {
+        e.currentTarget.style.display = "none";
+      },
+    });
+  }
+  return React.createElement((Icon || FaCode) as any, props);
 };
 
 export const getFeatureList = (features: any): string[] => {

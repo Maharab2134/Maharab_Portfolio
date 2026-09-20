@@ -14,6 +14,32 @@ import {
 
 const renderIcon = (Icon: any, props: any = {}) => {
   const Comp: any = Icon || FaCode;
+  if (!Icon) return <Comp {...props} />;
+  if (
+    typeof Icon === "string" &&
+    (Icon.startsWith("http://") ||
+      Icon.startsWith("https://") ||
+      Icon.startsWith("data:image/") ||
+      Icon.includes("/"))
+  ) {
+    return (
+      <img
+        src={Icon}
+        alt="skill-icon"
+        className={`object-contain ${props.className || ""}`}
+        style={{
+          width: props.size || 24,
+          height: props.size || 24,
+          display: "inline-block",
+          verticalAlign: "middle",
+          ...props.style,
+        }}
+        onError={(e) => {
+          (e.target as HTMLElement).style.display = "none";
+        }}
+      />
+    );
+  }
   return <Comp {...props} />;
 };
 
