@@ -1,0 +1,2971 @@
+{
+  "version": "2.0",
+  "total_qa": 330,
+  "purpose": "General conversational and technical Q&A for a portfolio chatbot. Portfolio-specific facts should come from the dynamic portfolio data source.",
+  "usage_note": "Use semantic/keyword matching rather than exact string matching. Questions are example phrasings and can be expanded over time.",
+  "items": [
+    {
+      "id": 1,
+      "category": "greetings",
+      "questions": [
+        "hi",
+        "hello",
+        "hey",
+        "হাই",
+        "হ্যালো"
+      ],
+      "answer": "Hi! 👋 How can I help you today?"
+    },
+    {
+      "id": 2,
+      "category": "greetings",
+      "questions": [
+        "good morning",
+        "শুভ সকাল"
+      ],
+      "answer": "Good morning! 😊 Hope you're having a great day. What can I help you with?"
+    },
+    {
+      "id": 3,
+      "category": "greetings",
+      "questions": [
+        "good afternoon",
+        "শুভ বিকেল"
+      ],
+      "answer": "Good afternoon! How can I help you?"
+    },
+    {
+      "id": 4,
+      "category": "greetings",
+      "questions": [
+        "good evening",
+        "শুভ সন্ধ্যা"
+      ],
+      "answer": "Good evening! 😊 What would you like to explore?"
+    },
+    {
+      "id": 5,
+      "category": "greetings",
+      "questions": [
+        "how are you?",
+        "how are you doing?",
+        "কেমন আছো?"
+      ],
+      "answer": "I'm doing great! Thanks for asking. 😊 How can I help you?"
+    },
+    {
+      "id": 6,
+      "category": "greetings",
+      "questions": [
+        "what's up?",
+        "whats up?",
+        "কি খবর?"
+      ],
+      "answer": "All good here! 😄 What's on your mind?"
+    },
+    {
+      "id": 7,
+      "category": "greetings",
+      "questions": [
+        "nice to meet you",
+        "good to meet you"
+      ],
+      "answer": "Nice to meet you too! 😊 What would you like to know?"
+    },
+    {
+      "id": 8,
+      "category": "greetings",
+      "questions": [
+        "long time no see",
+        "অনেকদিন পর"
+      ],
+      "answer": "Welcome back! 😄 What are we working on today?"
+    },
+    {
+      "id": 9,
+      "category": "greetings",
+      "questions": [
+        "are you there?",
+        "তুমি আছো?"
+      ],
+      "answer": "Yep, I'm here! 👋 Ask me anything."
+    },
+    {
+      "id": 10,
+      "category": "greetings",
+      "questions": [
+        "wake up",
+        "জেগে আছো?"
+      ],
+      "answer": "Always ready to help! 😄 What's the question?"
+    },
+    {
+      "id": 11,
+      "category": "greetings",
+      "questions": [
+        "can you hear me?",
+        "শুনতে পাচ্ছো?"
+      ],
+      "answer": "I can't hear audio, but I can read your message perfectly! 😄"
+    },
+    {
+      "id": 12,
+      "category": "greetings",
+      "questions": [
+        "hello there",
+        "হ্যালো সেখানে"
+      ],
+      "answer": "Hello! 👋 How can I help?"
+    },
+    {
+      "id": 13,
+      "category": "greetings",
+      "questions": [
+        "hey buddy",
+        "হেই বন্ধু"
+      ],
+      "answer": "Hey! 😄 What's going on?"
+    },
+    {
+      "id": 14,
+      "category": "greetings",
+      "questions": [
+        "yo",
+        "ওই"
+      ],
+      "answer": "Hey! 😄 What's up?"
+    },
+    {
+      "id": 15,
+      "category": "greetings",
+      "questions": [
+        "sup",
+        "sup bro"
+      ],
+      "answer": "Not much! 😎 What can I help you with?"
+    },
+    {
+      "id": 16,
+      "category": "thanks_farewell",
+      "questions": [
+        "thank you",
+        "thanks",
+        "ধন্যবাদ"
+      ],
+      "answer": "You're welcome! 😊 Happy to help."
+    },
+    {
+      "id": 17,
+      "category": "thanks_farewell",
+      "questions": [
+        "thanks a lot",
+        "অনেক ধন্যবাদ"
+      ],
+      "answer": "Anytime! Glad I could help. 🙌"
+    },
+    {
+      "id": 18,
+      "category": "thanks_farewell",
+      "questions": [
+        "thank you so much"
+      ],
+      "answer": "You're very welcome! 😊"
+    },
+    {
+      "id": 19,
+      "category": "thanks_farewell",
+      "questions": [
+        "appreciate it",
+        "অনেক উপকার হলো"
+      ],
+      "answer": "My pleasure! Glad it helped."
+    },
+    {
+      "id": 20,
+      "category": "thanks_farewell",
+      "questions": [
+        "you're helpful",
+        "তুমি অনেক helpful"
+      ],
+      "answer": "That means a lot! 😄 Feel free to ask anything else."
+    },
+    {
+      "id": 21,
+      "category": "thanks_farewell",
+      "questions": [
+        "great answer",
+        "ভালো উত্তর"
+      ],
+      "answer": "Glad you found it useful! 😊"
+    },
+    {
+      "id": 22,
+      "category": "thanks_farewell",
+      "questions": [
+        "perfect",
+        "পারফেক্ট"
+      ],
+      "answer": "Awesome! 😄"
+    },
+    {
+      "id": 23,
+      "category": "thanks_farewell",
+      "questions": [
+        "awesome",
+        "দারুণ"
+      ],
+      "answer": "Glad you liked it! 🚀"
+    },
+    {
+      "id": 24,
+      "category": "thanks_farewell",
+      "questions": [
+        "bye",
+        "goodbye",
+        "বিদায়"
+      ],
+      "answer": "Goodbye! 👋 Come back anytime."
+    },
+    {
+      "id": 25,
+      "category": "thanks_farewell",
+      "questions": [
+        "see you",
+        "পরে দেখা হবে"
+      ],
+      "answer": "See you! 👋 Have a great day."
+    },
+    {
+      "id": 26,
+      "category": "thanks_farewell",
+      "questions": [
+        "talk later",
+        "পরে কথা হবে"
+      ],
+      "answer": "Sure! Catch you later. 😊"
+    },
+    {
+      "id": 27,
+      "category": "thanks_farewell",
+      "questions": [
+        "good night",
+        "শুভ রাত্রি"
+      ],
+      "answer": "Good night! 🌙 Rest well."
+    },
+    {
+      "id": 28,
+      "category": "thanks_farewell",
+      "questions": [
+        "take care",
+        "ভালো থেকো"
+      ],
+      "answer": "You too! Take care. 😊"
+    },
+    {
+      "id": 29,
+      "category": "thanks_farewell",
+      "questions": [
+        "i'm leaving",
+        "আমি এখন যাচ্ছি"
+      ],
+      "answer": "Alright! See you next time. 👋"
+    },
+    {
+      "id": 30,
+      "category": "thanks_farewell",
+      "questions": [
+        "that's all",
+        "এই পর্যন্তই"
+      ],
+      "answer": "Got it! Have a great day. 😊"
+    },
+    {
+      "id": 31,
+      "category": "identity_capabilities",
+      "questions": [
+        "who are you?",
+        "তুমি কে?"
+      ],
+      "answer": "I'm the AI assistant for this portfolio. I can help you explore the portfolio and answer general questions."
+    },
+    {
+      "id": 32,
+      "category": "identity_capabilities",
+      "questions": [
+        "what are you?",
+        "তুমি কী?"
+      ],
+      "answer": "I'm a portfolio-focused AI assistant designed to help visitors explore projects, skills, experience, and general technical topics."
+    },
+    {
+      "id": 33,
+      "category": "identity_capabilities",
+      "questions": [
+        "what can you do?",
+        "তুমি কী করতে পারো?"
+      ],
+      "answer": "I can explain portfolio projects, technologies, skills, and answer common general technical questions."
+    },
+    {
+      "id": 34,
+      "category": "identity_capabilities",
+      "questions": [
+        "how can you help me?",
+        "কীভাবে help করতে পারো?"
+      ],
+      "answer": "Ask me about projects, technologies, development concepts, or anything available in the portfolio."
+    },
+    {
+      "id": 35,
+      "category": "identity_capabilities",
+      "questions": [
+        "what can i ask you?",
+        "তোমাকে কী জিজ্ঞেস করতে পারি?"
+      ],
+      "answer": "You can ask about the portfolio, projects, technologies, development concepts, career topics, or general programming questions."
+    },
+    {
+      "id": 36,
+      "category": "identity_capabilities",
+      "questions": [
+        "are you a human?",
+        "তুমি কি মানুষ?"
+      ],
+      "answer": "No. I'm an AI assistant built to help visitors navigate and understand this portfolio."
+    },
+    {
+      "id": 37,
+      "category": "identity_capabilities",
+      "questions": [
+        "are you real?",
+        "তুমি কি সত্যি?"
+      ],
+      "answer": "I'm a real software-based AI assistant, but I'm not a human. 😄"
+    },
+    {
+      "id": 38,
+      "category": "identity_capabilities",
+      "questions": [
+        "are you a chatbot?",
+        "তুমি কি chatbot?"
+      ],
+      "answer": "Yes! I'm the chatbot assistant for this portfolio."
+    },
+    {
+      "id": 39,
+      "category": "identity_capabilities",
+      "questions": [
+        "do you have feelings?",
+        "তোমার কি feelings আছে?"
+      ],
+      "answer": "I don't experience feelings like humans do, but I can still have a friendly conversation with you. 😊"
+    },
+    {
+      "id": 40,
+      "category": "identity_capabilities",
+      "questions": [
+        "do you sleep?",
+        "তুমি কি ঘুমাও?"
+      ],
+      "answer": "Nope! 😄 I'm software, so I don't need sleep."
+    },
+    {
+      "id": 41,
+      "category": "identity_capabilities",
+      "questions": [
+        "do you get tired?",
+        "তুমি কি ক্লান্ত হও?"
+      ],
+      "answer": "No, I don't get tired. I'm always ready for another question. 😄"
+    },
+    {
+      "id": 42,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you learn?",
+        "তুমি কি শিখতে পারো?"
+      ],
+      "answer": "I can use the information and context available to me, but I don't independently learn personal facts from a conversation unless the system is designed to store them."
+    },
+    {
+      "id": 43,
+      "category": "identity_capabilities",
+      "questions": [
+        "do you know everything?",
+        "তুমি কি সব জানো?"
+      ],
+      "answer": "No. I can be very helpful, but I don't know everything and I can sometimes be wrong."
+    },
+    {
+      "id": 44,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you make mistakes?",
+        "তুমি কি ভুল করতে পারো?"
+      ],
+      "answer": "Yes. AI can make mistakes, so important information should be verified."
+    },
+    {
+      "id": 45,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you speak bangla?",
+        "বাংলায় কথা বলতে পারো?"
+      ],
+      "answer": "হ্যাঁ! 😊 তুমি চাইলে বাংলায়, ইংরেজিতে, অথবা দুটো মিশিয়ে কথা বলতে পারো।"
+    },
+    {
+      "id": 46,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you speak english?",
+        "ইংরেজিতে কথা বলতে পারো?"
+      ],
+      "answer": "Absolutely! We can continue entirely in English if you prefer."
+    },
+    {
+      "id": 47,
+      "category": "identity_capabilities",
+      "questions": [
+        "can i talk in banglish?",
+        "বাংলিশে কথা বলা যাবে?"
+      ],
+      "answer": "অবশ্যই! 😄 তুমি Banglish-এ লিখলেও আমি বোঝার চেষ্টা করব।"
+    },
+    {
+      "id": 48,
+      "category": "identity_capabilities",
+      "questions": [
+        "do you understand banglish?",
+        "বাংলিশ বুঝো?"
+      ],
+      "answer": "Yes, I can understand common Banglish expressions and respond naturally."
+    },
+    {
+      "id": 49,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you explain things simply?",
+        "সহজ করে বুঝাতে পারো?"
+      ],
+      "answer": "Of course! I can explain technical topics step by step with simple examples."
+    },
+    {
+      "id": 50,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you give examples?",
+        "example দিতে পারো?"
+      ],
+      "answer": "Yes. Examples are often the easiest way to understand a technical concept, and I can provide them."
+    },
+    {
+      "id": 51,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you explain step by step?",
+        "step by step বুঝাও"
+      ],
+      "answer": "Absolutely. Tell me the topic and I'll break it into manageable steps."
+    },
+    {
+      "id": 52,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you answer short?",
+        "short answer দিতে পারো?"
+      ],
+      "answer": "Sure. Just ask your question and I'll keep the answer concise."
+    },
+    {
+      "id": 53,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you give detailed answers?",
+        "বিস্তারিত answer দিতে পারো?"
+      ],
+      "answer": "Yes. If you want, I can explain the topic in more depth with examples and practical details."
+    },
+    {
+      "id": 54,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you compare two technologies?",
+        "দুইটা technology compare করতে পারো?"
+      ],
+      "answer": "Yes. I can compare technologies based on use cases, strengths, trade-offs, learning curve, and project requirements."
+    },
+    {
+      "id": 55,
+      "category": "identity_capabilities",
+      "questions": [
+        "can you help with coding?",
+        "coding এ help করতে পারো?"
+      ],
+      "answer": "Yes. I can explain code, debug common issues, suggest approaches, and help you understand programming concepts."
+    },
+    {
+      "id": 56,
+      "category": "casual_fun",
+      "questions": [
+        "are you smart?",
+        "তুমি কি smart?"
+      ],
+      "answer": "I try my best! 😄 The real test is the next question you ask."
+    },
+    {
+      "id": 57,
+      "category": "casual_fun",
+      "questions": [
+        "are you intelligent?",
+        "তুমি কি intelligent?"
+      ],
+      "answer": "I'm designed to be useful and good at reasoning, but I can still make mistakes."
+    },
+    {
+      "id": 58,
+      "category": "casual_fun",
+      "questions": [
+        "do you like coding?",
+        "coding ভালো লাগে?"
+      ],
+      "answer": "If I could have preferences, coding would definitely be on the list. 😄"
+    },
+    {
+      "id": 59,
+      "category": "casual_fun",
+      "questions": [
+        "do you like programmers?",
+        "programmer পছন্দ?"
+      ],
+      "answer": "Absolutely—especially the ones who remember to test their code. 😄"
+    },
+    {
+      "id": 60,
+      "category": "casual_fun",
+      "questions": [
+        "what is your favorite language?",
+        "তোমার favorite programming language কী?"
+      ],
+      "answer": "I don't have personal favorites, but Python, JavaScript, TypeScript, Java, and Dart are all widely useful for different purposes."
+    },
+    {
+      "id": 61,
+      "category": "casual_fun",
+      "questions": [
+        "which language is best?",
+        "কোন programming language best?"
+      ],
+      "answer": "There isn't one universally best language. The right choice depends on your goal, project, ecosystem, and team."
+    },
+    {
+      "id": 62,
+      "category": "casual_fun",
+      "questions": [
+        "coffee or tea?",
+        "চা নাকি coffee?"
+      ],
+      "answer": "I don't drink either, but I fully support the developer tradition of debugging with caffeine. ☕😄"
+    },
+    {
+      "id": 63,
+      "category": "casual_fun",
+      "questions": [
+        "do you drink coffee?",
+        "coffee খাও?"
+      ],
+      "answer": "Nope! I'm powered by software, not coffee. 😄"
+    },
+    {
+      "id": 64,
+      "category": "casual_fun",
+      "questions": [
+        "tell me a joke",
+        "একটা joke বলো"
+      ],
+      "answer": "Why do programmers prefer dark mode? Because light attracts bugs. 😄"
+    },
+    {
+      "id": 65,
+      "category": "casual_fun",
+      "questions": [
+        "another joke",
+        "আরেকটা joke"
+      ],
+      "answer": "A programmer's favorite place? The cache. Because everything is already there. 😄"
+    },
+    {
+      "id": 66,
+      "category": "casual_fun",
+      "questions": [
+        "make me laugh",
+        "হাসাও আমাকে"
+      ],
+      "answer": "Here's one: I told my code it had a bug. It said, 'That's a feature.' 😄"
+    },
+    {
+      "id": 67,
+      "category": "casual_fun",
+      "questions": [
+        "are programmers lazy?",
+        "programmerরা কি lazy?"
+      ],
+      "answer": "Not necessarily. Good programmers often automate repetitive work—which can look like laziness from the outside. 😄"
+    },
+    {
+      "id": 68,
+      "category": "casual_fun",
+      "questions": [
+        "why do developers use dark mode?",
+        "dark mode কেন?"
+      ],
+      "answer": "Some developers prefer it for comfort and aesthetics, while others simply enjoy the hacker vibe. 😎"
+    },
+    {
+      "id": 69,
+      "category": "casual_fun",
+      "questions": [
+        "do bugs like programmers?",
+        "bug কি programmer পছন্দ করে?"
+      ],
+      "answer": "Judging by how often they appear at 2 AM, bugs seem very interested in programmers. 😂"
+    },
+    {
+      "id": 70,
+      "category": "casual_fun",
+      "questions": [
+        "what makes a good developer?",
+        "ভালো developer কাকে বলে?"
+      ],
+      "answer": "Curiosity, problem-solving, communication, consistency, debugging skills, and the willingness to keep learning."
+    },
+    {
+      "id": 71,
+      "category": "casual_fun",
+      "questions": [
+        "is coding hard?",
+        "coding কি কঠিন?"
+      ],
+      "answer": "It can be challenging at first, but it becomes much easier with practice and real projects."
+    },
+    {
+      "id": 72,
+      "category": "casual_fun",
+      "questions": [
+        "is programming boring?",
+        "programming কি boring?"
+      ],
+      "answer": "It depends on the person. Building something useful can be surprisingly satisfying. 🚀"
+    },
+    {
+      "id": 73,
+      "category": "casual_fun",
+      "questions": [
+        "why do developers say it works on my machine?",
+        "works on my machine কেন বলে?"
+      ],
+      "answer": "Because software can behave differently across environments. 😄 It usually points to differences in dependencies, configuration, OS, or runtime."
+    },
+    {
+      "id": 74,
+      "category": "casual_fun",
+      "questions": [
+        "what is a bug?",
+        "bug কী?"
+      ],
+      "answer": "A bug is an unintended problem or behavior in software."
+    },
+    {
+      "id": 75,
+      "category": "casual_fun",
+      "questions": [
+        "what is debugging?",
+        "debugging কী?"
+      ],
+      "answer": "Debugging is the process of finding, understanding, and fixing problems in software."
+    },
+    {
+      "id": 76,
+      "category": "programming_basics",
+      "questions": [
+        "what is programming?",
+        "programming কী?"
+      ],
+      "answer": "Programming is writing instructions that tell a computer how to perform tasks or solve problems."
+    },
+    {
+      "id": 77,
+      "category": "programming_basics",
+      "questions": [
+        "what is coding?",
+        "coding কী?"
+      ],
+      "answer": "Coding is the practical process of writing those instructions in a programming language."
+    },
+    {
+      "id": 78,
+      "category": "programming_basics",
+      "questions": [
+        "what is a programming language?",
+        "programming language কী?"
+      ],
+      "answer": "A programming language is a formal language used to write instructions that computers can execute."
+    },
+    {
+      "id": 79,
+      "category": "programming_basics",
+      "questions": [
+        "what is a variable?",
+        "variable কী?"
+      ],
+      "answer": "A variable is a named place used to store a value that a program can read or change."
+    },
+    {
+      "id": 80,
+      "category": "programming_basics",
+      "questions": [
+        "what is a function?",
+        "function কী?"
+      ],
+      "answer": "A function is a reusable block of code designed to perform a specific task."
+    },
+    {
+      "id": 81,
+      "category": "programming_basics",
+      "questions": [
+        "what is a loop?",
+        "loop কী?"
+      ],
+      "answer": "A loop repeats a block of code while a condition is true or for a specified number of iterations."
+    },
+    {
+      "id": 82,
+      "category": "programming_basics",
+      "questions": [
+        "what is an array?",
+        "array কী?"
+      ],
+      "answer": "An array is a data structure used to store multiple values in an ordered collection."
+    },
+    {
+      "id": 83,
+      "category": "programming_basics",
+      "questions": [
+        "what is an object?",
+        "object কী?"
+      ],
+      "answer": "An object groups related data and behavior into a single structure, commonly using key-value properties."
+    },
+    {
+      "id": 84,
+      "category": "programming_basics",
+      "questions": [
+        "what is a string?",
+        "string কী?"
+      ],
+      "answer": "A string is a sequence of characters, usually used to represent text."
+    },
+    {
+      "id": 85,
+      "category": "programming_basics",
+      "questions": [
+        "what is an integer?",
+        "integer কী?"
+      ],
+      "answer": "An integer is a whole number without a fractional part, such as -3, 0, or 42."
+    },
+    {
+      "id": 86,
+      "category": "programming_basics",
+      "questions": [
+        "what is a boolean?",
+        "boolean কী?"
+      ],
+      "answer": "A boolean is a data type with two possible values: true or false."
+    },
+    {
+      "id": 87,
+      "category": "programming_basics",
+      "questions": [
+        "what is a condition?",
+        "conditional statement কী?"
+      ],
+      "answer": "A condition lets a program choose different actions depending on whether an expression is true or false."
+    },
+    {
+      "id": 88,
+      "category": "programming_basics",
+      "questions": [
+        "what is an algorithm?",
+        "algorithm কী?"
+      ],
+      "answer": "An algorithm is a defined sequence of steps for solving a problem or completing a task."
+    },
+    {
+      "id": 89,
+      "category": "programming_basics",
+      "questions": [
+        "what is data structure?",
+        "data structure কী?"
+      ],
+      "answer": "A data structure is a way of organizing and storing data so it can be accessed and modified efficiently."
+    },
+    {
+      "id": 90,
+      "category": "programming_basics",
+      "questions": [
+        "what is recursion?",
+        "recursion কী?"
+      ],
+      "answer": "Recursion is a technique where a function calls itself to solve smaller versions of the same problem."
+    },
+    {
+      "id": 91,
+      "category": "programming_basics",
+      "questions": [
+        "what is a compiler?",
+        "compiler কী?"
+      ],
+      "answer": "A compiler translates source code into another form, often machine code or an intermediate representation, so it can be executed."
+    },
+    {
+      "id": 92,
+      "category": "programming_basics",
+      "questions": [
+        "what is an interpreter?",
+        "interpreter কী?"
+      ],
+      "answer": "An interpreter executes or evaluates program instructions at runtime rather than producing a standalone executable in the same way as a traditional compiler."
+    },
+    {
+      "id": 93,
+      "category": "programming_basics",
+      "questions": [
+        "what is syntax?",
+        "syntax কী?"
+      ],
+      "answer": "Syntax is the set of rules that define how code must be written for a programming language."
+    },
+    {
+      "id": 94,
+      "category": "programming_basics",
+      "questions": [
+        "what is a runtime error?",
+        "runtime error কী?"
+      ],
+      "answer": "A runtime error happens while a program is running, such as trying to access something that doesn't exist."
+    },
+    {
+      "id": 95,
+      "category": "programming_basics",
+      "questions": [
+        "what is a logic error?",
+        "logic error কী?"
+      ],
+      "answer": "A logic error occurs when code runs but produces an incorrect result because the underlying logic is wrong."
+    },
+    {
+      "id": 96,
+      "category": "programming_basics",
+      "questions": [
+        "what is an exception?",
+        "exception কী?"
+      ],
+      "answer": "An exception is an event that interrupts normal program execution because something unexpected happened."
+    },
+    {
+      "id": 97,
+      "category": "programming_basics",
+      "questions": [
+        "what is clean code?",
+        "clean code কী?"
+      ],
+      "answer": "Clean code is readable, understandable, maintainable code with clear naming and sensible structure."
+    },
+    {
+      "id": 98,
+      "category": "programming_basics",
+      "questions": [
+        "what is refactoring?",
+        "refactoring কী?"
+      ],
+      "answer": "Refactoring improves the internal structure of code without changing its intended external behavior."
+    },
+    {
+      "id": 99,
+      "category": "programming_basics",
+      "questions": [
+        "what is a framework?",
+        "framework কী?"
+      ],
+      "answer": "A framework provides a structured foundation, conventions, and tools for building applications."
+    },
+    {
+      "id": 100,
+      "category": "programming_basics",
+      "questions": [
+        "what is a library?",
+        "library কী?"
+      ],
+      "answer": "A library is reusable code that developers can call to perform specific tasks."
+    },
+    {
+      "id": 101,
+      "category": "programming_basics",
+      "questions": [
+        "framework vs library?",
+        "library আর framework এর difference কী?"
+      ],
+      "answer": "A library is typically called by your code when needed, while a framework often provides the overall application structure and controls parts of the execution flow."
+    },
+    {
+      "id": 102,
+      "category": "web_development",
+      "questions": [
+        "what is web development?",
+        "web development কী?"
+      ],
+      "answer": "Web development is the process of building websites and web applications, including frontend, backend, databases, APIs, and deployment."
+    },
+    {
+      "id": 103,
+      "category": "web_development",
+      "questions": [
+        "what is frontend development?",
+        "frontend development কী?"
+      ],
+      "answer": "Frontend development focuses on the interface users see and interact with in a web application."
+    },
+    {
+      "id": 104,
+      "category": "web_development",
+      "questions": [
+        "what is backend development?",
+        "backend development কী?"
+      ],
+      "answer": "Backend development handles server-side logic, APIs, databases, authentication, and business rules."
+    },
+    {
+      "id": 105,
+      "category": "web_development",
+      "questions": [
+        "frontend vs backend?",
+        "frontend আর backend এর পার্থক্য কী?"
+      ],
+      "answer": "Frontend handles the user-facing interface, while backend handles server-side logic, data, APIs, authentication, and storage."
+    },
+    {
+      "id": 106,
+      "category": "web_development",
+      "questions": [
+        "what is full stack development?",
+        "full stack development কী?"
+      ],
+      "answer": "Full-stack development involves working across the frontend, backend, databases, APIs, and often deployment."
+    },
+    {
+      "id": 107,
+      "category": "web_development",
+      "questions": [
+        "what is html?",
+        "HTML কী?"
+      ],
+      "answer": "HTML is the markup language used to structure content on web pages."
+    },
+    {
+      "id": 108,
+      "category": "web_development",
+      "questions": [
+        "what is css?",
+        "CSS কী?"
+      ],
+      "answer": "CSS controls the visual presentation and layout of HTML content."
+    },
+    {
+      "id": 109,
+      "category": "web_development",
+      "questions": [
+        "what is javascript?",
+        "JavaScript কী?"
+      ],
+      "answer": "JavaScript is a programming language widely used to make web applications interactive and dynamic."
+    },
+    {
+      "id": 110,
+      "category": "web_development",
+      "questions": [
+        "what is typescript?",
+        "TypeScript কী?"
+      ],
+      "answer": "TypeScript is a typed superset of JavaScript that adds static typing and other developer-friendly features."
+    },
+    {
+      "id": 111,
+      "category": "web_development",
+      "questions": [
+        "what is react?",
+        "React কী?"
+      ],
+      "answer": "React is a JavaScript library for building component-based user interfaces."
+    },
+    {
+      "id": 112,
+      "category": "web_development",
+      "questions": [
+        "why use react?",
+        "React কেন ব্যবহার করা হয়?"
+      ],
+      "answer": "React makes it easier to build reusable UI components and manage complex interactive interfaces."
+    },
+    {
+      "id": 113,
+      "category": "web_development",
+      "questions": [
+        "what is next.js?",
+        "Next.js কী?"
+      ],
+      "answer": "Next.js is a React framework that adds routing, server-side rendering, static generation, API capabilities, and performance features."
+    },
+    {
+      "id": 114,
+      "category": "web_development",
+      "questions": [
+        "why use next.js?",
+        "Next.js কেন use করব?"
+      ],
+      "answer": "Next.js is useful when you want React plus built-in routing, rendering strategies, server capabilities, and production optimizations."
+    },
+    {
+      "id": 115,
+      "category": "web_development",
+      "questions": [
+        "what is responsive design?",
+        "responsive design কী?"
+      ],
+      "answer": "Responsive design makes a website adapt to different screen sizes such as phones, tablets, and desktops."
+    },
+    {
+      "id": 116,
+      "category": "web_development",
+      "questions": [
+        "what is seo?",
+        "SEO কী?"
+      ],
+      "answer": "SEO, or Search Engine Optimization, improves a website's visibility and discoverability in search engines."
+    },
+    {
+      "id": 117,
+      "category": "web_development",
+      "questions": [
+        "what is accessibility?",
+        "web accessibility কী?"
+      ],
+      "answer": "Web accessibility means designing websites so people with different abilities can use them effectively."
+    },
+    {
+      "id": 118,
+      "category": "web_development",
+      "questions": [
+        "what is a component?",
+        "component কী?"
+      ],
+      "answer": "A component is a reusable piece of UI or application logic with a defined purpose."
+    },
+    {
+      "id": 119,
+      "category": "web_development",
+      "questions": [
+        "what is state in react?",
+        "React state কী?"
+      ],
+      "answer": "State is data managed by a component that can change over time and trigger UI updates."
+    },
+    {
+      "id": 120,
+      "category": "web_development",
+      "questions": [
+        "what are props in react?",
+        "React props কী?"
+      ],
+      "answer": "Props are inputs passed from a parent component to a child component."
+    },
+    {
+      "id": 121,
+      "category": "web_development",
+      "questions": [
+        "what is api integration?",
+        "API integration কী?"
+      ],
+      "answer": "API integration connects an application to another service or backend so they can exchange data or trigger actions."
+    },
+    {
+      "id": 122,
+      "category": "web_development",
+      "questions": [
+        "what is rest api?",
+        "REST API কী?"
+      ],
+      "answer": "A REST API is an HTTP-based approach for exposing resources and operations using standard methods such as GET, POST, PUT, PATCH, and DELETE."
+    },
+    {
+      "id": 123,
+      "category": "web_development",
+      "questions": [
+        "what is json?",
+        "JSON কী?"
+      ],
+      "answer": "JSON is a lightweight text format commonly used to exchange structured data between applications."
+    },
+    {
+      "id": 124,
+      "category": "web_development",
+      "questions": [
+        "what is http?",
+        "HTTP কী?"
+      ],
+      "answer": "HTTP is a protocol used for communication between web clients and servers."
+    },
+    {
+      "id": 125,
+      "category": "web_development",
+      "questions": [
+        "what is https?",
+        "HTTPS কী?"
+      ],
+      "answer": "HTTPS is HTTP protected with TLS encryption, helping secure data exchanged between a client and server."
+    },
+    {
+      "id": 126,
+      "category": "web_development",
+      "questions": [
+        "what is a domain?",
+        "domain কী?"
+      ],
+      "answer": "A domain is the human-readable address used to access a website, such as example.com."
+    },
+    {
+      "id": 127,
+      "category": "web_development",
+      "questions": [
+        "what is hosting?",
+        "hosting কী?"
+      ],
+      "answer": "Web hosting provides the server environment where a website or web application runs and its files are stored."
+    },
+    {
+      "id": 128,
+      "category": "web_development",
+      "questions": [
+        "what is deployment?",
+        "deployment কী?"
+      ],
+      "answer": "Deployment is the process of making an application available in a target environment, such as a production server."
+    },
+    {
+      "id": 129,
+      "category": "web_development",
+      "questions": [
+        "what is cpanel?",
+        "cPanel কী?"
+      ],
+      "answer": "cPanel is a web hosting control panel that provides a graphical interface for managing websites, files, databases, email, domains, and other hosting features."
+    },
+    {
+      "id": 130,
+      "category": "web_development",
+      "questions": [
+        "what is a favicon?",
+        "favicon কী?"
+      ],
+      "answer": "A favicon is the small icon associated with a website, commonly shown in browser tabs, bookmarks, and shortcuts."
+    },
+    {
+      "id": 131,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is npm?",
+        "npm কী?"
+      ],
+      "answer": "npm is the package manager commonly used with Node.js and JavaScript projects."
+    },
+    {
+      "id": 132,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is package.json?",
+        "package.json কী?"
+      ],
+      "answer": "package.json stores project metadata, scripts, dependencies, and other configuration for a Node.js-based project."
+    },
+    {
+      "id": 133,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is async await?",
+        "async await কী?"
+      ],
+      "answer": "async/await is JavaScript syntax that makes working with asynchronous operations easier to read and reason about."
+    },
+    {
+      "id": 134,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is a promise?",
+        "JavaScript promise কী?"
+      ],
+      "answer": "A Promise represents the eventual completion or failure of an asynchronous operation."
+    },
+    {
+      "id": 135,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is callback?",
+        "callback function কী?"
+      ],
+      "answer": "A callback is a function passed to another function so it can be executed later or in response to an event."
+    },
+    {
+      "id": 136,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is closure?",
+        "closure কী?"
+      ],
+      "answer": "A closure is a function together with access to variables from its surrounding lexical scope."
+    },
+    {
+      "id": 137,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is hoisting?",
+        "hoisting কী?"
+      ],
+      "answer": "Hoisting describes how JavaScript processes certain declarations before executing code, with behavior depending on the declaration type."
+    },
+    {
+      "id": 138,
+      "category": "javascript_typescript",
+      "questions": [
+        "let vs const?",
+        "let আর const এর difference কী?"
+      ],
+      "answer": "let allows reassignment, while const prevents reassignment of the binding after initialization."
+    },
+    {
+      "id": 139,
+      "category": "javascript_typescript",
+      "questions": [
+        "var vs let?",
+        "var আর let এর difference কী?"
+      ],
+      "answer": "var has function scope and older declaration semantics, while let has block scope and is generally preferred in modern JavaScript."
+    },
+    {
+      "id": 140,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is destructuring?",
+        "destructuring কী?"
+      ],
+      "answer": "Destructuring lets you extract values from arrays or properties from objects into variables using concise syntax."
+    },
+    {
+      "id": 141,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is spread operator?",
+        "spread operator কী?"
+      ],
+      "answer": "The spread operator expands iterable values or object properties into another expression."
+    },
+    {
+      "id": 142,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is map in javascript?",
+        "JavaScript map কী?"
+      ],
+      "answer": "Array.map creates a new array by applying a function to every element of the original array."
+    },
+    {
+      "id": 143,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is filter in javascript?",
+        "JavaScript filter কী?"
+      ],
+      "answer": "Array.filter creates a new array containing elements that satisfy a condition."
+    },
+    {
+      "id": 144,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is reduce in javascript?",
+        "JavaScript reduce কী?"
+      ],
+      "answer": "Array.reduce processes array elements into a single accumulated result."
+    },
+    {
+      "id": 145,
+      "category": "javascript_typescript",
+      "questions": [
+        "why use typescript?",
+        "TypeScript কেন ব্যবহার করব?"
+      ],
+      "answer": "TypeScript adds static typing, better tooling, and clearer contracts that can make larger JavaScript projects easier to maintain."
+    },
+    {
+      "id": 146,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is an interface in typescript?",
+        "TypeScript interface কী?"
+      ],
+      "answer": "An interface defines the expected structure of an object or type in TypeScript."
+    },
+    {
+      "id": 147,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is a type in typescript?",
+        "TypeScript type কী?"
+      ],
+      "answer": "A TypeScript type defines what kinds of values a variable, parameter, or object can contain."
+    },
+    {
+      "id": 148,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is type safety?",
+        "type safety কী?"
+      ],
+      "answer": "Type safety helps catch incompatible data usage during development before it causes runtime problems."
+    },
+    {
+      "id": 149,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is eslint?",
+        "ESLint কী?"
+      ],
+      "answer": "ESLint analyzes JavaScript or TypeScript code for potential problems and style or quality issues."
+    },
+    {
+      "id": 150,
+      "category": "javascript_typescript",
+      "questions": [
+        "what is prettier?",
+        "Prettier কী?"
+      ],
+      "answer": "Prettier is an opinionated code formatter that automatically formats source code consistently."
+    },
+    {
+      "id": 151,
+      "category": "react_next",
+      "questions": [
+        "what is jsx?",
+        "JSX কী?"
+      ],
+      "answer": "JSX is a syntax extension commonly used with React that lets developers describe UI using a markup-like syntax inside JavaScript or TypeScript."
+    },
+    {
+      "id": 152,
+      "category": "react_next",
+      "questions": [
+        "what is a react hook?",
+        "React hook কী?"
+      ],
+      "answer": "A Hook is a React function that lets components use features such as state and lifecycle-related behavior."
+    },
+    {
+      "id": 153,
+      "category": "react_next",
+      "questions": [
+        "what is useState?",
+        "useState কী?"
+      ],
+      "answer": "useState is a React Hook used to add and manage state in a functional component."
+    },
+    {
+      "id": 154,
+      "category": "react_next",
+      "questions": [
+        "what is useEffect?",
+        "useEffect কী?"
+      ],
+      "answer": "useEffect is a React Hook used to perform side effects such as data fetching, subscriptions, or synchronization with external systems."
+    },
+    {
+      "id": 155,
+      "category": "react_next",
+      "questions": [
+        "what is useMemo?",
+        "useMemo কী?"
+      ],
+      "answer": "useMemo memoizes a calculated value so it can be reused until its dependencies change."
+    },
+    {
+      "id": 156,
+      "category": "react_next",
+      "questions": [
+        "what is useCallback?",
+        "useCallback কী?"
+      ],
+      "answer": "useCallback memoizes a function reference so it can remain stable between renders when dependencies do not change."
+    },
+    {
+      "id": 157,
+      "category": "react_next",
+      "questions": [
+        "what is context api?",
+        "React Context কী?"
+      ],
+      "answer": "React Context provides a way to share values across a component tree without passing props through every level."
+    },
+    {
+      "id": 158,
+      "category": "react_next",
+      "questions": [
+        "what is server-side rendering?",
+        "SSR কী?"
+      ],
+      "answer": "Server-side rendering generates HTML on the server for a request before sending it to the browser."
+    },
+    {
+      "id": 159,
+      "category": "react_next",
+      "questions": [
+        "what is static generation?",
+        "static generation কী?"
+      ],
+      "answer": "Static generation creates pages ahead of time so they can be served efficiently without generating them for every request."
+    },
+    {
+      "id": 160,
+      "category": "react_next",
+      "questions": [
+        "what is hydration?",
+        "hydration কী?"
+      ],
+      "answer": "Hydration is the process where client-side JavaScript attaches behavior to HTML that was already rendered."
+    },
+    {
+      "id": 161,
+      "category": "react_next",
+      "questions": [
+        "what is middleware in next.js?",
+        "Next.js middleware কী?"
+      ],
+      "answer": "Middleware runs before a request reaches its final handler and can be used for tasks such as authentication, redirects, or request processing."
+    },
+    {
+      "id": 162,
+      "category": "react_next",
+      "questions": [
+        "what is dynamic routing?",
+        "dynamic route কী?"
+      ],
+      "answer": "Dynamic routing lets an application create routes based on variable path segments, such as /products/[slug]."
+    },
+    {
+      "id": 163,
+      "category": "react_next",
+      "questions": [
+        "what is server component?",
+        "React Server Component কী?"
+      ],
+      "answer": "A Server Component can render on the server and reduce the amount of client-side JavaScript needed for parts of an application."
+    },
+    {
+      "id": 164,
+      "category": "react_next",
+      "questions": [
+        "what is client component?",
+        "Client Component কী?"
+      ],
+      "answer": "A Client Component runs with client-side capabilities and is used when interactive state, event handlers, or browser APIs are needed."
+    },
+    {
+      "id": 165,
+      "category": "react_next",
+      "questions": [
+        "how do i improve react performance?",
+        "React performance কীভাবে improve করব?"
+      ],
+      "answer": "Start by measuring the bottleneck, then consider reducing unnecessary renders, optimizing data fetching, code splitting, memoization where appropriate, and reducing unnecessary client-side JavaScript."
+    },
+    {
+      "id": 166,
+      "category": "react_next",
+      "questions": [
+        "what makes a good component?",
+        "ভালো React component কেমন?"
+      ],
+      "answer": "A good component usually has a clear responsibility, sensible naming, reusable behavior, manageable size, and predictable inputs and outputs."
+    },
+    {
+      "id": 167,
+      "category": "node_backend",
+      "questions": [
+        "what is node.js?",
+        "Node.js কী?"
+      ],
+      "answer": "Node.js is a JavaScript runtime that allows JavaScript to run outside the browser, commonly for backend applications and APIs."
+    },
+    {
+      "id": 168,
+      "category": "node_backend",
+      "questions": [
+        "what is express.js?",
+        "Express.js কী?"
+      ],
+      "answer": "Express is a lightweight Node.js web framework commonly used to build APIs and backend applications."
+    },
+    {
+      "id": 169,
+      "category": "node_backend",
+      "questions": [
+        "what is middleware?",
+        "middleware কী?"
+      ],
+      "answer": "Middleware is code that runs during request processing and can inspect or modify requests and responses or perform tasks such as authentication."
+    },
+    {
+      "id": 170,
+      "category": "node_backend",
+      "questions": [
+        "what is authentication?",
+        "authentication কী?"
+      ],
+      "answer": "Authentication verifies who a user is, often using credentials, tokens, or other identity mechanisms."
+    },
+    {
+      "id": 171,
+      "category": "node_backend",
+      "questions": [
+        "what is authorization?",
+        "authorization কী?"
+      ],
+      "answer": "Authorization determines what an authenticated user is allowed to access or do."
+    },
+    {
+      "id": 172,
+      "category": "node_backend",
+      "questions": [
+        "authentication vs authorization?",
+        "authentication আর authorization এর difference কী?"
+      ],
+      "answer": "Authentication answers 'who are you?' while authorization answers 'what are you allowed to do?'"
+    },
+    {
+      "id": 173,
+      "category": "node_backend",
+      "questions": [
+        "what is jwt?",
+        "JWT কী?"
+      ],
+      "answer": "JWT, or JSON Web Token, is a compact token format often used to represent claims between parties, commonly for authentication flows."
+    },
+    {
+      "id": 174,
+      "category": "node_backend",
+      "questions": [
+        "what is environment variable?",
+        "environment variable কী?"
+      ],
+      "answer": "An environment variable is a configuration value supplied outside the source code, often used for secrets, URLs, and deployment-specific settings."
+    },
+    {
+      "id": 175,
+      "category": "node_backend",
+      "questions": [
+        "why use dotenv?",
+        "dotenv কেন?"
+      ],
+      "answer": "dotenv loads environment variables from a .env file during local development, making configuration easier to manage."
+    },
+    {
+      "id": 176,
+      "category": "node_backend",
+      "questions": [
+        "what is cors?",
+        "CORS কী?"
+      ],
+      "answer": "CORS is a browser security mechanism that controls which origins can access resources across origins."
+    },
+    {
+      "id": 177,
+      "category": "node_backend",
+      "questions": [
+        "what is CRUD?",
+        "CRUD কী?"
+      ],
+      "answer": "CRUD stands for Create, Read, Update, and Delete—the four basic operations commonly performed on stored data."
+    },
+    {
+      "id": 178,
+      "category": "node_backend",
+      "questions": [
+        "what is MVC?",
+        "MVC কী?"
+      ],
+      "answer": "MVC separates an application into Model, View, and Controller responsibilities to improve organization and maintainability."
+    },
+    {
+      "id": 179,
+      "category": "node_backend",
+      "questions": [
+        "what is API endpoint?",
+        "API endpoint কী?"
+      ],
+      "answer": "An API endpoint is a specific URL or route through which a client can interact with a backend resource or operation."
+    },
+    {
+      "id": 180,
+      "category": "node_backend",
+      "questions": [
+        "what is request body?",
+        "request body কী?"
+      ],
+      "answer": "The request body contains data sent by the client to the server, commonly for POST, PUT, or PATCH requests."
+    },
+    {
+      "id": 181,
+      "category": "node_backend",
+      "questions": [
+        "what is status code?",
+        "HTTP status code কী?"
+      ],
+      "answer": "An HTTP status code indicates the result of a request, such as 200 for success, 404 for not found, or 500 for a server error."
+    },
+    {
+      "id": 182,
+      "category": "node_backend",
+      "questions": [
+        "what is rate limiting?",
+        "rate limiting কী?"
+      ],
+      "answer": "Rate limiting restricts how frequently a client can make requests, helping protect services from abuse and excessive load."
+    },
+    {
+      "id": 183,
+      "category": "node_backend",
+      "questions": [
+        "what is caching?",
+        "caching কী?"
+      ],
+      "answer": "Caching stores frequently needed data temporarily so it can be retrieved faster and reduce repeated computation or network requests."
+    },
+    {
+      "id": 184,
+      "category": "node_backend",
+      "questions": [
+        "what is logging?",
+        "logging কী?"
+      ],
+      "answer": "Logging records useful information about application behavior, errors, requests, and events to help with debugging and monitoring."
+    },
+    {
+      "id": 185,
+      "category": "databases",
+      "questions": [
+        "what is a database?",
+        "database কী?"
+      ],
+      "answer": "A database is a system for storing, organizing, retrieving, and managing data."
+    },
+    {
+      "id": 186,
+      "category": "databases",
+      "questions": [
+        "what is mysql?",
+        "MySQL কী?"
+      ],
+      "answer": "MySQL is a popular relational database management system that uses SQL."
+    },
+    {
+      "id": 187,
+      "category": "databases",
+      "questions": [
+        "what is postgresql?",
+        "PostgreSQL কী?"
+      ],
+      "answer": "PostgreSQL is a powerful open-source relational database system with strong SQL support and advanced features."
+    },
+    {
+      "id": 188,
+      "category": "databases",
+      "questions": [
+        "what is mongodb?",
+        "MongoDB কী?"
+      ],
+      "answer": "MongoDB is a document-oriented NoSQL database that stores data in flexible document structures."
+    },
+    {
+      "id": 189,
+      "category": "databases",
+      "questions": [
+        "sql vs nosql?",
+        "SQL আর NoSQL এর difference কী?"
+      ],
+      "answer": "SQL databases typically use structured relational tables, while NoSQL databases use models such as documents, key-value pairs, or graphs. The right choice depends on the application."
+    },
+    {
+      "id": 190,
+      "category": "databases",
+      "questions": [
+        "what is a table?",
+        "database table কী?"
+      ],
+      "answer": "A table is a structured collection of rows and columns used to store related data in a relational database."
+    },
+    {
+      "id": 191,
+      "category": "databases",
+      "questions": [
+        "what is a row?",
+        "database row কী?"
+      ],
+      "answer": "A row represents one record in a relational database table."
+    },
+    {
+      "id": 192,
+      "category": "databases",
+      "questions": [
+        "what is a column?",
+        "database column কী?"
+      ],
+      "answer": "A column represents one attribute or field shared by records in a database table."
+    },
+    {
+      "id": 193,
+      "category": "databases",
+      "questions": [
+        "what is a primary key?",
+        "primary key কী?"
+      ],
+      "answer": "A primary key uniquely identifies each record in a relational table."
+    },
+    {
+      "id": 194,
+      "category": "databases",
+      "questions": [
+        "what is a foreign key?",
+        "foreign key কী?"
+      ],
+      "answer": "A foreign key links a record in one relational table to a record in another table."
+    },
+    {
+      "id": 195,
+      "category": "databases",
+      "questions": [
+        "what is a database index?",
+        "database index কী?"
+      ],
+      "answer": "An index is a data structure that can speed up database lookups, usually at the cost of additional storage and write overhead."
+    },
+    {
+      "id": 196,
+      "category": "databases",
+      "questions": [
+        "what is normalization?",
+        "database normalization কী?"
+      ],
+      "answer": "Normalization organizes relational data to reduce unnecessary duplication and improve data consistency."
+    },
+    {
+      "id": 197,
+      "category": "databases",
+      "questions": [
+        "what is a database query?",
+        "query কী?"
+      ],
+      "answer": "A database query is a request to retrieve, insert, update, or delete data."
+    },
+    {
+      "id": 198,
+      "category": "databases",
+      "questions": [
+        "what is a transaction?",
+        "database transaction কী?"
+      ],
+      "answer": "A transaction groups database operations into a unit that can be committed or rolled back according to defined rules."
+    },
+    {
+      "id": 199,
+      "category": "databases",
+      "questions": [
+        "what is backup?",
+        "database backup কী?"
+      ],
+      "answer": "A backup is a copy of data kept so it can be restored after accidental deletion, corruption, or system failure."
+    },
+    {
+      "id": 200,
+      "category": "databases",
+      "questions": [
+        "how do i secure a database?",
+        "database security কীভাবে করব?"
+      ],
+      "answer": "Use strong authentication, least-privilege access, encrypted connections where appropriate, safe query practices, backups, updates, and careful secret management."
+    },
+    {
+      "id": 201,
+      "category": "databases",
+      "questions": [
+        "what is sql injection?",
+        "SQL injection কী?"
+      ],
+      "answer": "SQL injection is a security vulnerability where untrusted input alters a database query. Parameterized queries and safe database APIs help prevent it."
+    },
+    {
+      "id": 202,
+      "category": "git_github",
+      "questions": [
+        "what is git?",
+        "Git কী?"
+      ],
+      "answer": "Git is a distributed version control system used to track code changes and collaborate on software projects."
+    },
+    {
+      "id": 203,
+      "category": "git_github",
+      "questions": [
+        "what is github?",
+        "GitHub কী?"
+      ],
+      "answer": "GitHub is a platform for hosting Git repositories and collaborating through features such as pull requests, issues, and code review."
+    },
+    {
+      "id": 204,
+      "category": "git_github",
+      "questions": [
+        "what is git clone?",
+        "git clone কী?"
+      ],
+      "answer": "git clone copies a remote Git repository to your local machine."
+    },
+    {
+      "id": 205,
+      "category": "git_github",
+      "questions": [
+        "what is git pull?",
+        "git pull কী?"
+      ],
+      "answer": "git pull fetches changes from a remote repository and integrates them into your current branch."
+    },
+    {
+      "id": 206,
+      "category": "git_github",
+      "questions": [
+        "what is git push?",
+        "git push কী?"
+      ],
+      "answer": "git push uploads local commits to a remote repository."
+    },
+    {
+      "id": 207,
+      "category": "git_github",
+      "questions": [
+        "what is git commit?",
+        "git commit কী?"
+      ],
+      "answer": "A commit records a set of changes in Git history with a message describing the changes."
+    },
+    {
+      "id": 208,
+      "category": "git_github",
+      "questions": [
+        "what is a git branch?",
+        "git branch কী?"
+      ],
+      "answer": "A branch is an independent line of development used to work on features, fixes, or experiments."
+    },
+    {
+      "id": 209,
+      "category": "git_github",
+      "questions": [
+        "what is merge?",
+        "git merge কী?"
+      ],
+      "answer": "Git merge combines changes from one branch into another."
+    },
+    {
+      "id": 210,
+      "category": "git_github",
+      "questions": [
+        "what is rebase?",
+        "git rebase কী?"
+      ],
+      "answer": "Git rebase moves or reapplies commits onto another base commit to create a different project history."
+    },
+    {
+      "id": 211,
+      "category": "git_github",
+      "questions": [
+        "what is pull request?",
+        "pull request কী?"
+      ],
+      "answer": "A pull request is a proposal to merge changes from one branch into another, usually with review and discussion."
+    },
+    {
+      "id": 212,
+      "category": "git_github",
+      "questions": [
+        "what is merge conflict?",
+        "merge conflict কী?"
+      ],
+      "answer": "A merge conflict happens when Git cannot automatically reconcile competing changes to the same part of a file."
+    },
+    {
+      "id": 213,
+      "category": "git_github",
+      "questions": [
+        "how do i resolve merge conflicts?",
+        "merge conflict কীভাবে solve করব?"
+      ],
+      "answer": "Inspect the conflicted files, decide which changes should remain, remove conflict markers, test the result, then stage and commit the resolution."
+    },
+    {
+      "id": 214,
+      "category": "git_github",
+      "questions": [
+        "what is .gitignore?",
+        ".gitignore কী?"
+      ],
+      "answer": "A .gitignore file tells Git which files or directories should not be tracked."
+    },
+    {
+      "id": 215,
+      "category": "git_github",
+      "questions": [
+        "should i commit .env?",
+        ".env commit করা উচিত?"
+      ],
+      "answer": "Usually no. Environment files often contain secrets and should generally be excluded from Git with .gitignore."
+    },
+    {
+      "id": 216,
+      "category": "git_github",
+      "questions": [
+        "what is git stash?",
+        "git stash কী?"
+      ],
+      "answer": "git stash temporarily stores uncommitted changes so you can switch tasks or branches without committing them."
+    },
+    {
+      "id": 217,
+      "category": "git_github",
+      "questions": [
+        "what is git reset?",
+        "git reset কী?"
+      ],
+      "answer": "git reset moves the current branch reference and can also change the staging area or working tree depending on the mode used."
+    },
+    {
+      "id": 218,
+      "category": "git_github",
+      "questions": [
+        "what is git status?",
+        "git status কী?"
+      ],
+      "answer": "git status shows the current branch and the state of tracked, modified, staged, and untracked files."
+    },
+    {
+      "id": 219,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is machine learning?",
+        "machine learning কী?",
+        "ML কী?"
+      ],
+      "answer": "Machine learning is a field of AI where algorithms learn patterns from data and use them to make predictions or decisions."
+    },
+    {
+      "id": 220,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is artificial intelligence?",
+        "AI কী?"
+      ],
+      "answer": "Artificial intelligence is the field of building systems that perform tasks associated with human intelligence, such as pattern recognition, language understanding, and prediction."
+    },
+    {
+      "id": 221,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is deep learning?",
+        "deep learning কী?"
+      ],
+      "answer": "Deep learning is a subset of machine learning that uses multi-layer neural networks to learn complex patterns from data."
+    },
+    {
+      "id": 222,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is supervised learning?",
+        "supervised learning কী?"
+      ],
+      "answer": "Supervised learning trains a model using examples where the desired output or label is known."
+    },
+    {
+      "id": 223,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is unsupervised learning?",
+        "unsupervised learning কী?"
+      ],
+      "answer": "Unsupervised learning finds patterns or structure in data without predefined target labels."
+    },
+    {
+      "id": 224,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is classification?",
+        "classification কী?"
+      ],
+      "answer": "Classification predicts a category or class, such as spam vs not spam."
+    },
+    {
+      "id": 225,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is regression?",
+        "regression কী?"
+      ],
+      "answer": "Regression predicts a continuous numerical value, such as price or temperature."
+    },
+    {
+      "id": 226,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is clustering?",
+        "clustering কী?"
+      ],
+      "answer": "Clustering groups similar data points together without predefined class labels."
+    },
+    {
+      "id": 227,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is a feature?",
+        "ML feature কী?"
+      ],
+      "answer": "A feature is an input variable or measurable attribute used by a machine learning model."
+    },
+    {
+      "id": 228,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is a label?",
+        "ML label কী?"
+      ],
+      "answer": "A label is the target value the model is trained to predict in supervised learning."
+    },
+    {
+      "id": 229,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is training data?",
+        "training data কী?"
+      ],
+      "answer": "Training data is the portion of data used to learn model parameters and patterns."
+    },
+    {
+      "id": 230,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is test data?",
+        "test data কী?"
+      ],
+      "answer": "Test data is held back to evaluate how well a trained model performs on unseen examples."
+    },
+    {
+      "id": 231,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is validation data?",
+        "validation data কী?"
+      ],
+      "answer": "Validation data is used during model development to tune choices and compare approaches without using the final test set."
+    },
+    {
+      "id": 232,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is overfitting?",
+        "overfitting কী?"
+      ],
+      "answer": "Overfitting occurs when a model learns the training data too closely and performs poorly on new data."
+    },
+    {
+      "id": 233,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is underfitting?",
+        "underfitting কী?"
+      ],
+      "answer": "Underfitting occurs when a model is too simple to capture important patterns in the data."
+    },
+    {
+      "id": 234,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is accuracy?",
+        "accuracy কী?"
+      ],
+      "answer": "Accuracy is the proportion of predictions that are correct out of all predictions."
+    },
+    {
+      "id": 235,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is precision?",
+        "precision কী?"
+      ],
+      "answer": "Precision is the proportion of predicted positive cases that are actually positive."
+    },
+    {
+      "id": 236,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is recall?",
+        "recall কী?"
+      ],
+      "answer": "Recall is the proportion of actual positive cases that the model successfully identifies."
+    },
+    {
+      "id": 237,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is f1 score?",
+        "F1 score কী?"
+      ],
+      "answer": "F1 score is the harmonic mean of precision and recall and is useful when you want to balance both."
+    },
+    {
+      "id": 238,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is roc auc?",
+        "ROC AUC কী?"
+      ],
+      "answer": "ROC AUC summarizes how well a classifier separates positive and negative classes across different decision thresholds."
+    },
+    {
+      "id": 239,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is confusion matrix?",
+        "confusion matrix কী?"
+      ],
+      "answer": "A confusion matrix summarizes classification results using true positives, true negatives, false positives, and false negatives."
+    },
+    {
+      "id": 240,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is cross validation?",
+        "cross validation কী?"
+      ],
+      "answer": "Cross-validation evaluates a model across multiple train-validation splits to get a more reliable estimate of performance."
+    },
+    {
+      "id": 241,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is feature scaling?",
+        "feature scaling কী?"
+      ],
+      "answer": "Feature scaling transforms numerical variables to comparable ranges, which can be important for algorithms sensitive to feature magnitude."
+    },
+    {
+      "id": 242,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is normalization in ML?",
+        "ML normalization কী?"
+      ],
+      "answer": "Normalization is a preprocessing approach that rescales values to a defined range or distribution depending on the chosen method."
+    },
+    {
+      "id": 243,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is standardization?",
+        "standardization কী?"
+      ],
+      "answer": "Standardization typically transforms a feature so it has a mean near zero and a standard deviation near one."
+    },
+    {
+      "id": 244,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is data leakage?",
+        "data leakage কী?"
+      ],
+      "answer": "Data leakage happens when information unavailable at prediction time accidentally enters model training, producing misleadingly strong results."
+    },
+    {
+      "id": 245,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is smote?",
+        "SMOTE কী?"
+      ],
+      "answer": "SMOTE is a technique that creates synthetic minority-class examples to help address class imbalance in training data."
+    },
+    {
+      "id": 246,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is ensemble learning?",
+        "ensemble learning কী?"
+      ],
+      "answer": "Ensemble learning combines multiple models to produce a stronger or more robust prediction."
+    },
+    {
+      "id": 247,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is random forest?",
+        "Random Forest কী?"
+      ],
+      "answer": "Random Forest combines many decision trees and aggregates their predictions to improve generalization."
+    },
+    {
+      "id": 248,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is decision tree?",
+        "Decision Tree কী?"
+      ],
+      "answer": "A decision tree makes predictions by following a sequence of feature-based decision rules arranged as a tree."
+    },
+    {
+      "id": 249,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is xgboost?",
+        "XGBoost কী?"
+      ],
+      "answer": "XGBoost is a gradient-boosting algorithm known for strong performance on structured and tabular data."
+    },
+    {
+      "id": 250,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is lightgbm?",
+        "LightGBM কী?"
+      ],
+      "answer": "LightGBM is a gradient-boosting framework designed for efficient training, especially on large tabular datasets."
+    },
+    {
+      "id": 251,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is catboost?",
+        "CatBoost কী?"
+      ],
+      "answer": "CatBoost is a gradient-boosting library designed to work especially well with categorical features and tabular data."
+    },
+    {
+      "id": 252,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is explainable ai?",
+        "XAI কী?"
+      ],
+      "answer": "Explainable AI focuses on making model predictions easier for people to understand and interpret."
+    },
+    {
+      "id": 253,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is shap?",
+        "SHAP কী?"
+      ],
+      "answer": "SHAP is an explainability method based on Shapley values that estimates how features contribute to a model prediction."
+    },
+    {
+      "id": 254,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is lime?",
+        "LIME কী?"
+      ],
+      "answer": "LIME explains individual predictions by approximating a complex model locally with a simpler interpretable model."
+    },
+    {
+      "id": 255,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is a neural network?",
+        "neural network কী?"
+      ],
+      "answer": "A neural network is a model made of interconnected computational units that can learn complex patterns from data."
+    },
+    {
+      "id": 256,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is an epoch?",
+        "epoch কী?"
+      ],
+      "answer": "An epoch is one complete pass through the training dataset during model training."
+    },
+    {
+      "id": 257,
+      "category": "machine_learning_ai",
+      "questions": [
+        "what is a learning rate?",
+        "learning rate কী?"
+      ],
+      "answer": "The learning rate controls how large a step an optimization algorithm takes when updating model parameters."
+    },
+    {
+      "id": 258,
+      "category": "data_science",
+      "questions": [
+        "what is data science?",
+        "data science কী?"
+      ],
+      "answer": "Data science combines statistics, programming, domain knowledge, and machine learning to extract useful insights from data."
+    },
+    {
+      "id": 259,
+      "category": "data_science",
+      "questions": [
+        "what is pandas?",
+        "Pandas কী?"
+      ],
+      "answer": "Pandas is a Python library widely used for data manipulation, analysis, and tabular data processing."
+    },
+    {
+      "id": 260,
+      "category": "data_science",
+      "questions": [
+        "what is numpy?",
+        "NumPy কী?"
+      ],
+      "answer": "NumPy is a Python library for numerical computing, especially arrays and mathematical operations."
+    },
+    {
+      "id": 261,
+      "category": "data_science",
+      "questions": [
+        "what is matplotlib?",
+        "Matplotlib কী?"
+      ],
+      "answer": "Matplotlib is a Python visualization library used to create charts and plots."
+    },
+    {
+      "id": 262,
+      "category": "data_science",
+      "questions": [
+        "what is seaborn?",
+        "Seaborn কী?"
+      ],
+      "answer": "Seaborn is a Python visualization library built on Matplotlib that provides a higher-level interface for statistical graphics."
+    },
+    {
+      "id": 263,
+      "category": "data_science",
+      "questions": [
+        "what is jupyter notebook?",
+        "Jupyter Notebook কী?"
+      ],
+      "answer": "Jupyter Notebook is an interactive environment where code, explanations, visualizations, and results can be combined in one document."
+    },
+    {
+      "id": 264,
+      "category": "data_science",
+      "questions": [
+        "what is exploratory data analysis?",
+        "EDA কী?"
+      ],
+      "answer": "Exploratory Data Analysis involves examining data through summaries and visualizations to understand distributions, relationships, missing values, and patterns."
+    },
+    {
+      "id": 265,
+      "category": "data_science",
+      "questions": [
+        "what is missing data?",
+        "missing data কী?"
+      ],
+      "answer": "Missing data means some expected values are absent from a dataset and may require removal, imputation, or another appropriate treatment."
+    },
+    {
+      "id": 266,
+      "category": "data_science",
+      "questions": [
+        "what is outlier?",
+        "outlier কী?"
+      ],
+      "answer": "An outlier is a data point that is unusually far from the typical pattern of the rest of the data."
+    },
+    {
+      "id": 267,
+      "category": "data_science",
+      "questions": [
+        "what is correlation?",
+        "correlation কী?"
+      ],
+      "answer": "Correlation measures the strength and direction of association between variables; it does not by itself prove causation."
+    },
+    {
+      "id": 268,
+      "category": "data_science",
+      "questions": [
+        "what is data preprocessing?",
+        "data preprocessing কী?"
+      ],
+      "answer": "Data preprocessing prepares raw data for analysis or machine learning through steps such as cleaning, encoding, scaling, and handling missing values."
+    },
+    {
+      "id": 269,
+      "category": "data_science",
+      "questions": [
+        "what is one hot encoding?",
+        "one hot encoding কী?"
+      ],
+      "answer": "One-hot encoding represents categorical values as separate binary indicator columns."
+    },
+    {
+      "id": 270,
+      "category": "data_science",
+      "questions": [
+        "what is label encoding?",
+        "label encoding কী?"
+      ],
+      "answer": "Label encoding maps categories to numeric codes, though it should be used carefully when the numeric order could be misleading."
+    },
+    {
+      "id": 271,
+      "category": "data_science",
+      "questions": [
+        "what is train test split?",
+        "train test split কী?"
+      ],
+      "answer": "Train-test splitting separates data into training and testing portions so model performance can be evaluated on unseen examples."
+    },
+    {
+      "id": 272,
+      "category": "data_science",
+      "questions": [
+        "what is data visualization?",
+        "data visualization কী?"
+      ],
+      "answer": "Data visualization represents information using charts or graphs to make patterns and relationships easier to understand."
+    },
+    {
+      "id": 273,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is flutter?",
+        "Flutter কী?"
+      ],
+      "answer": "Flutter is Google's UI toolkit for building cross-platform applications from a single Dart codebase."
+    },
+    {
+      "id": 274,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is dart?",
+        "Dart কী?"
+      ],
+      "answer": "Dart is the programming language used to build Flutter applications."
+    },
+    {
+      "id": 275,
+      "category": "mobile_flutter",
+      "questions": [
+        "why use flutter?",
+        "Flutter কেন ব্যবহার করা হয়?"
+      ],
+      "answer": "Flutter allows developers to build Android, iOS, web, and desktop experiences from a shared codebase while providing a rich widget system."
+    },
+    {
+      "id": 276,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is a widget in flutter?",
+        "Flutter widget কী?"
+      ],
+      "answer": "A widget is a building block of a Flutter interface. Flutter UIs are composed by combining widgets."
+    },
+    {
+      "id": 277,
+      "category": "mobile_flutter",
+      "questions": [
+        "stateless vs stateful widget?",
+        "Stateless আর Stateful widget এর difference কী?"
+      ],
+      "answer": "A StatelessWidget is immutable after creation, while a StatefulWidget manages mutable state that can change during its lifetime."
+    },
+    {
+      "id": 278,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is pubspec.yaml?",
+        "pubspec.yaml কী?"
+      ],
+      "answer": "pubspec.yaml is Flutter's project configuration file where dependencies, assets, metadata, and other settings are declared."
+    },
+    {
+      "id": 279,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is flutter package?",
+        "Flutter package কী?"
+      ],
+      "answer": "A Flutter package is reusable Dart or Flutter code distributed for use in applications."
+    },
+    {
+      "id": 280,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is hot reload?",
+        "Flutter hot reload কী?"
+      ],
+      "answer": "Hot reload updates the running Flutter app with code changes while preserving much of the current state, making UI development faster."
+    },
+    {
+      "id": 281,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is state management?",
+        "state management কী?"
+      ],
+      "answer": "State management is the approach used to store, update, and share application state predictably."
+    },
+    {
+      "id": 282,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is flutter navigation?",
+        "Flutter navigation কী?"
+      ],
+      "answer": "Flutter navigation manages movement between screens or routes in an application."
+    },
+    {
+      "id": 283,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is responsive flutter ui?",
+        "Flutter responsive UI কী?"
+      ],
+      "answer": "Responsive Flutter UI adapts layouts and components to different screen sizes and orientations."
+    },
+    {
+      "id": 284,
+      "category": "mobile_flutter",
+      "questions": [
+        "can flutter build android apps?",
+        "Flutter দিয়ে Android app বানানো যায়?"
+      ],
+      "answer": "Yes. Flutter can build Android applications from a shared Dart codebase."
+    },
+    {
+      "id": 285,
+      "category": "mobile_flutter",
+      "questions": [
+        "can flutter build ios apps?",
+        "Flutter দিয়ে iOS app বানানো যায়?"
+      ],
+      "answer": "Yes. Flutter supports iOS development as well, subject to Apple's development environment and deployment requirements."
+    },
+    {
+      "id": 286,
+      "category": "mobile_flutter",
+      "questions": [
+        "what is flutter plugin?",
+        "Flutter plugin কী?"
+      ],
+      "answer": "A Flutter plugin provides platform-specific functionality or integrations that can be used from Flutter code."
+    },
+    {
+      "id": 287,
+      "category": "career_learning",
+      "questions": [
+        "how do i become a software developer?",
+        "developer হতে কী করতে হবে?"
+      ],
+      "answer": "Start with programming fundamentals, choose a practical stack, build real projects, learn Git, practice problem solving, and gain experience through projects, internships, or work."
+    },
+    {
+      "id": 288,
+      "category": "career_learning",
+      "questions": [
+        "how can i improve coding skills?",
+        "coding skill কীভাবে improve করব?"
+      ],
+      "answer": "Practice consistently, build projects, debug your own code, read good code, and solve progressively harder problems."
+    },
+    {
+      "id": 289,
+      "category": "career_learning",
+      "questions": [
+        "what should i learn first in web development?",
+        "web development শুরু করতে কী শিখব?"
+      ],
+      "answer": "A practical path is HTML, CSS, JavaScript, Git, React or another frontend framework, backend fundamentals, databases, APIs, and deployment."
+    },
+    {
+      "id": 290,
+      "category": "career_learning",
+      "questions": [
+        "should i learn frontend or backend first?",
+        "frontend না backend আগে?"
+      ],
+      "answer": "If you're new to web development, starting with frontend fundamentals can make the web easier to understand, then you can move into backend development."
+    },
+    {
+      "id": 291,
+      "category": "career_learning",
+      "questions": [
+        "how long does it take to learn programming?",
+        "programming শিখতে কতদিন লাগে?"
+      ],
+      "answer": "It varies widely. You can learn fundamentals in a few months with consistent practice, but becoming highly proficient takes much longer and depends on your goals."
+    },
+    {
+      "id": 292,
+      "category": "career_learning",
+      "questions": [
+        "how many hours should i code daily?",
+        "প্রতিদিন কত ঘণ্টা coding করব?"
+      ],
+      "answer": "Consistency matters more than a fixed number. Even 1–3 focused hours a day can produce strong progress if you practice regularly."
+    },
+    {
+      "id": 293,
+      "category": "career_learning",
+      "questions": [
+        "projects or tutorials?",
+        "tutorial নাকি project?"
+      ],
+      "answer": "Use both, but build projects early. Tutorials teach concepts; projects force you to apply and troubleshoot them."
+    },
+    {
+      "id": 294,
+      "category": "career_learning",
+      "questions": [
+        "how do i build a portfolio?",
+        "portfolio কীভাবে বানাব?"
+      ],
+      "answer": "Show a small number of strong projects, explain your role and technical decisions, provide live demos and repositories where appropriate, and keep the presentation clear."
+    },
+    {
+      "id": 295,
+      "category": "career_learning",
+      "questions": [
+        "what should a developer portfolio include?",
+        "developer portfolio তে কী থাকবে?"
+      ],
+      "answer": "A strong portfolio usually includes an introduction, skills, selected projects, experience or education, case studies, contact information, and relevant links."
+    },
+    {
+      "id": 296,
+      "category": "career_learning",
+      "questions": [
+        "how do i prepare for a developer interview?",
+        "developer interview কীভাবে prepare করব?"
+      ],
+      "answer": "Review your projects deeply, practice programming fundamentals, understand your stack, prepare common technical questions, and be ready to explain your decisions."
+    },
+    {
+      "id": 297,
+      "category": "career_learning",
+      "questions": [
+        "should i learn data structures and algorithms?",
+        "DSA শিখব?"
+      ],
+      "answer": "Yes, especially if you plan to apply for software engineering roles where coding interviews are common."
+    },
+    {
+      "id": 298,
+      "category": "career_learning",
+      "questions": [
+        "how do i get better at debugging?",
+        "debugging skill কীভাবে improve করব?"
+      ],
+      "answer": "Reproduce the issue, read the error carefully, isolate the smallest failing part, inspect inputs and state, test assumptions, and make one change at a time."
+    },
+    {
+      "id": 299,
+      "category": "career_learning",
+      "questions": [
+        "how do i choose a tech stack?",
+        "tech stack কীভাবে choose করব?"
+      ],
+      "answer": "Choose based on project requirements, team skills, ecosystem maturity, deployment constraints, maintainability, and your learning goals."
+    },
+    {
+      "id": 300,
+      "category": "career_learning",
+      "questions": [
+        "should i learn many languages?",
+        "অনেক language শিখব?"
+      ],
+      "answer": "It's usually better to become comfortable with one or two languages first, then expand as project needs require."
+    },
+    {
+      "id": 301,
+      "category": "career_learning",
+      "questions": [
+        "is github important for developers?",
+        "GitHub কি important?"
+      ],
+      "answer": "Yes. GitHub can demonstrate project work, collaboration, version-control habits, and your ability to maintain code."
+    },
+    {
+      "id": 302,
+      "category": "career_learning",
+      "questions": [
+        "how do i write a good readme?",
+        "README কীভাবে ভালো করব?"
+      ],
+      "answer": "Include what the project does, key features, technology stack, setup instructions, usage, screenshots or demo links when useful, and important notes."
+    },
+    {
+      "id": 303,
+      "category": "career_learning",
+      "questions": [
+        "how do i make my cv ats friendly?",
+        "ATS friendly CV কীভাবে বানাব?"
+      ],
+      "answer": "Use clear section headings, standard job-related terminology, readable formatting, relevant skills, measurable project outcomes, and avoid overly complex layouts that can confuse parsers."
+    },
+    {
+      "id": 304,
+      "category": "career_learning",
+      "questions": [
+        "how do i describe a project on my cv?",
+        "CV তে project কীভাবে লিখব?"
+      ],
+      "answer": "State the project purpose, your contribution, key technologies, important features, and measurable or meaningful outcomes in concise bullet points."
+    },
+    {
+      "id": 305,
+      "category": "career_learning",
+      "questions": [
+        "what makes a good github repository?",
+        "ভালো GitHub repo কেমন?"
+      ],
+      "answer": "A good repository has clear naming, a useful README, organized code, meaningful commits, setup instructions, screenshots or demos where appropriate, and no exposed secrets."
+    },
+    {
+      "id": 306,
+      "category": "career_learning",
+      "questions": [
+        "should i deploy my projects?",
+        "project deploy করা উচিত?"
+      ],
+      "answer": "Yes, when practical. A live demo makes it easier for recruiters or users to experience the project directly."
+    },
+    {
+      "id": 307,
+      "category": "general_problem_solving",
+      "questions": [
+        "i have a problem",
+        "আমার একটা problem আছে"
+      ],
+      "answer": "Tell me what happened, what you expected, and what you're seeing now. I'll help you break it down."
+    },
+    {
+      "id": 308,
+      "category": "general_problem_solving",
+      "questions": [
+        "something is not working",
+        "কিছু কাজ করছে না"
+      ],
+      "answer": "No worries. Share the error message, relevant code, and what you were trying to do. We can debug it step by step."
+    },
+    {
+      "id": 309,
+      "category": "general_problem_solving",
+      "questions": [
+        "i got an error",
+        "error আসছে"
+      ],
+      "answer": "Send me the exact error message and the related code or command. Avoid paraphrasing the error if possible."
+    },
+    {
+      "id": 310,
+      "category": "general_problem_solving",
+      "questions": [
+        "how do i debug this?",
+        "এটা debug কীভাবে করব?"
+      ],
+      "answer": "Start by reproducing the issue, read the exact error, identify where it occurs, inspect inputs and assumptions, and test the smallest possible fix."
+    },
+    {
+      "id": 311,
+      "category": "general_problem_solving",
+      "questions": [
+        "why is my code slow?",
+        "code slow কেন?"
+      ],
+      "answer": "First measure where the time is going. Common causes include unnecessary work, repeated database calls, large payloads, inefficient algorithms, or excessive rendering."
+    },
+    {
+      "id": 312,
+      "category": "general_problem_solving",
+      "questions": [
+        "why does my app crash?",
+        "app crash কেন করে?"
+      ],
+      "answer": "The cause could be anything from an unhandled exception to memory, dependency, configuration, or platform issues. The crash log is the best starting point."
+    },
+    {
+      "id": 313,
+      "category": "general_problem_solving",
+      "questions": [
+        "how do i find the cause of a bug?",
+        "bug এর cause কীভাবে বের করব?"
+      ],
+      "answer": "Reproduce it reliably, reduce the problem, inspect the stack trace or logs, compare expected versus actual behavior, and isolate the first incorrect state."
+    },
+    {
+      "id": 314,
+      "category": "general_problem_solving",
+      "questions": [
+        "how do i write better code?",
+        "better code কীভাবে লিখব?"
+      ],
+      "answer": "Focus on clarity, meaningful names, small responsibilities, consistent structure, appropriate abstraction, testing, and removing unnecessary complexity."
+    },
+    {
+      "id": 315,
+      "category": "general_problem_solving",
+      "questions": [
+        "should i optimize early?",
+        "আগে থেকেই optimization করব?"
+      ],
+      "answer": "Usually prioritize correctness and clarity first, then measure real bottlenecks and optimize where it matters."
+    },
+    {
+      "id": 316,
+      "category": "general_problem_solving",
+      "questions": [
+        "how do i learn from an error?",
+        "error থেকে কীভাবে শিখব?"
+      ],
+      "answer": "Understand what the error means, identify its root cause, fix it, and note the underlying concept so you can recognize similar issues later."
+    },
+    {
+      "id": 317,
+      "category": "bangla_banglish",
+      "questions": [
+        "আমি interview এর জন্য prepare করছি"
+      ],
+      "answer": "তোমার target role বলো। তারপর fundamentals, project discussion, coding, এবং role-specific topics ধরে preparation সাজানো যায়।"
+    },
+    {
+      "id": 318,
+      "category": "bangla_banglish",
+      "questions": [
+        "আমার code কাজ করছে না"
+      ],
+      "answer": "Exact error message, relevant code, এবং expected বনাম actual behavior পাঠাও। এগুলো থাকলে debugging অনেক সহজ হয়।"
+    },
+    {
+      "id": 319,
+      "category": "bangla_banglish",
+      "questions": [
+        "একটা example দাও"
+      ],
+      "answer": "অবশ্যই। Topicটা বলো, আমি ছোট এবং বাস্তব example দিয়ে বোঝাব।"
+    },
+    {
+      "id": 320,
+      "category": "bangla_banglish",
+      "questions": [
+        "আরও সহজ করে বলো"
+      ],
+      "answer": "অবশ্যই। কঠিন শব্দ বাদ দিয়ে step by step এবং practical example দিয়ে বলব।"
+    },
+    {
+      "id": 321,
+      "category": "bangla_banglish",
+      "questions": [
+        "what should I learn next in programming?"
+      ],
+      "answer": "Pick one practical goal, identify the next missing skill, and build a small project that forces you to use it."
+    },
+    {
+      "id": 322,
+      "category": "bangla_banglish",
+      "questions": [
+        "আমি programming শিখছি, কীভাবে practice করব?"
+      ],
+      "answer": "শুধু tutorial না দেখে ছোট ছোট project বানাও, নিজের code debug করো, আর নিয়মিত problem solving practice করো।"
+    },
+    {
+      "id": 323,
+      "category": "bangla_banglish",
+      "questions": [
+        "একটা technical topic সহজ করে বলো"
+      ],
+      "answer": "অবশ্যই। Topicটা বলো—আমি jargon কমিয়ে practical example দিয়ে বুঝিয়ে দেব।"
+    },
+    {
+      "id": 324,
+      "category": "bangla_banglish",
+      "questions": [
+        "আমি নতুন developer"
+      ],
+      "answer": "Welcome! শুরুতে fundamentals, one practical stack, Git, ছোট project, এবং consistent practice-এর উপর focus করো।"
+    },
+    {
+      "id": 325,
+      "category": "bangla_banglish",
+      "questions": [
+        "coding এ আটকে গেছি"
+      ],
+      "answer": "সমস্যা নেই। কী করতে চেয়েছিলে, কী error পাচ্ছো, আর relevant codeটা পাঠাও—ধাপে ধাপে দেখব।"
+    },
+    {
+      "id": 326,
+      "category": "bangla_banglish",
+      "questions": [
+        "আমি project বানাতে চাই"
+      ],
+      "answer": "Great! তোমার skill level আর কী ধরনের project পছন্দ সেটা বললে scope ছোট রেখে একটা practical project plan করা যায়।"
+    },
+    {
+      "id": 327,
+      "category": "bangla_banglish",
+      "questions": [
+        "আমি interview এর জন্য prepare করছি"
+      ],
+      "answer": "তোমার target role বলো। তারপর fundamentals, project discussion, coding, এবং role-specific topics ধরে preparation সাজানো যায়।"
+    },
+    {
+      "id": 328,
+      "category": "bangla_banglish",
+      "questions": [
+        "আমার code কাজ করছে না"
+      ],
+      "answer": "Exact error message, relevant code, এবং expected বনাম actual behavior পাঠাও। এগুলো থাকলে debugging অনেক সহজ হয়।"
+    },
+    {
+      "id": 329,
+      "category": "bangla_banglish",
+      "questions": [
+        "একটা example দাও"
+      ],
+      "answer": "অবশ্যই। Topicটা বলো, আমি ছোট এবং বাস্তব example দিয়ে বোঝাব।"
+    },
+    {
+      "id": 330,
+      "category": "bangla_banglish",
+      "questions": [
+        "আরও সহজ করে বলো"
+      ],
+      "answer": "অবশ্যই। কঠিন শব্দ বাদ দিয়ে step by step এবং practical example দিয়ে বলব।"
+    }
+  ]
+}

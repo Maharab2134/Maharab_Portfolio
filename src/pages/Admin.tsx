@@ -67,6 +67,7 @@ import { ResumeTab } from "../components/admin/tabs/ResumeTab";
 import { MessagesTab } from "../components/admin/tabs/MessagesTab";
 import { ReviewsTab } from "../components/admin/tabs/ReviewsTab";
 import { SetupTab } from "../components/admin/tabs/SetupTab";
+import { ChatbotQATab } from "../components/admin/tabs/ChatbotQATab";
 
 const getTabInfo = (tab: AdminNavTab): { title: string; section: string } => {
   switch (tab) {
@@ -92,6 +93,8 @@ const getTabInfo = (tab: AdminNavTab): { title: string; section: string } => {
       return { title: "Contact Inquiries", section: "INBOX" };
     case "reviews":
       return { title: "Project Reviews & Client Evaluations", section: "INBOX" };
+    case "chatbotqa":
+      return { title: "Chatbot Fallback QA Settings", section: "ASSETS" };
     case "setup":
       return { title: "Supabase & Database SQL", section: "SYSTEM" };
     default:
@@ -1271,6 +1274,10 @@ const Admin: React.FC = () => {
               reviewReordering={reviewReordering}
               projectsList={projectsList}
             />
+          )}
+
+          {activeTab === "chatbotqa" && (
+            <ChatbotQATab uploadStatus={uploadStatus} />
           )}
 
           {activeTab === "setup" && <SetupTab />}

@@ -13,6 +13,7 @@ export type AdminNavTab =
   | "resume"
   | "messages"
   | "reviews"
+  | "chatbotqa"
   | "setup";
 
 export type ProjectViewMode = "list" | "editor";

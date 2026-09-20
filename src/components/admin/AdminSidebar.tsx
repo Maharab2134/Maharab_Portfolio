@@ -14,6 +14,7 @@ import {
   FaSignOutAlt,
   FaCogs,
   FaBriefcase,
+  FaRobot,
 } from "react-icons/fa";
 import { AdminNavTab, renderIcon } from "./types";
 import { toProxyImageUrl } from "../../data/projectsData";
@@ -143,6 +144,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           badge: counts.reviews > 0 ? counts.reviews : undefined,
           badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
           activeColor: "text-amber-400",
+        },
+        {
+          id: "chatbotqa" as AdminNavTab,
+          label: "Chatbot Fallback QA",
+          icon: FaRobot,
+          activeColor: "text-indigo-400",
         },
       ],
     },

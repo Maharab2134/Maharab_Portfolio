@@ -23,7 +23,7 @@ import {
   getCachedCertificatesSync,
   getCachedExperienceSync,
   getCachedSkillsSync,
-  getCachedReviewsSync,
+  getCachedReviewsSync, getCachedChatbotQASync,
   STORAGE_PROFILE_KEY,
   STORAGE_SKILL_CATEGORIES_KEY,
   ProjectReview,
@@ -48,6 +48,7 @@ export interface DynamicPortfolioSnapshot {
   certificates: CertificateItem[];
   process: DevelopmentProcessConfig;
   reviews: ProjectReview[];
+  chatbotQA: any[];
   context: ActiveContext;
 }
 
@@ -126,7 +127,8 @@ export const getDynamicPortfolioSnapshot = (context: ActiveContext): DynamicPort
   const allEdu = getCachedEducationSync().filter((item) => item.isActive !== false);
   const allCerts = getCachedCertificatesSync();
   const process = getLiveProcessSync();
-  const reviews = getCachedReviewsSync(20);
+  const reviews = getCachedReviewsSync();
+  const chatbotQA = getCachedChatbotQASync();
 
   return {
     profile,
@@ -139,6 +141,7 @@ export const getDynamicPortfolioSnapshot = (context: ActiveContext): DynamicPort
     certificates: allCerts,
     process,
     reviews,
+    chatbotQA,
     context,
   };
 };

@@ -3898,3 +3898,121 @@ export const syncAllPortfolioDataToSupabaseCloud = async (): Promise<{
   const allSuccess = results.every((r) => r.success);
   return { success: allSuccess, results };
 };
+
+// ==========================================
+// CHATBOT QA SETTINGS
+// ==========================================
+
+export interface ChatbotQAItem {
+  id?: number;
+  category: string;
+  questions: string[];
+  answer: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const STORAGE_CHATBOT_QA_KEY = "maharab_chatbot_qa";
+
+export const getCachedChatbotQASync = (): ChatbotQAItem[] => {
+  try {
+    const cached = localStorage.getItem(STORAGE_CHATBOT_QA_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {
+    console.error("Failed to parse cached chatbot QA", e);
+  }
+  return [];
+};
+
+export const getLiveChatbotQA = async (): Promise<ChatbotQAItem[]> => {
+  if (!isSupabaseConfigured || !supabase) {
+    return getCachedChatbotQASync();
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("chatbot_qa")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) throw error;
+    if (data) {
+      localStorage.setItem(STORAGE_CHATBOT_QA_KEY, JSON.stringify(data));
+      return data as ChatbotQAItem[];
+    }
+  } catch (err: any) {
+    console.error("Supabase QA fetch error:", err);
+  }
+  return getCachedChatbotQASync();
+};
+
+export const saveLiveChatbotQA = async (
+  item: ChatbotQAItem
+): Promise<{ success: boolean; data?: ChatbotQAItem; error?: string }> => {
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, error: "Database not configured." };
+  }
+
+  try {
+    if (item.id && item.id > 0) {
+      // Update existing
+      const { data, error } = await supabase
+        .from("chatbot_qa")
+        .update({
+          category: item.category,
+          questions: item.questions,
+          answer: item.answer,
+        })
+        .eq("id", item.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return { success: true, data: data as ChatbotQAItem };
+    } else {
+      // Insert new
+      const { id, ...rest } = item;
+      const { data, error } = await supabase
+        .from("chatbot_qa")
+        .insert([rest])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return { success: true, data: data as ChatbotQAItem };
+    }
+  } catch (err: any) {
+    console.error("Failed to save Chatbot QA:", err);
+    return { success: false, error: err.message };
+  }
+};
+
+export const deleteLiveChatbotQA = async (id: number): Promise<boolean> => {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const { error } = await supabase.from("chatbot_qa").delete().eq("id", id);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error("Failed to delete Chatbot QA:", err);
+    return false;
+  }
+};
+
+export const useLiveChatbotQA = (): ChatbotQAItem[] => {
+  const [items, setItems] = useState<ChatbotQAItem[]>(getCachedChatbotQASync());
+
+  useEffect(() => {
+    let isMounted = true;
+    getLiveChatbotQA().then((data) => {
+      if (isMounted && data.length > 0) {
+        setItems(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return items;
+};

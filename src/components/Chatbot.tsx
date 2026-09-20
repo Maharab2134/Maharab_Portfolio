@@ -24,7 +24,7 @@ import {
 import { ActiveContext } from "../lib/chatbotKnowledge";
 import { Project, getAllProjectsSync, toProxyImageUrl } from "../data/projectsData";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
-import { useLiveProfile } from "../lib/portfolioService";
+import { useLiveProfile, useLiveChatbotQA } from "../lib/portfolioService";
 
 interface ChatbotProps {
   activeView: "home" | "hire" | "journey" | "project" | "admin" | "case-studies";
@@ -46,6 +46,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   onSelectProject,
 }) => {
   const profile = useLiveProfile();
+  const fallbackQA = useLiveChatbotQA();
   const profileImg =
     profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage;
   const developerName = profile.shortName || profile.name || "Maharab";
@@ -165,7 +166,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
     // Responsive assistant delay to provide a polished interactive feel
     setTimeout(() => {
-      const reply = PortfolioChatbotEngine.processQuery(query, context);
+      const reply = PortfolioChatbotEngine.processQuery(query, context, fallbackQA);
       setMessages((prev) => [...prev, reply]);
       setIsTyping(false);
       if (!isOpen) setHasUnread(true);

@@ -13,7 +13,7 @@ import {
   findDynamicProjectMatches,
 } from "./chatbotKnowledge";
 import { Project } from "../data/projectsData";
-import gnChatData from "../data/gn_chat.json";
+import { ChatbotQAItem } from "./portfolioService";
 
 export interface ChatAction {
   label: string;
@@ -243,7 +243,8 @@ export class PortfolioChatbotEngine {
    */
   public static processQuery(
     rawQuery: string,
-    context: ActiveContext
+    context: ActiveContext,
+    fallbackQAData: ChatbotQAItem[] = []
   ): ChatMessage {
     const q = rawQuery.toLowerCase().trim();
     const snapshot = getDynamicPortfolioSnapshot(context);
@@ -1223,9 +1224,9 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 18. GN_CHAT.JSON FALLBACK
+    // 18. GN_CHAT.JSON FALLBACK (NOW VIA DATABASE)
     // ------------------------------------------------------------------------
-    const fallbackItems = gnChatData.items || [];
+    const fallbackItems = fallbackQAData;
     let bestMatch = null;
     let maxScore = 0;
     
