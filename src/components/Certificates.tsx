@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaCertificate,
@@ -9,37 +9,32 @@ import {
   FaChevronUp,
 } from "react-icons/fa";
 import { CertificateItem } from "../data/portfolioData";
-import { getCachedCertificatesSync } from "../lib/portfolioService";
+import { useLiveCertificates } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
 const Certificates: React.FC = () => {
-  const [certsList, setCertsList] = useState<CertificateItem[]>(getCachedCertificatesSync);
+  const certsList = useLiveCertificates();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [showAll, setShowAll] = useState(false);
   const initialLimit = 4;
 
-  useEffect(() => {
-    const handleCertsUpdate = () => {
-      const live = getCachedCertificatesSync();
-      React.startTransition(() => {
-        setCertsList(live);
-      });
-    };
-    window.addEventListener("portfolio_certificates_updated", handleCertsUpdate);
-    return () => window.removeEventListener("portfolio_certificates_updated", handleCertsUpdate);
-  }, []);
-
-  const filteredCerts = certsList.filter((cert) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "professional") return cert.type === "Professional";
-    if (activeTab === "achievement") return cert.type === "Achievement" || cert.type === "Conference";
-    return true;
-  });
+  const filteredCerts = certsList
+    .filter((cert) => cert.isActive !== false)
+    .filter((cert) => {
+      if (activeTab === "all") return true;
+      if (activeTab === "professional") return cert.type === "Professional";
+      if (activeTab === "achievement") return cert.type === "Achievement" || cert.type === "Conference";
+      return true;
+    });
 
   const displayedCerts = showAll ? filteredCerts : filteredCerts.slice(0, initialLimit);
+
+  if (filteredCerts.length === 0) {
+    return null;
+  }
 
   return (
     <section

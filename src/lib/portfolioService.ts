@@ -1063,142 +1063,195 @@ export const calculateWorkStatus = (
 
 export const STORAGE_PROFILE_KEY = "maharab_cached_profile";
 
+export const getCachedProfileSync = (): any => {
+  try {
+    const cached = localStorage.getItem(STORAGE_PROFILE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && typeof parsed === "object") {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return null;
+};
+
 // Profile Info Service
 export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
-  // 1. If Supabase is configured, fetch live profile from cloud first
+  // Read local cache first
+  const parsedCached = getCachedProfileSync();
+
+  // 1. If Supabase is configured, fetch live profile from cloud
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
         .from("profile_info")
         .select("*")
+        .order("updated_at", { ascending: false })
         .limit(1);
 
       if (!error && data && data.length > 0) {
         const row = data[0];
-        const resolvedImage = row.profile_image || row.profileImage || PORTFOLIO_INFO.profileImage;
+
+        // Resolve profile image: prioritize local image if custom and Supabase row has only placeholder
+        const isDefaultImg = (img?: string) => !img || img === "/images/img.jpg" || img === PORTFOLIO_INFO.profileImage;
+        let resolvedImage = row.profile_image || row.profileImage;
+        if (isDefaultImg(resolvedImage) && parsedCached && !isDefaultImg(parsedCached.profile_image || parsedCached.profileImage)) {
+          resolvedImage = parsedCached.profile_image || parsedCached.profileImage;
+        }
+        if (!resolvedImage) {
+          resolvedImage = PORTFOLIO_INFO.profileImage;
+        }
+
+        // Show intro video toggle:
+        // Prioritize explicit row value, then local cached override, finally static default
+        const resolvedShowIntro =
+          row.show_intro_video !== undefined && row.show_intro_video !== null
+            ? Boolean(row.show_intro_video)
+            : row.showIntroVideo !== undefined && row.showIntroVideo !== null
+            ? Boolean(row.showIntroVideo)
+            : parsedCached?.show_intro_video !== undefined && parsedCached?.show_intro_video !== null
+            ? Boolean(parsedCached.show_intro_video)
+            : parsedCached?.showIntroVideo !== undefined && parsedCached?.showIntroVideo !== null
+            ? Boolean(parsedCached.showIntroVideo)
+            : PORTFOLIO_INFO.showIntroVideo;
+
+        const resolvedIntroUrl =
+          row.intro_video_url ||
+          row.introVideoUrl ||
+          row.intro_video_id ||
+          row.introVideoId ||
+          parsedCached?.intro_video_url ||
+          parsedCached?.introVideoUrl ||
+          PORTFOLIO_INFO.introVideoUrl;
+
+        // Clean merge: only take defined, non-null values from row over parsedCached
+        const cleanRow: Record<string, any> = {};
+        for (const [k, v] of Object.entries(row)) {
+          if (v !== null && v !== undefined) {
+            cleanRow[k] = v;
+          }
+        }
+
+        // Check if local cache has newer unsynced edits than Supabase
+        const localIsNewer = Boolean(
+          parsedCached?._local_updated_at &&
+          row.updated_at &&
+          new Date(parsedCached._local_updated_at).getTime() > new Date(row.updated_at).getTime()
+        );
+
+        const baseProfile = localIsNewer
+          ? { ...cleanRow, ...parsedCached }
+          : { ...parsedCached, ...cleanRow };
+
         const profileMapped = {
           ...PORTFOLIO_INFO,
-          name: row.name || PORTFOLIO_INFO.name,
-          shortName: row.short_name || PORTFOLIO_INFO.shortName,
-          title: row.title || PORTFOLIO_INFO.title,
-          tagline: row.tagline || PORTFOLIO_INFO.tagline,
+          name: baseProfile.name || PORTFOLIO_INFO.name,
+          shortName: baseProfile.short_name || baseProfile.shortName || PORTFOLIO_INFO.shortName,
+          title: baseProfile.title || PORTFOLIO_INFO.title,
+          tagline: baseProfile.tagline !== undefined ? baseProfile.tagline : PORTFOLIO_INFO.tagline,
           typewriterPrefix:
-            row.typewriter_prefix !== undefined
-              ? row.typewriter_prefix
-              : row.typewriterPrefix !== undefined
-              ? row.typewriterPrefix
+            baseProfile.typewriter_prefix !== undefined
+              ? baseProfile.typewriter_prefix
+              : baseProfile.typewriterPrefix !== undefined
+              ? baseProfile.typewriterPrefix
               : PORTFOLIO_INFO.typewriterPrefix,
           typewriterPhrases: parseTypewriterPhrases(
-            row.typewriter_phrases !== undefined
-              ? row.typewriter_phrases
-              : row.typewriterPhrases
+            baseProfile.typewriter_phrases !== undefined
+              ? baseProfile.typewriter_phrases
+              : baseProfile.typewriterPhrases
           ),
-          bio: row.bio || PORTFOLIO_INFO.bio,
+          bio: baseProfile.bio || PORTFOLIO_INFO.bio,
           footerBio:
-            row.footer_bio ||
-            row.footerBio ||
+            baseProfile.footer_bio ||
+            baseProfile.footerBio ||
             (PORTFOLIO_INFO as any).footerBio ||
             "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
           footer_bio:
-            row.footer_bio ||
-            row.footerBio ||
+            baseProfile.footer_bio ||
+            baseProfile.footerBio ||
             (PORTFOLIO_INFO as any).footerBio ||
             "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
-          email: row.email || PORTFOLIO_INFO.email,
-          phone: row.phone || PORTFOLIO_INFO.phone,
-          whatsappNumber: (row.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, ""),
-          whatsappUrl: `https://wa.me/${(row.phone || PORTFOLIO_INFO.phone).replace(/[^0-9]/g, "")}`,
-          location: row.location || PORTFOLIO_INFO.location,
+          email: baseProfile.email || PORTFOLIO_INFO.email,
+          phone: baseProfile.phone || PORTFOLIO_INFO.phone,
+          whatsappNumber: (baseProfile.phone || PORTFOLIO_INFO.phone || "").replace(/[^0-9]/g, ""),
+          whatsappUrl: `https://wa.me/${(baseProfile.phone || PORTFOLIO_INFO.phone || "").replace(/[^0-9]/g, "")}`,
+          location: baseProfile.location || PORTFOLIO_INFO.location,
           mapsUrl:
-            row.maps_url ||
-            row.mapsUrl ||
-            (row.location
-              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.location)}`
+            baseProfile.maps_url ||
+            baseProfile.mapsUrl ||
+            (baseProfile.location
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(baseProfile.location)}`
               : PORTFOLIO_INFO.mapsUrl),
           maps_url:
-            row.maps_url ||
-            row.mapsUrl ||
-            (row.location
-              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.location)}`
+            baseProfile.maps_url ||
+            baseProfile.mapsUrl ||
+            (baseProfile.location
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(baseProfile.location)}`
               : PORTFOLIO_INFO.mapsUrl),
-          resumeUrl: row.resume_url || PORTFOLIO_INFO.resumeUrl,
-          resume_url: row.resume_url || PORTFOLIO_INFO.resumeUrl,
+          resumeUrl: baseProfile.resume_url || baseProfile.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+          resume_url: baseProfile.resume_url || baseProfile.resumeUrl || PORTFOLIO_INFO.resumeUrl,
           profileImage: resolvedImage,
           profile_image: resolvedImage,
-          showIntroVideo:
-            row.show_intro_video !== undefined
-              ? Boolean(row.show_intro_video)
-              : row.showIntroVideo !== undefined
-              ? Boolean(row.showIntroVideo)
-              : PORTFOLIO_INFO.showIntroVideo,
-          show_intro_video:
-            row.show_intro_video !== undefined
-              ? Boolean(row.show_intro_video)
-              : row.showIntroVideo !== undefined
-              ? Boolean(row.showIntroVideo)
-              : PORTFOLIO_INFO.showIntroVideo,
-          introVideoUrl:
-            row.intro_video_url ||
-            row.introVideoUrl ||
-            row.intro_video_id ||
-            row.introVideoId ||
-            PORTFOLIO_INFO.introVideoUrl,
-          intro_video_url:
-            row.intro_video_url ||
-            row.introVideoUrl ||
-            row.intro_video_id ||
-            row.introVideoId ||
-            PORTFOLIO_INFO.introVideoUrl,
+          showIntroVideo: resolvedShowIntro,
+          show_intro_video: resolvedShowIntro,
+          introVideoUrl: resolvedIntroUrl,
+          intro_video_url: resolvedIntroUrl,
           introVideoId:
-            row.intro_video_id ||
-            row.introVideoId ||
+            baseProfile.intro_video_id ||
+            baseProfile.introVideoId ||
             PORTFOLIO_INFO.introVideoId,
           stats: {
             ...PORTFOLIO_INFO.stats,
-            yearsExperience: row.years_experience || PORTFOLIO_INFO.stats.yearsExperience,
-            projectsCompleted: row.projects_completed || PORTFOLIO_INFO.stats.projectsCompleted,
-            satisfactionRate: row.satisfaction_rate || PORTFOLIO_INFO.stats.satisfactionRate,
+            yearsExperience: baseProfile.years_experience || baseProfile.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
+            projectsCompleted: baseProfile.projects_completed || baseProfile.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
+            satisfactionRate: baseProfile.satisfaction_rate || baseProfile.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
           },
           aboutStats:
-            Array.isArray(row.about_stats) && row.about_stats.length > 0
-              ? row.about_stats
+            Array.isArray(baseProfile.about_stats) && baseProfile.about_stats.length > 0
+              ? baseProfile.about_stats
+              : Array.isArray(baseProfile.aboutStats) && baseProfile.aboutStats.length > 0
+              ? baseProfile.aboutStats
               : [
-                  { value: row.years_experience || PORTFOLIO_INFO.stats.yearsExperience, label: "Project Experience" },
-                  { value: row.projects_completed || "20+", label: "Projects" },
+                  { value: baseProfile.years_experience || PORTFOLIO_INFO.stats.yearsExperience, label: "Project Experience" },
+                  { value: baseProfile.projects_completed || "20+", label: "Projects" },
                   { value: "10+", label: "Technologies" },
                   { value: "CSE", label: "Academic Background" },
                 ],
           about_stats:
-            Array.isArray(row.about_stats) && row.about_stats.length > 0
-              ? row.about_stats
+            Array.isArray(baseProfile.about_stats) && baseProfile.about_stats.length > 0
+              ? baseProfile.about_stats
+              : Array.isArray(baseProfile.aboutStats) && baseProfile.aboutStats.length > 0
+              ? baseProfile.aboutStats
               : [
-                  { value: row.years_experience || PORTFOLIO_INFO.stats.yearsExperience, label: "Project Experience" },
-                  { value: row.projects_completed || "20+", label: "Projects" },
+                  { value: baseProfile.years_experience || PORTFOLIO_INFO.stats.yearsExperience, label: "Project Experience" },
+                  { value: baseProfile.projects_completed || "20+", label: "Projects" },
                   { value: "10+", label: "Technologies" },
                   { value: "CSE", label: "Academic Background" },
                 ],
-          about_stat1_val: (Array.isArray(row.about_stats) && row.about_stats[0]?.value) || row.years_experience || "2+ Years",
-          about_stat1_lbl: (Array.isArray(row.about_stats) && row.about_stats[0]?.label) || "Project Experience",
-          about_stat2_val: (Array.isArray(row.about_stats) && row.about_stats[1]?.value) || row.projects_completed || "20+",
-          about_stat2_lbl: (Array.isArray(row.about_stats) && row.about_stats[1]?.label) || "Projects",
-          about_stat3_val: (Array.isArray(row.about_stats) && row.about_stats[2]?.value) || "10+",
-          about_stat3_lbl: (Array.isArray(row.about_stats) && row.about_stats[2]?.label) || "Technologies",
-          about_stat4_val: (Array.isArray(row.about_stats) && row.about_stats[3]?.value) || "CSE",
-          about_stat4_lbl: (Array.isArray(row.about_stats) && row.about_stats[3]?.label) || "Academic Background",
+          about_stat1_val: (Array.isArray(baseProfile.about_stats) && baseProfile.about_stats[0]?.value) || baseProfile.about_stat1_val || baseProfile.years_experience || "2+ Years",
+          about_stat1_lbl: (Array.isArray(baseProfile.about_stats) && baseProfile.about_stats[0]?.label) || baseProfile.about_stat1_lbl || "Project Experience",
+          about_stat2_val: (Array.isArray(baseProfile.about_stats) && baseProfile.about_stats[1]?.value) || baseProfile.about_stat2_val || baseProfile.projects_completed || "20+",
+          about_stat2_lbl: (Array.isArray(baseProfile.about_stats) && baseProfile.about_stats[1]?.label) || baseProfile.about_stat2_lbl || "Projects",
+          about_stat3_val: (Array.isArray(baseProfile.about_stats) && baseProfile.about_stats[2]?.value) || baseProfile.about_stat3_val || "10+",
+          about_stat3_lbl: (Array.isArray(baseProfile.about_stats) && baseProfile.about_stats[2]?.label) || baseProfile.about_stat3_lbl || "Technologies",
+          about_stat4_val: (Array.isArray(baseProfile.about_stats) && baseProfile.about_stats[3]?.value) || baseProfile.about_stat4_val || "CSE",
+          about_stat4_lbl: (Array.isArray(baseProfile.about_stats) && baseProfile.about_stats[3]?.label) || baseProfile.about_stat4_lbl || "Academic Background",
           socials: {
-            github: row.github_url || PORTFOLIO_INFO.socials.github,
-            linkedin: row.linkedin_url || PORTFOLIO_INFO.socials.linkedin,
-            twitter: row.twitter_url || PORTFOLIO_INFO.socials.twitter,
+            github: baseProfile.github_url || baseProfile.github || baseProfile.socials?.github || PORTFOLIO_INFO.socials.github,
+            linkedin: baseProfile.linkedin_url || baseProfile.linkedin || baseProfile.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
+            twitter: baseProfile.twitter_url || baseProfile.twitter || baseProfile.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
           },
-          workingHours: row.working_hours || (row.work_hours_enabled !== undefined ? {
-            enabled: Boolean(row.work_hours_enabled),
-            mode: row.work_hours_mode || "auto",
-            startTime: row.work_start_time || "09:00",
-            endTime: row.work_end_time || "22:00",
-            timezone: row.work_timezone || "Asia/Dhaka",
-            onlineLabel: row.work_online_label || "Available for Work",
-            offlineLabel: row.work_offline_label || "Currently Away / Offline",
+          workingHours: baseProfile.working_hours || baseProfile.workingHours || (baseProfile.work_hours_enabled !== undefined ? {
+            enabled: Boolean(baseProfile.work_hours_enabled),
+            mode: baseProfile.work_hours_mode || "auto",
+            startTime: baseProfile.work_start_time || "09:00",
+            endTime: baseProfile.work_end_time || "22:00",
+            timezone: baseProfile.work_timezone || "Asia/Dhaka",
+            onlineLabel: baseProfile.work_online_label || "Available for Work",
+            offlineLabel: baseProfile.work_offline_label || "Currently Away / Offline",
           } : (PORTFOLIO_INFO as any).workingHours),
+          _local_updated_at: parsedCached?._local_updated_at,
         };
         try {
           localStorage.setItem(STORAGE_PROFILE_KEY, JSON.stringify(profileMapped));
@@ -1211,95 +1264,111 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
   }
 
   // 2. Fallback to localStorage cache if offline or Supabase unavailable
-  try {
-    const cached = localStorage.getItem(STORAGE_PROFILE_KEY);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed && (parsed.name || parsed.resume_url || parsed.resumeUrl || parsed.profile_image || parsed.profileImage)) {
-        const resolvedImage = parsed.profile_image || parsed.profileImage || PORTFOLIO_INFO.profileImage;
-        return {
-          ...PORTFOLIO_INFO,
-          ...parsed,
-          name: parsed.name || PORTFOLIO_INFO.name,
-          shortName: parsed.short_name || parsed.shortName || PORTFOLIO_INFO.shortName,
-          title: parsed.title || PORTFOLIO_INFO.title,
-          typewriterPrefix:
-            parsed.typewriter_prefix !== undefined
-              ? parsed.typewriter_prefix
-              : parsed.typewriterPrefix !== undefined
-              ? parsed.typewriterPrefix
-              : PORTFOLIO_INFO.typewriterPrefix,
-          typewriterPhrases: parseTypewriterPhrases(
-            parsed.typewriter_phrases !== undefined
-              ? parsed.typewriter_phrases
-              : parsed.typewriterPhrases
-          ),
-          bio: parsed.bio || PORTFOLIO_INFO.bio,
-          footerBio:
-            parsed.footer_bio ||
-            parsed.footerBio ||
-            (PORTFOLIO_INFO as any).footerBio ||
-            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
-          footer_bio:
-            parsed.footer_bio ||
-            parsed.footerBio ||
-            (PORTFOLIO_INFO as any).footerBio ||
-            "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
-          email: parsed.email || PORTFOLIO_INFO.email,
-          phone: parsed.phone || PORTFOLIO_INFO.phone,
-          whatsappNumber: (parsed.phone || PORTFOLIO_INFO.phone || "").replace(/[^0-9]/g, ""),
-          whatsappUrl: `https://wa.me/${(parsed.phone || PORTFOLIO_INFO.phone || "").replace(/[^0-9]/g, "")}`,
-          location: parsed.location || PORTFOLIO_INFO.location,
-          mapsUrl:
-            parsed.maps_url ||
-            parsed.mapsUrl ||
-            (parsed.location
-              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
-              : PORTFOLIO_INFO.mapsUrl),
-          maps_url:
-            parsed.maps_url ||
-            parsed.mapsUrl ||
-            (parsed.location
-              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsed.location)}`
-              : PORTFOLIO_INFO.mapsUrl),
-          resumeUrl: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
-          resume_url: parsed.resume_url || parsed.resumeUrl || PORTFOLIO_INFO.resumeUrl,
-          profileImage: resolvedImage,
-          profile_image: resolvedImage,
-          stats: {
-            ...PORTFOLIO_INFO.stats,
-            yearsExperience: parsed.years_experience || parsed.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
-            projectsCompleted: parsed.projects_completed || parsed.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
-            satisfactionRate: parsed.satisfaction_rate || parsed.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
-          },
-          aboutStats:
-            parsed.aboutStats ||
-            parsed.about_stats ||
-            (parsed.about_stat1_val ? [
-              { value: parsed.about_stat1_val, label: parsed.about_stat1_lbl || "Project Experience" },
-              { value: parsed.about_stat2_val || "15+", label: parsed.about_stat2_lbl || "Projects" },
-              { value: parsed.about_stat3_val || "10+", label: parsed.about_stat3_lbl || "Technologies" },
-              { value: parsed.about_stat4_val || "CSE", label: parsed.about_stat4_lbl || "Academic Background" },
+  if (parsedCached && (parsedCached.name || parsedCached.resume_url || parsedCached.resumeUrl || parsedCached.profile_image || parsedCached.profileImage)) {
+    const resolvedImage = parsedCached.profile_image || parsedCached.profileImage || PORTFOLIO_INFO.profileImage;
+    const resolvedShowIntro =
+      parsedCached.show_intro_video !== undefined && parsedCached.show_intro_video !== null
+        ? Boolean(parsedCached.show_intro_video)
+        : parsedCached.showIntroVideo !== undefined && parsedCached.showIntroVideo !== null
+        ? Boolean(parsedCached.showIntroVideo)
+        : PORTFOLIO_INFO.showIntroVideo;
+    const resolvedIntroUrl =
+      parsedCached.intro_video_url ||
+      parsedCached.introVideoUrl ||
+      parsedCached.introVideoId ||
+      PORTFOLIO_INFO.introVideoUrl;
+
+    return {
+      ...PORTFOLIO_INFO,
+      ...parsedCached,
+      name: parsedCached.name || PORTFOLIO_INFO.name,
+      shortName: parsedCached.short_name || parsedCached.shortName || PORTFOLIO_INFO.shortName,
+      title: parsedCached.title || PORTFOLIO_INFO.title,
+      typewriterPrefix:
+        parsedCached.typewriter_prefix !== undefined
+          ? parsedCached.typewriter_prefix
+          : parsedCached.typewriterPrefix !== undefined
+          ? parsedCached.typewriterPrefix
+          : PORTFOLIO_INFO.typewriterPrefix,
+      typewriterPhrases: parseTypewriterPhrases(
+        parsedCached.typewriter_phrases !== undefined
+          ? parsedCached.typewriter_phrases
+          : parsedCached.typewriterPhrases
+      ),
+      bio: parsedCached.bio || PORTFOLIO_INFO.bio,
+      footerBio:
+        parsedCached.footer_bio ||
+        parsedCached.footerBio ||
+        (PORTFOLIO_INFO as any).footerBio ||
+        "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
+      footer_bio:
+        parsedCached.footer_bio ||
+        parsedCached.footerBio ||
+        (PORTFOLIO_INFO as any).footerBio ||
+        "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
+      email: parsedCached.email || PORTFOLIO_INFO.email,
+      phone: parsedCached.phone || PORTFOLIO_INFO.phone,
+      whatsappNumber: (parsedCached.phone || PORTFOLIO_INFO.phone || "").replace(/[^0-9]/g, ""),
+      whatsappUrl: `https://wa.me/${(parsedCached.phone || PORTFOLIO_INFO.phone || "").replace(/[^0-9]/g, "")}`,
+      location: parsedCached.location || PORTFOLIO_INFO.location,
+      mapsUrl:
+        parsedCached.maps_url ||
+        parsedCached.mapsUrl ||
+        (parsedCached.location
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsedCached.location)}`
+          : PORTFOLIO_INFO.mapsUrl),
+      maps_url:
+        parsedCached.maps_url ||
+        parsedCached.mapsUrl ||
+        (parsedCached.location
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsedCached.location)}`
+          : PORTFOLIO_INFO.mapsUrl),
+      resumeUrl: parsedCached.resume_url || parsedCached.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+      resume_url: parsedCached.resume_url || parsedCached.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+      profileImage: resolvedImage,
+      profile_image: resolvedImage,
+      showIntroVideo: resolvedShowIntro,
+      show_intro_video: resolvedShowIntro,
+      introVideoUrl: resolvedIntroUrl,
+      intro_video_url: resolvedIntroUrl,
+      introVideoId:
+        parsedCached.intro_video_id ||
+        parsedCached.introVideoId ||
+        PORTFOLIO_INFO.introVideoId,
+      stats: {
+        ...PORTFOLIO_INFO.stats,
+        yearsExperience: parsedCached.years_experience || parsedCached.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
+        projectsCompleted: parsedCached.projects_completed || parsedCached.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
+        satisfactionRate: parsedCached.satisfaction_rate || parsedCached.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
+      },
+      aboutStats:
+        Array.isArray(parsedCached.about_stats) && parsedCached.about_stats.length > 0
+          ? parsedCached.about_stats
+          : Array.isArray(parsedCached.aboutStats) && parsedCached.aboutStats.length > 0
+          ? parsedCached.aboutStats
+          : (parsedCached.about_stat1_val ? [
+              { value: parsedCached.about_stat1_val, label: parsedCached.about_stat1_lbl || "Project Experience" },
+              { value: parsedCached.about_stat2_val || "15+", label: parsedCached.about_stat2_lbl || "Projects" },
+              { value: parsedCached.about_stat3_val || "10+", label: parsedCached.about_stat3_lbl || "Technologies" },
+              { value: parsedCached.about_stat4_val || "CSE", label: parsedCached.about_stat4_lbl || "Academic Background" },
             ] : (PORTFOLIO_INFO as any).aboutStats),
-          about_stat1_val: parsed.about_stat1_val || (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years",
-          about_stat1_lbl: parsed.about_stat1_lbl || (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience",
-          about_stat2_val: parsed.about_stat2_val || (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+",
-          about_stat2_lbl: parsed.about_stat2_lbl || (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects",
-          about_stat3_val: parsed.about_stat3_val || (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+",
-          about_stat3_lbl: parsed.about_stat3_lbl || (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies",
-          about_stat4_val: parsed.about_stat4_val || (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE",
-          about_stat4_lbl: parsed.about_stat4_lbl || (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background",
-          socials: {
-            ...PORTFOLIO_INFO.socials,
-            github: parsed.github_url || parsed.github || parsed.socials?.github || PORTFOLIO_INFO.socials.github,
-            linkedin: parsed.linkedin_url || parsed.linkedin || parsed.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
-            twitter: parsed.twitter_url || parsed.twitter || parsed.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
-          },
-          workingHours: parsed.workingHours || parsed.working_hours || (PORTFOLIO_INFO as any).workingHours,
-        };
-      }
-    }
-  } catch (e) {}
+      about_stat1_val: parsedCached.about_stat1_val || (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years",
+      about_stat1_lbl: parsedCached.about_stat1_lbl || (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience",
+      about_stat2_val: parsedCached.about_stat2_val || (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+",
+      about_stat2_lbl: parsedCached.about_stat2_lbl || (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects",
+      about_stat3_val: parsedCached.about_stat3_val || (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+",
+      about_stat3_lbl: parsedCached.about_stat3_lbl || (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies",
+      about_stat4_val: parsedCached.about_stat4_val || (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE",
+      about_stat4_lbl: parsedCached.about_stat4_lbl || (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background",
+      socials: {
+        ...PORTFOLIO_INFO.socials,
+        github: parsedCached.github_url || parsedCached.github || parsedCached.socials?.github || PORTFOLIO_INFO.socials.github,
+        linkedin: parsedCached.linkedin_url || parsedCached.linkedin || parsedCached.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
+        twitter: parsedCached.twitter_url || parsedCached.twitter || parsedCached.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
+      },
+      workingHours: parsedCached.workingHours || parsedCached.working_hours || (PORTFOLIO_INFO as any).workingHours,
+    };
+  }
 
   return PORTFOLIO_INFO;
 };
@@ -1352,7 +1421,9 @@ export const saveLiveProfile = async (
     offlineLabel: profileData.work_offline_label || "Currently Away / Offline",
   };
 
-  // Normalize and cache
+  const nowIso = new Date().toISOString();
+
+  // Normalize and cache locally
   const toCache = {
     ...profileData,
     ...(resumeUrl ? { resume_url: resumeUrl, resumeUrl } : {}),
@@ -1376,6 +1447,7 @@ export const saveLiveProfile = async (
     work_timezone: workingHours.timezone,
     work_online_label: workingHours.onlineLabel,
     work_offline_label: workingHours.offlineLabel,
+    _local_updated_at: nowIso,
   };
 
   try {
@@ -1416,14 +1488,9 @@ export const saveLiveProfile = async (
         github_url: profileData.github || profileData.github_url,
         linkedin_url: profileData.linkedin || profileData.linkedin_url,
         twitter_url: profileData.twitter || profileData.twitter_url,
-        work_hours_enabled: workingHours.enabled,
-        work_hours_mode: workingHours.mode,
-        work_start_time: workingHours.startTime,
-        work_end_time: workingHours.endTime,
-        work_timezone: workingHours.timezone,
-        work_online_label: workingHours.onlineLabel,
-        work_offline_label: workingHours.offlineLabel,
+        working_hours: workingHours,
         about_stats: aboutStats,
+        updated_at: nowIso,
       };
 
       const dbProfile: Record<string, any> = {};
@@ -1433,48 +1500,44 @@ export const saveLiveProfile = async (
         }
       }
 
-      const { data: existing } = await supabase.from("profile_info").select("id").limit(1);
-      if (existing && existing.length > 0) {
-        const { error: updErr } = await supabase.from("profile_info").update(dbProfile).eq("id", existing[0].id);
-        if (updErr) {
-          // If custom column not yet migrated in Supabase, retry with core fields
-          const safeDb = { ...dbProfile };
-          delete safeDb.show_intro_video;
-          delete safeDb.intro_video_url;
-          delete safeDb.typewriter_prefix;
-          delete safeDb.typewriter_phrases;
-          delete safeDb.maps_url;
-          delete safeDb.footer_bio;
-          delete safeDb.work_hours_enabled;
-          delete safeDb.work_hours_mode;
-          delete safeDb.work_start_time;
-          delete safeDb.work_end_time;
-          delete safeDb.work_timezone;
-          delete safeDb.work_online_label;
-          delete safeDb.work_offline_label;
-          delete safeDb.about_stats;
-          await supabase.from("profile_info").update(safeDb).eq("id", existing[0].id);
+      // Check existing profile rows in Supabase, ordered by updated_at DESC
+      const { data: existing } = await supabase
+        .from("profile_info")
+        .select("id")
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      let payload: Record<string, any> = { ...dbProfile };
+      let lastError: string | undefined;
+
+      // Smart adaptive retry loop: if any specific column is not yet migrated in Supabase schema cache,
+      // extract only that specific column name from the error and retry without it,
+      // preserving all other columns!
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const res: any =
+          existing && existing.length > 0
+            ? await supabase.from("profile_info").update(payload).eq("id", existing[0].id)
+            : await supabase.from("profile_info").insert([payload]);
+
+        const err = res.error;
+        if (!err) {
+          lastError = undefined;
+          break;
         }
-      } else {
-        const { error: insErr } = await supabase.from("profile_info").insert([dbProfile]);
-        if (insErr) {
-          const safeDb = { ...dbProfile };
-          delete safeDb.show_intro_video;
-          delete safeDb.intro_video_url;
-          delete safeDb.typewriter_prefix;
-          delete safeDb.typewriter_phrases;
-          delete safeDb.maps_url;
-          delete safeDb.footer_bio;
-          delete safeDb.work_hours_enabled;
-          delete safeDb.work_hours_mode;
-          delete safeDb.work_start_time;
-          delete safeDb.work_end_time;
-          delete safeDb.work_timezone;
-          delete safeDb.work_online_label;
-          delete safeDb.work_offline_label;
-          delete safeDb.about_stats;
-          await supabase.from("profile_info").insert([safeDb]);
+
+        console.warn(`Supabase profile save attempt ${attempt + 1} notice:`, err.message);
+        const match = String(err.message || "").match(/Could not find the '([a-zA-Z0-9_]+)' column/i);
+        if (match && match[1] && match[1] in payload) {
+          delete payload[match[1]];
+          continue;
+        } else {
+          lastError = err.message;
+          break;
         }
+      }
+
+      if (lastError) {
+        return { success: true, error: lastError };
       }
     } catch (err: any) {
       return { success: true, error: err.message };
@@ -1652,10 +1715,16 @@ export const getCachedEducationSync = (): EducationItem[] => {
 };
 
 export const getLiveEducation = async (): Promise<EducationItem[]> => {
-  const cached = getCachedEducationSync();
-  if (cached !== EDUCATION_DATA && cached.length > 0) {
-    return cached;
-  }
+  let cachedList: EducationItem[] = [];
+  try {
+    const cached = localStorage.getItem(STORAGE_EDUCATION_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedList = parsed;
+      }
+    }
+  } catch (e) {}
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -1665,22 +1734,35 @@ export const getLiveEducation = async (): Promise<EducationItem[]> => {
         .order("order_index", { ascending: true });
 
       if (!error && data && data.length > 0) {
-        const mapped: EducationItem[] = data.map((d: any) => ({
-          degree: d.degree || "",
-          institution: d.institution || "",
-          period: d.period || "",
-          description: d.description || "",
-          highlights: Array.isArray(d.highlights) ? d.highlights : [],
-          isActive: d.is_active !== undefined ? d.is_active : (d.isActive !== undefined ? d.isActive : true),
-        }));
+        const mapped: EducationItem[] = data.map((d: any) => {
+          const localMatch = cachedList.find((c) => c.degree === d.degree);
+          return {
+            degree: d.degree || "",
+            institution: d.institution || "",
+            period: d.period || "",
+            description: d.description || "",
+            highlights: Array.isArray(d.highlights) ? d.highlights : [],
+            isActive:
+              d.is_active !== undefined && d.is_active !== null
+                ? Boolean(d.is_active)
+                : localMatch?.isActive !== undefined
+                ? localMatch.isActive
+                : true,
+          };
+        });
         try {
           localStorage.setItem(STORAGE_EDUCATION_KEY, JSON.stringify(mapped));
         } catch (e) {}
         return mapped;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Supabase fetch education failed, using local cache:", e);
+    }
   }
 
+  if (cachedList.length > 0) {
+    return cachedList;
+  }
   return EDUCATION_DATA;
 };
 
@@ -1710,9 +1792,24 @@ export const saveLiveEducation = async (
 
       // Delete existing and insert updated list
       await supabase.from("education").delete().neq("degree", "___never_match___");
-      const { error } = await supabase.from("education").insert(rows);
-      if (error) {
-        return { success: true, error: error.message };
+      const { error: insErr } = await supabase.from("education").insert(rows);
+      if (insErr) {
+        // If error is due to missing is_active column or schema cache, retry immediately with safeRows
+        const isColumnError =
+          insErr.message &&
+          (insErr.message.includes("is_active") ||
+            insErr.message.includes("schema cache") ||
+            insErr.message.includes("column"));
+
+        if (isColumnError) {
+          const safeRows = rows.map(({ is_active, ...rest }) => rest);
+          const { error: retryErr } = await supabase.from("education").insert(safeRows);
+          if (retryErr) {
+            return { success: true, error: retryErr.message };
+          }
+          return { success: true };
+        }
+        return { success: true, error: insErr.message };
       }
     } catch (err: any) {
       return { success: true, error: err.message };
@@ -1720,6 +1817,40 @@ export const saveLiveEducation = async (
   }
 
   return { success: true };
+};
+
+export const useLiveEducation = (): EducationItem[] => {
+  const [educationList, setEducationList] = useState<EducationItem[]>(getCachedEducationSync);
+
+  useEffect(() => {
+    let active = true;
+    const fetchLatest = async () => {
+      const live = await getLiveEducation();
+      if (active && live && live.length > 0) {
+        startTransition(() => {
+          setEducationList(live);
+        });
+      }
+    };
+
+    fetchLatest();
+
+    const handleUpdate = () => {
+      const live = getCachedEducationSync();
+      startTransition(() => {
+        setEducationList(live);
+      });
+      fetchLatest();
+    };
+
+    window.addEventListener("portfolio_education_updated", handleUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_education_updated", handleUpdate);
+    };
+  }, []);
+
+  return educationList;
 };
 
 // ============================================================================
@@ -1741,10 +1872,16 @@ export const getCachedCertificatesSync = (): CertificateItem[] => {
 };
 
 export const getLiveCertificates = async (): Promise<CertificateItem[]> => {
-  const cached = getCachedCertificatesSync();
-  if (cached !== CERTIFICATES_DATA && cached.length > 0) {
-    return cached;
-  }
+  let cachedList: CertificateItem[] = [];
+  try {
+    const cached = localStorage.getItem(STORAGE_CERTIFICATES_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedList = parsed;
+      }
+    }
+  } catch (e) {}
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -1754,23 +1891,37 @@ export const getLiveCertificates = async (): Promise<CertificateItem[]> => {
         .order("order_index", { ascending: true });
 
       if (!error && data && data.length > 0) {
-        const mapped: CertificateItem[] = data.map((c: any) => ({
-          title: c.title || "",
-          issuer: c.issuer || "",
-          year: c.year || "",
-          type: c.type || "Professional",
-          link: c.link || "",
-          details: c.details || "",
-          verificationId: c.verification_id || c.verificationId || "",
-        }));
+        const mapped: CertificateItem[] = data.map((c: any) => {
+          const localMatch = cachedList.find((item) => item.title === c.title);
+          return {
+            title: c.title || "",
+            issuer: c.issuer || "",
+            year: c.year || "",
+            type: c.type || "Professional",
+            link: c.link || "",
+            details: c.details || "",
+            verificationId: c.verification_id || c.verificationId || "",
+            isActive:
+              c.is_active !== undefined && c.is_active !== null
+                ? Boolean(c.is_active)
+                : localMatch?.isActive !== undefined
+                ? localMatch.isActive
+                : true,
+          };
+        });
         try {
           localStorage.setItem(STORAGE_CERTIFICATES_KEY, JSON.stringify(mapped));
         } catch (e) {}
         return mapped;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Supabase fetch certificates failed, using local cache:", e);
+    }
   }
 
+  if (cachedList.length > 0) {
+    return cachedList;
+  }
   return CERTIFICATES_DATA;
 };
 
@@ -1796,13 +1947,28 @@ export const saveLiveCertificates = async (
         link: cert.link || "",
         details: cert.details || "",
         verification_id: cert.verificationId || "",
+        is_active: cert.isActive !== false,
         order_index: idx,
       }));
 
       await supabase.from("certificates").delete().neq("title", "___never_match___");
-      const { error } = await supabase.from("certificates").insert(rows);
-      if (error) {
-        return { success: true, error: error.message };
+      const { error: insErr } = await supabase.from("certificates").insert(rows);
+      if (insErr) {
+        const isColumnError =
+          insErr.message &&
+          (insErr.message.includes("is_active") ||
+            insErr.message.includes("schema cache") ||
+            insErr.message.includes("column"));
+
+        if (isColumnError) {
+          const safeRows = rows.map(({ is_active, ...rest }) => rest);
+          const { error: retryErr } = await supabase.from("certificates").insert(safeRows);
+          if (retryErr) {
+            return { success: true, error: retryErr.message };
+          }
+          return { success: true };
+        }
+        return { success: true, error: insErr.message };
       }
     } catch (err: any) {
       return { success: true, error: err.message };
@@ -1810,6 +1976,40 @@ export const saveLiveCertificates = async (
   }
 
   return { success: true };
+};
+
+export const useLiveCertificates = (): CertificateItem[] => {
+  const [certsList, setCertsList] = useState<CertificateItem[]>(getCachedCertificatesSync);
+
+  useEffect(() => {
+    let active = true;
+    const fetchLatest = async () => {
+      const live = await getLiveCertificates();
+      if (active && live && live.length > 0) {
+        startTransition(() => {
+          setCertsList(live);
+        });
+      }
+    };
+
+    fetchLatest();
+
+    const handleUpdate = () => {
+      const live = getCachedCertificatesSync();
+      startTransition(() => {
+        setCertsList(live);
+      });
+      fetchLatest();
+    };
+
+    window.addEventListener("portfolio_certificates_updated", handleUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_certificates_updated", handleUpdate);
+    };
+  }, []);
+
+  return certsList;
 };
 
 // ============================================================================
@@ -3105,7 +3305,11 @@ export const saveTestimonialsConfig = async (
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data: existing } = await supabase.from("profile_info").select("id").limit(1);
+      const { data: existing } = await supabase
+        .from("profile_info")
+        .select("id")
+        .order("updated_at", { ascending: false })
+        .limit(1);
       if (existing && existing.length > 0) {
         await supabase
           .from("profile_info")
@@ -3230,7 +3434,11 @@ export const saveDevelopmentProcessConfig = async (
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data: existing } = await supabase.from("profile_info").select("id").limit(1);
+      const { data: existing } = await supabase
+        .from("profile_info")
+        .select("id")
+        .order("updated_at", { ascending: false })
+        .limit(1);
       if (existing && existing.length > 0) {
         await supabase
           .from("profile_info")
@@ -3310,10 +3518,16 @@ export const getCachedExperienceSync = (): ExperienceItem[] => {
 };
 
 export const getLiveExperience = async (): Promise<ExperienceItem[]> => {
-  const cached = getCachedExperienceSync();
-  if (cached !== EXPERIENCE_DATA && cached.length > 0) {
-    return cached;
-  }
+  let cachedList: ExperienceItem[] = [];
+  try {
+    const cached = localStorage.getItem(STORAGE_EXPERIENCE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedList = parsed;
+      }
+    }
+  } catch (e) {}
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -3323,28 +3537,41 @@ export const getLiveExperience = async (): Promise<ExperienceItem[]> => {
         .order("order_index", { ascending: true });
 
       if (!error && data && data.length > 0) {
-        const mapped: ExperienceItem[] = data.map((d: any) => ({
-          id: d.id,
-          role: d.role || "",
-          company: d.company || "",
-          companyUrl: d.company_url || d.companyUrl || "",
-          companyLogo: d.company_logo || d.companyLogo || "",
-          location: d.location || "",
-          period: d.period || "",
-          employmentType: d.employment_type || d.employmentType || "",
-          description: d.description || "",
-          technologies: Array.isArray(d.technologies) ? d.technologies : [],
-          highlights: Array.isArray(d.highlights) ? d.highlights : [],
-          isActive: d.is_active !== undefined ? d.is_active : (d.isActive !== undefined ? d.isActive : true),
-        }));
+        const mapped: ExperienceItem[] = data.map((d: any) => {
+          const localMatch = cachedList.find((c) => c.role === d.role && c.company === d.company);
+          return {
+            id: d.id,
+            role: d.role || "",
+            company: d.company || "",
+            companyUrl: d.company_url || d.companyUrl || "",
+            companyLogo: d.company_logo || d.companyLogo || "",
+            location: d.location || "",
+            period: d.period || "",
+            employmentType: d.employment_type || d.employmentType || "",
+            description: d.description || "",
+            technologies: Array.isArray(d.technologies) ? d.technologies : [],
+            highlights: Array.isArray(d.highlights) ? d.highlights : [],
+            isActive:
+              d.is_active !== undefined && d.is_active !== null
+                ? Boolean(d.is_active)
+                : localMatch?.isActive !== undefined
+                ? localMatch.isActive
+                : true,
+          };
+        });
         try {
           localStorage.setItem(STORAGE_EXPERIENCE_KEY, JSON.stringify(mapped));
         } catch (e) {}
         return mapped;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Supabase fetch experience failed, using local cache:", e);
+    }
   }
 
+  if (cachedList.length > 0) {
+    return cachedList;
+  }
   return EXPERIENCE_DATA;
 };
 
@@ -3379,9 +3606,23 @@ export const saveLiveExperience = async (
 
       // Delete existing and insert updated list
       await supabase.from("experience").delete().neq("role", "___never_match___");
-      const { error } = await supabase.from("experience").insert(rows);
-      if (error) {
-        return { success: true, error: error.message };
+      const { error: insErr } = await supabase.from("experience").insert(rows);
+      if (insErr) {
+        const isColumnError =
+          insErr.message &&
+          (insErr.message.includes("is_active") ||
+            insErr.message.includes("schema cache") ||
+            insErr.message.includes("column"));
+
+        if (isColumnError) {
+          const safeRows = rows.map(({ is_active, ...rest }) => rest);
+          const { error: retryErr } = await supabase.from("experience").insert(safeRows);
+          if (retryErr) {
+            return { success: true, error: retryErr.message };
+          }
+          return { success: true };
+        }
+        return { success: true, error: insErr.message };
       }
     } catch (err: any) {
       return { success: true, error: err.message };
@@ -3389,6 +3630,40 @@ export const saveLiveExperience = async (
   }
 
   return { success: true };
+};
+
+export const useLiveExperience = (): ExperienceItem[] => {
+  const [experienceList, setExperienceList] = useState<ExperienceItem[]>(getCachedExperienceSync);
+
+  useEffect(() => {
+    let active = true;
+    const fetchLatest = async () => {
+      const live = await getLiveExperience();
+      if (active && live && live.length > 0) {
+        startTransition(() => {
+          setExperienceList(live);
+        });
+      }
+    };
+
+    fetchLatest();
+
+    const handleUpdate = () => {
+      const live = getCachedExperienceSync();
+      startTransition(() => {
+        setExperienceList(live);
+      });
+      fetchLatest();
+    };
+
+    window.addEventListener("portfolio_experience_updated", handleUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_experience_updated", handleUpdate);
+    };
+  }, []);
+
+  return experienceList;
 };
 
 export const getLiveExperienceConfig = (): ExperienceConfig => {
@@ -3427,7 +3702,11 @@ export const saveExperienceConfig = async (
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data: existing } = await supabase.from("profile_info").select("id").limit(1);
+      const { data: existing } = await supabase
+        .from("profile_info")
+        .select("id")
+        .order("updated_at", { ascending: false })
+        .limit(1);
       if (existing && existing.length > 0) {
         await supabase
           .from("profile_info")
@@ -3460,6 +3739,7 @@ export const useExperienceConfig = (): ExperienceConfig => {
           const { data, error } = await supabase
             .from("profile_info")
             .select("*")
+            .order("updated_at", { ascending: false })
             .limit(1);
           if (!error && data && data.length > 0 && (data[0] as any)?.experience_config) {
             const remote = (data[0] as any).experience_config;

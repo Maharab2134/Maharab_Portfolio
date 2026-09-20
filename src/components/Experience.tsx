@@ -10,8 +10,8 @@ import {
 } from "react-icons/fa";
 import { ExperienceItem, getCompanyLogoUrl } from "../data/portfolioData";
 import {
-  getCachedExperienceSync,
   useExperienceConfig,
+  useLiveExperience,
 } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
@@ -20,18 +20,7 @@ const renderIcon = (Icon: any, props: any = {}) => {
 
 const Experience: React.FC = () => {
   const config = useExperienceConfig();
-  const [experienceList, setExperienceList] = useState<ExperienceItem[]>(getCachedExperienceSync);
-
-  useEffect(() => {
-    const handleExpUpdate = () => {
-      const live = getCachedExperienceSync();
-      React.startTransition(() => {
-        setExperienceList(live);
-      });
-    };
-    window.addEventListener("portfolio_experience_updated", handleExpUpdate);
-    return () => window.removeEventListener("portfolio_experience_updated", handleExpUpdate);
-  }, []);
+  const experienceList = useLiveExperience();
 
   // If section is toggled off in Admin Studio, completely hide it
   if (!config.isActive) {

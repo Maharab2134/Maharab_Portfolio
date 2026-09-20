@@ -53,6 +53,7 @@ export interface CertificateItem {
   link: string;
   details: string;
   verificationId?: string;
+  isActive?: boolean;
 }
 
 export interface MilestoneItem {

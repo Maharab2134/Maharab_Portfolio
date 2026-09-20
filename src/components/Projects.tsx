@@ -22,6 +22,7 @@ import {
   toGoogleDriveDirectUrl,
   createProjectSvgFallback,
 } from "../data/projectsData";
+import { getLiveProjects } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -58,74 +59,62 @@ const ProjectCard: React.FC<{
   };
 
   const handleOpenDetails = () => {
-    if (typeof window !== "undefined") {
-      const currentScrollY =
-        window.scrollY || document.documentElement.scrollTop || 0;
-      sessionStorage.setItem("portfolio_home_scroll_y", String(currentScrollY));
-    }
     if (onSelectProject) {
       onSelectProject(project);
-    } else {
-      const url = `${window.location.pathname}?project=${project.id}`;
-      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.3) }}
-      whileHover={{ y: -6 }}
-      onClick={handleOpenDetails}
-      className={`relative flex flex-col justify-between overflow-hidden border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl hover:border-purple-500/40 hover:bg-white/[0.05] transition-all duration-300 cursor-pointer group shadow-xl shadow-black/20 ${
-        project.featured ? "ring-1 ring-purple-500/30" : ""
-      }`}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.08 }}
+      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#0b0c1e] to-[#040510] backdrop-blur-xl hover:border-purple-500/40 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300"
     >
-      {/* Thumbnail Banner */}
-      <div className="relative overflow-hidden aspect-[16/9] bg-slate-950/80">
+      {/* Visual Thumbnail */}
+      <div
+        className="relative w-full h-48 sm:h-52 overflow-hidden bg-slate-900/60 cursor-pointer"
+        onClick={handleOpenDetails}
+      >
         <img
           src={imgSrc}
           alt={project.title}
-          loading="lazy"
-          decoding="async"
           onError={handleImageError}
-          className="object-cover object-top w-full h-full transition-transform duration-700 group-hover:scale-105"
+          loading="lazy"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0c1e] via-transparent to-transparent opacity-80" />
 
-        {/* Gradient Shadow Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/30 to-transparent" />
-
-        {/* Badges Top Row */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-          <span className="px-2.5 py-1 text-[11px] font-semibold tracking-wider uppercase rounded-full bg-slate-900/80 border border-white/15 text-cyan-300 backdrop-blur-md">
+        {/* Category Badge */}
+        <div className="absolute top-3 left-3">
+          <span className="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-black/60 border border-white/10 text-cyan-300 backdrop-blur-md">
             {project.categoryLabel}
           </span>
+        </div>
 
-          {project.featured && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-purple-500/80 text-white backdrop-blur-md shadow-md">
-              {renderIcon(FaStar, { size: 10 })}
-              Featured
+        {/* Featured Pill */}
+        {project.featured && (
+          <div className="absolute top-3 right-3">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md">
+              {renderIcon(FaStar, { size: 9 })}
+              <span>Featured</span>
             </span>
-          )}
-        </div>
-
-        {/* Hover Details Button Hint */}
-        <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 opacity-0 bg-black/40 backdrop-blur-[2px] group-hover:opacity-100">
-          <span className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-full bg-purple-600/90 shadow-lg">
-            <span>Explore Case Study</span>
-            {renderIcon(FaArrowRight, { size: 11 })}
-          </span>
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Content Container */}
-      <div className="flex flex-col flex-1 p-4 sm:p-5">
-        <div className="flex-1">
-          <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-purple-300 transition-colors mb-1.5 line-clamp-1">
+      {/* Card Content Body */}
+      <div className="p-5 flex flex-col justify-between flex-1">
+        <div>
+          <h3
+            onClick={handleOpenDetails}
+            className="text-base sm:text-lg font-bold text-white group-hover:text-purple-300 transition-colors cursor-pointer mb-2"
+          >
             {project.title}
           </h3>
-          <p className="text-xs leading-relaxed text-slate-400 line-clamp-1 mb-3.5 font-normal" title={project.description}>
+
+          <p className="text-xs sm:text-sm text-slate-400 line-clamp-2 leading-relaxed mb-4">
             {project.description}
           </p>
         </div>
@@ -206,6 +195,15 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
   const [columns, setColumns] = useState<number>(3);
 
   useEffect(() => {
+    let active = true;
+    getLiveProjects().then((live) => {
+      if (active && live && live.length > 0) {
+        React.startTransition(() => {
+          setProjectsList(live);
+        });
+      }
+    });
+
     const handleProjectsUpdate = () => {
       const live = getAllProjectsSync();
       React.startTransition(() => {
@@ -214,7 +212,10 @@ const Projects: React.FC<ProjectsProps> = ({ onSelectProject }) => {
     };
 
     window.addEventListener("portfolio_projects_updated", handleProjectsUpdate);
-    return () => window.removeEventListener("portfolio_projects_updated", handleProjectsUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_projects_updated", handleProjectsUpdate);
+    };
   }, []);
 
   useEffect(() => {

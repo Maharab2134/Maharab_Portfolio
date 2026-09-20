@@ -34,6 +34,12 @@ import {
   saveTestimonialsConfig,
   saveReviewsOrder,
   useDevelopmentProcessConfig,
+  getCachedProfileSync,
+  getCachedEducationSync,
+  getCachedCertificatesSync,
+  getCachedExperienceSync,
+  getCachedSkillCategoriesSync,
+  getCachedSkillsSync,
 } from "../lib/portfolioService";
 import {
   getLiveAnalytics,
@@ -139,65 +145,229 @@ const Admin: React.FC = () => {
   });
 
   // Profile state
-  const [profileForm, setProfileForm] = useState({
-    name: PORTFOLIO_INFO.name,
-    short_name: PORTFOLIO_INFO.shortName,
-    title: PORTFOLIO_INFO.title,
-    tagline: PORTFOLIO_INFO.tagline,
-    bio: PORTFOLIO_INFO.bio,
-    footer_bio:
-      (PORTFOLIO_INFO as any).footerBio ||
-      "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
-    phone: PORTFOLIO_INFO.phone,
-    email: PORTFOLIO_INFO.email,
-    location: PORTFOLIO_INFO.location,
-    maps_url: (PORTFOLIO_INFO as any).mapsUrl || "",
-    resume_url: PORTFOLIO_INFO.resumeUrl,
-    profile_image: PORTFOLIO_INFO.profileImage,
-    profileImage: PORTFOLIO_INFO.profileImage,
-    show_intro_video: (PORTFOLIO_INFO as any).showIntroVideo ?? true,
-    intro_video_url: (PORTFOLIO_INFO as any).introVideoUrl || PORTFOLIO_INFO.introVideoId || "",
-    typewriter_prefix: (PORTFOLIO_INFO as any).typewriterPrefix || "I engineer",
-    typewriter_phrases: Array.isArray((PORTFOLIO_INFO as any).typewriterPhrases)
-      ? (PORTFOLIO_INFO as any).typewriterPhrases.join("\n")
-      : "Scalable Full-Stack Web Apps\nCross-Platform Mobile Experiences\nHigh-Throughput REST & GraphQL APIs\nSecure Microservices Architecture",
-    available_for_hire: true,
-    about_stat1_val: (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years",
-    about_stat1_lbl: (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience",
-    about_stat2_val: (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+",
-    about_stat2_lbl: (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects",
-    about_stat3_val: (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+",
-    about_stat3_lbl: (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies",
-    about_stat4_val: (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE",
-    about_stat4_lbl: (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background",
-    years_experience: PORTFOLIO_INFO.stats.yearsExperience,
-    projects_completed: PORTFOLIO_INFO.stats.projectsCompleted,
-    satisfaction_rate: PORTFOLIO_INFO.stats.satisfactionRate,
-    github: PORTFOLIO_INFO.socials.github,
-    linkedin: PORTFOLIO_INFO.socials.linkedin,
-    twitter: PORTFOLIO_INFO.socials.twitter,
-    work_hours_enabled: (PORTFOLIO_INFO as any).workingHours?.enabled ?? true,
-    work_hours_mode: (PORTFOLIO_INFO as any).workingHours?.mode || "auto",
-    work_start_time: (PORTFOLIO_INFO as any).workingHours?.startTime || "09:00",
-    work_end_time: (PORTFOLIO_INFO as any).workingHours?.endTime || "22:00",
-    work_timezone: (PORTFOLIO_INFO as any).workingHours?.timezone || "Asia/Dhaka",
-    work_online_label: (PORTFOLIO_INFO as any).workingHours?.onlineLabel || "Available for Work",
-    work_offline_label: (PORTFOLIO_INFO as any).workingHours?.offlineLabel || "Currently Away / Offline",
+  const [profileForm, setProfileForm] = useState(() => {
+    const cached = getCachedProfileSync();
+    if (cached) {
+      return {
+        name: cached.name || PORTFOLIO_INFO.name,
+        short_name: cached.short_name || cached.shortName || PORTFOLIO_INFO.shortName,
+        title: cached.title || PORTFOLIO_INFO.title,
+        tagline: cached.tagline !== undefined ? cached.tagline : PORTFOLIO_INFO.tagline,
+        bio: cached.bio || PORTFOLIO_INFO.bio,
+        footer_bio:
+          cached.footer_bio ||
+          cached.footerBio ||
+          (PORTFOLIO_INFO as any).footerBio ||
+          "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
+        phone: cached.phone || PORTFOLIO_INFO.phone,
+        email: cached.email || PORTFOLIO_INFO.email,
+        location: cached.location || PORTFOLIO_INFO.location,
+        maps_url:
+          cached.maps_url ||
+          cached.mapsUrl ||
+          (PORTFOLIO_INFO as any).mapsUrl ||
+          "",
+        resume_url: cached.resume_url || cached.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+        profile_image:
+          cached.profile_image || cached.profileImage || PORTFOLIO_INFO.profileImage,
+        profileImage:
+          cached.profile_image || cached.profileImage || PORTFOLIO_INFO.profileImage,
+        show_intro_video:
+          cached.show_intro_video !== undefined
+            ? Boolean(cached.show_intro_video)
+            : cached.showIntroVideo !== undefined
+            ? Boolean(cached.showIntroVideo)
+            : true,
+        intro_video_url:
+          cached.intro_video_url ||
+          cached.introVideoUrl ||
+          cached.introVideoId ||
+          (PORTFOLIO_INFO as any).introVideoUrl ||
+          "",
+        typewriter_prefix:
+          cached.typewriter_prefix ??
+          cached.typewriterPrefix ??
+          PORTFOLIO_INFO.typewriterPrefix,
+        typewriter_phrases: Array.isArray(cached.typewriterPhrases)
+          ? cached.typewriterPhrases.join("\n")
+          : Array.isArray(cached.typewriter_phrases)
+          ? cached.typewriter_phrases.join("\n")
+          : typeof cached.typewriter_phrases === "string"
+          ? cached.typewriter_phrases
+          : PORTFOLIO_INFO.typewriterPhrases.join("\n"),
+        available_for_hire: true,
+        about_stat1_val:
+          cached.about_stat1_val ||
+          cached.aboutStats?.[0]?.value ||
+          cached.about_stats?.[0]?.value ||
+          (PORTFOLIO_INFO as any).aboutStats?.[0]?.value ||
+          "2+ Years",
+        about_stat1_lbl:
+          cached.about_stat1_lbl ||
+          cached.aboutStats?.[0]?.label ||
+          cached.about_stats?.[0]?.label ||
+          (PORTFOLIO_INFO as any).aboutStats?.[0]?.label ||
+          "Project Experience",
+        about_stat2_val:
+          cached.about_stat2_val ||
+          cached.aboutStats?.[1]?.value ||
+          cached.about_stats?.[1]?.value ||
+          (PORTFOLIO_INFO as any).aboutStats?.[1]?.value ||
+          "15+",
+        about_stat2_lbl:
+          cached.about_stat2_lbl ||
+          cached.aboutStats?.[1]?.label ||
+          cached.about_stats?.[1]?.label ||
+          (PORTFOLIO_INFO as any).aboutStats?.[1]?.label ||
+          "Projects",
+        about_stat3_val:
+          cached.about_stat3_val ||
+          cached.aboutStats?.[2]?.value ||
+          cached.about_stats?.[2]?.value ||
+          (PORTFOLIO_INFO as any).aboutStats?.[2]?.value ||
+          "10+",
+        about_stat3_lbl:
+          cached.about_stat3_lbl ||
+          cached.aboutStats?.[2]?.label ||
+          cached.about_stats?.[2]?.label ||
+          (PORTFOLIO_INFO as any).aboutStats?.[2]?.label ||
+          "Technologies",
+        about_stat4_val:
+          cached.about_stat4_val ||
+          cached.aboutStats?.[3]?.value ||
+          cached.about_stats?.[3]?.value ||
+          (PORTFOLIO_INFO as any).aboutStats?.[3]?.value ||
+          "CSE",
+        about_stat4_lbl:
+          cached.about_stat4_lbl ||
+          cached.aboutStats?.[3]?.label ||
+          cached.about_stats?.[3]?.label ||
+          (PORTFOLIO_INFO as any).aboutStats?.[3]?.label ||
+          "Academic Background",
+        years_experience:
+          cached.years_experience ||
+          cached.stats?.yearsExperience ||
+          PORTFOLIO_INFO.stats.yearsExperience,
+        projects_completed:
+          cached.projects_completed ||
+          cached.stats?.projectsCompleted ||
+          PORTFOLIO_INFO.stats.projectsCompleted,
+        satisfaction_rate:
+          cached.satisfaction_rate ||
+          cached.stats?.satisfactionRate ||
+          PORTFOLIO_INFO.stats.satisfactionRate,
+        github:
+          cached.github_url ||
+          cached.github ||
+          cached.socials?.github ||
+          PORTFOLIO_INFO.socials.github,
+        linkedin:
+          cached.linkedin_url ||
+          cached.linkedin ||
+          cached.socials?.linkedin ||
+          PORTFOLIO_INFO.socials.linkedin,
+        twitter:
+          cached.twitter_url ||
+          cached.twitter ||
+          cached.socials?.twitter ||
+          PORTFOLIO_INFO.socials.twitter,
+        work_hours_enabled:
+          cached.workingHours?.enabled ??
+          cached.working_hours?.enabled ??
+          cached.work_hours_enabled ??
+          true,
+        work_hours_mode:
+          cached.workingHours?.mode ||
+          cached.working_hours?.mode ||
+          cached.work_hours_mode ||
+          "auto",
+        work_start_time:
+          cached.workingHours?.startTime ||
+          cached.working_hours?.startTime ||
+          cached.work_start_time ||
+          "09:00",
+        work_end_time:
+          cached.workingHours?.endTime ||
+          cached.working_hours?.endTime ||
+          cached.work_end_time ||
+          "22:00",
+        work_timezone:
+          cached.workingHours?.timezone ||
+          cached.working_hours?.timezone ||
+          cached.work_timezone ||
+          "Asia/Dhaka",
+        work_online_label:
+          cached.workingHours?.onlineLabel ||
+          cached.working_hours?.onlineLabel ||
+          cached.work_online_label ||
+          "Available for Work",
+        work_offline_label:
+          cached.workingHours?.offlineLabel ||
+          cached.working_hours?.offlineLabel ||
+          cached.work_offline_label ||
+          "Currently Away / Offline",
+      };
+    }
+    return {
+      name: PORTFOLIO_INFO.name,
+      short_name: PORTFOLIO_INFO.shortName,
+      title: PORTFOLIO_INFO.title,
+      tagline: PORTFOLIO_INFO.tagline,
+      bio: PORTFOLIO_INFO.bio,
+      footer_bio:
+        (PORTFOLIO_INFO as any).footerBio ||
+        "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
+      phone: PORTFOLIO_INFO.phone,
+      email: PORTFOLIO_INFO.email,
+      location: PORTFOLIO_INFO.location,
+      maps_url: (PORTFOLIO_INFO as any).mapsUrl || "",
+      resume_url: PORTFOLIO_INFO.resumeUrl,
+      profile_image: PORTFOLIO_INFO.profileImage,
+      profileImage: PORTFOLIO_INFO.profileImage,
+      show_intro_video: (PORTFOLIO_INFO as any).showIntroVideo ?? true,
+      intro_video_url: (PORTFOLIO_INFO as any).introVideoUrl || PORTFOLIO_INFO.introVideoId || "",
+      typewriter_prefix: (PORTFOLIO_INFO as any).typewriterPrefix || "I engineer",
+      typewriter_phrases: Array.isArray((PORTFOLIO_INFO as any).typewriterPhrases)
+        ? (PORTFOLIO_INFO as any).typewriterPhrases.join("\n")
+        : "Scalable Full-Stack Web Apps\nCross-Platform Mobile Experiences\nHigh-Throughput REST & GraphQL APIs\nSecure Microservices Architecture",
+      available_for_hire: true,
+      about_stat1_val: (PORTFOLIO_INFO as any).aboutStats?.[0]?.value || "2+ Years",
+      about_stat1_lbl: (PORTFOLIO_INFO as any).aboutStats?.[0]?.label || "Project Experience",
+      about_stat2_val: (PORTFOLIO_INFO as any).aboutStats?.[1]?.value || "15+",
+      about_stat2_lbl: (PORTFOLIO_INFO as any).aboutStats?.[1]?.label || "Projects",
+      about_stat3_val: (PORTFOLIO_INFO as any).aboutStats?.[2]?.value || "10+",
+      about_stat3_lbl: (PORTFOLIO_INFO as any).aboutStats?.[2]?.label || "Technologies",
+      about_stat4_val: (PORTFOLIO_INFO as any).aboutStats?.[3]?.value || "CSE",
+      about_stat4_lbl: (PORTFOLIO_INFO as any).aboutStats?.[3]?.label || "Academic Background",
+      years_experience: PORTFOLIO_INFO.stats.yearsExperience,
+      projects_completed: PORTFOLIO_INFO.stats.projectsCompleted,
+      satisfaction_rate: PORTFOLIO_INFO.stats.satisfactionRate,
+      github: PORTFOLIO_INFO.socials.github,
+      linkedin: PORTFOLIO_INFO.socials.linkedin,
+      twitter: PORTFOLIO_INFO.socials.twitter,
+      work_hours_enabled: (PORTFOLIO_INFO as any).workingHours?.enabled ?? true,
+      work_hours_mode: (PORTFOLIO_INFO as any).workingHours?.mode || "auto",
+      work_start_time: (PORTFOLIO_INFO as any).workingHours?.startTime || "09:00",
+      work_end_time: (PORTFOLIO_INFO as any).workingHours?.endTime || "22:00",
+      work_timezone: (PORTFOLIO_INFO as any).workingHours?.timezone || "Asia/Dhaka",
+      work_online_label: (PORTFOLIO_INFO as any).workingHours?.onlineLabel || "Available for Work",
+      work_offline_label: (PORTFOLIO_INFO as any).workingHours?.offlineLabel || "Currently Away / Offline",
+    };
   });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [profileImageUploading, setProfileImageUploading] = useState(false);
 
   // Education & Certificates state
-  const [educationList, setEducationList] = useState<any[]>(EDUCATION_DATA);
-  const [certsList, setCertsList] = useState<any[]>(CERTIFICATES_DATA);
+  const [educationList, setEducationList] = useState<any[]>(getCachedEducationSync);
+  const [certsList, setCertsList] = useState<any[]>(getCachedCertificatesSync);
 
   // Experience state
-  const [experienceList, setExperienceList] = useState<ExperienceItem[]>(EXPERIENCE_DATA);
+  const [experienceList, setExperienceList] = useState<ExperienceItem[]>(getCachedExperienceSync);
 
   // Skills & Categories state
-  const [skillCategoriesList, setSkillCategoriesList] = useState<SkillCategory[]>(DEFAULT_SKILL_CATEGORIES);
-  const [skillsList, setSkillsList] = useState<SkillItemData[]>(DEFAULT_SKILLS_DATA);
+  const [skillCategoriesList, setSkillCategoriesList] = useState<SkillCategory[]>(getCachedSkillCategoriesSync);
+  const [skillsList, setSkillsList] = useState<SkillItemData[]>(getCachedSkillsSync);
 
   // Messages state
   const [messagesList, setMessagesList] = useState<any[]>([]);
@@ -469,45 +639,52 @@ const Admin: React.FC = () => {
   const fetchProfileData = useCallback(async () => {
     const liveProfile = await getLiveProfile();
     if (liveProfile) {
-      setProfileForm({
-        name: liveProfile.name || PORTFOLIO_INFO.name,
-        short_name: liveProfile.shortName || PORTFOLIO_INFO.shortName,
-        title: liveProfile.title || PORTFOLIO_INFO.title,
-        tagline: liveProfile.tagline || PORTFOLIO_INFO.tagline,
-        bio: liveProfile.bio || PORTFOLIO_INFO.bio,
+      setProfileForm((prev: any) => ({
+        ...prev,
+        name: liveProfile.name || prev.name || PORTFOLIO_INFO.name,
+        short_name: liveProfile.shortName || prev.short_name || PORTFOLIO_INFO.shortName,
+        title: liveProfile.title || prev.title || PORTFOLIO_INFO.title,
+        tagline: liveProfile.tagline !== undefined ? liveProfile.tagline : prev.tagline,
+        bio: liveProfile.bio || prev.bio || PORTFOLIO_INFO.bio,
         footer_bio:
           (liveProfile as any).footer_bio ||
           (liveProfile as any).footerBio ||
+          prev.footer_bio ||
           (PORTFOLIO_INFO as any).footerBio ||
           "Full-Stack Software Engineer & Mobile Developer dedicated to creating scalable, resilient digital experiences with thoughtful design.",
-        phone: liveProfile.phone || PORTFOLIO_INFO.phone,
-        email: liveProfile.email || PORTFOLIO_INFO.email,
-        location: liveProfile.location || PORTFOLIO_INFO.location,
+        phone: liveProfile.phone || prev.phone || PORTFOLIO_INFO.phone,
+        email: liveProfile.email || prev.email || PORTFOLIO_INFO.email,
+        location: liveProfile.location || prev.location || PORTFOLIO_INFO.location,
         maps_url:
           (liveProfile as any).maps_url ||
           (liveProfile as any).mapsUrl ||
+          prev.maps_url ||
           (PORTFOLIO_INFO as any).mapsUrl ||
           "",
-        resume_url: liveProfile.resumeUrl || PORTFOLIO_INFO.resumeUrl,
+        resume_url: liveProfile.resumeUrl || prev.resume_url || PORTFOLIO_INFO.resumeUrl,
         profile_image:
-          (liveProfile as any).profile_image || liveProfile.profileImage || PORTFOLIO_INFO.profileImage,
+          (liveProfile as any).profile_image || liveProfile.profileImage || prev.profile_image || PORTFOLIO_INFO.profileImage,
         profileImage:
-          (liveProfile as any).profile_image || liveProfile.profileImage || PORTFOLIO_INFO.profileImage,
+          (liveProfile as any).profile_image || liveProfile.profileImage || prev.profileImage || PORTFOLIO_INFO.profileImage,
         show_intro_video:
           (liveProfile as any).show_intro_video !== undefined
             ? Boolean((liveProfile as any).show_intro_video)
             : (liveProfile as any).showIntroVideo !== undefined
             ? Boolean((liveProfile as any).showIntroVideo)
+            : prev.show_intro_video !== undefined
+            ? prev.show_intro_video
             : true,
         intro_video_url:
           (liveProfile as any).intro_video_url ||
           (liveProfile as any).introVideoUrl ||
           (liveProfile as any).introVideoId ||
+          prev.intro_video_url ||
           (PORTFOLIO_INFO as any).introVideoUrl ||
           "",
         typewriter_prefix:
           (liveProfile as any).typewriter_prefix ??
           (liveProfile as any).typewriterPrefix ??
+          prev.typewriter_prefix ??
           PORTFOLIO_INFO.typewriterPrefix,
         typewriter_phrases: Array.isArray((liveProfile as any).typewriterPhrases)
           ? (liveProfile as any).typewriterPhrases.join("\n")
@@ -515,73 +692,83 @@ const Admin: React.FC = () => {
           ? (liveProfile as any).typewriter_phrases.join("\n")
           : typeof (liveProfile as any).typewriter_phrases === "string"
           ? (liveProfile as any).typewriter_phrases
-          : PORTFOLIO_INFO.typewriterPhrases.join("\n"),
+          : prev.typewriter_phrases,
         available_for_hire: true,
         about_stat1_val:
           (liveProfile as any).about_stat1_val ||
           (liveProfile as any).aboutStats?.[0]?.value ||
+          prev.about_stat1_val ||
           (PORTFOLIO_INFO as any).aboutStats?.[0]?.value ||
           "2+ Years",
         about_stat1_lbl:
           (liveProfile as any).about_stat1_lbl ||
           (liveProfile as any).aboutStats?.[0]?.label ||
+          prev.about_stat1_lbl ||
           (PORTFOLIO_INFO as any).aboutStats?.[0]?.label ||
           "Project Experience",
         about_stat2_val:
           (liveProfile as any).about_stat2_val ||
           (liveProfile as any).aboutStats?.[1]?.value ||
+          prev.about_stat2_val ||
           (PORTFOLIO_INFO as any).aboutStats?.[1]?.value ||
           "15+",
         about_stat2_lbl:
           (liveProfile as any).about_stat2_lbl ||
           (liveProfile as any).aboutStats?.[1]?.label ||
+          prev.about_stat2_lbl ||
           (PORTFOLIO_INFO as any).aboutStats?.[1]?.label ||
           "Projects",
         about_stat3_val:
           (liveProfile as any).about_stat3_val ||
           (liveProfile as any).aboutStats?.[2]?.value ||
+          prev.about_stat3_val ||
           (PORTFOLIO_INFO as any).aboutStats?.[2]?.value ||
           "10+",
         about_stat3_lbl:
           (liveProfile as any).about_stat3_lbl ||
           (liveProfile as any).aboutStats?.[2]?.label ||
+          prev.about_stat3_lbl ||
           (PORTFOLIO_INFO as any).aboutStats?.[2]?.label ||
           "Technologies",
         about_stat4_val:
           (liveProfile as any).about_stat4_val ||
           (liveProfile as any).aboutStats?.[3]?.value ||
+          prev.about_stat4_val ||
           (PORTFOLIO_INFO as any).aboutStats?.[3]?.value ||
           "CSE",
         about_stat4_lbl:
           (liveProfile as any).about_stat4_lbl ||
           (liveProfile as any).aboutStats?.[3]?.label ||
+          prev.about_stat4_lbl ||
           (PORTFOLIO_INFO as any).aboutStats?.[3]?.label ||
           "Academic Background",
-        years_experience: liveProfile.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
-        projects_completed: liveProfile.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
-        satisfaction_rate: liveProfile.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
-        github: liveProfile.socials?.github || PORTFOLIO_INFO.socials.github,
-        linkedin: liveProfile.socials?.linkedin || PORTFOLIO_INFO.socials.linkedin,
-        twitter: liveProfile.socials?.twitter || PORTFOLIO_INFO.socials.twitter,
+        years_experience: liveProfile.stats?.yearsExperience || prev.years_experience || PORTFOLIO_INFO.stats.yearsExperience,
+        projects_completed: liveProfile.stats?.projectsCompleted || prev.projects_completed || PORTFOLIO_INFO.stats.projectsCompleted,
+        satisfaction_rate: liveProfile.stats?.satisfactionRate || prev.satisfaction_rate || PORTFOLIO_INFO.stats.satisfactionRate,
+        github: liveProfile.socials?.github || (liveProfile as any).github_url || prev.github || PORTFOLIO_INFO.socials.github,
+        linkedin: liveProfile.socials?.linkedin || (liveProfile as any).linkedin_url || prev.linkedin || PORTFOLIO_INFO.socials.linkedin,
+        twitter: liveProfile.socials?.twitter || (liveProfile as any).twitter_url || prev.twitter || PORTFOLIO_INFO.socials.twitter,
         work_hours_enabled:
-          (liveProfile as any).workingHours?.enabled ?? (liveProfile as any).work_hours_enabled ?? true,
+          (liveProfile as any).workingHours?.enabled ?? (liveProfile as any).work_hours_enabled ?? prev.work_hours_enabled ?? true,
         work_hours_mode:
-          (liveProfile as any).workingHours?.mode || (liveProfile as any).work_hours_mode || "auto",
+          (liveProfile as any).workingHours?.mode || (liveProfile as any).work_hours_mode || prev.work_hours_mode || "auto",
         work_start_time:
-          (liveProfile as any).workingHours?.startTime || (liveProfile as any).work_start_time || "09:00",
+          (liveProfile as any).workingHours?.startTime || (liveProfile as any).work_start_time || prev.work_start_time || "09:00",
         work_end_time:
-          (liveProfile as any).workingHours?.endTime || (liveProfile as any).work_end_time || "22:00",
+          (liveProfile as any).workingHours?.endTime || (liveProfile as any).work_end_time || prev.work_end_time || "22:00",
         work_timezone:
-          (liveProfile as any).workingHours?.timezone || (liveProfile as any).work_timezone || "Asia/Dhaka",
+          (liveProfile as any).workingHours?.timezone || (liveProfile as any).work_timezone || prev.work_timezone || "Asia/Dhaka",
         work_online_label:
           (liveProfile as any).workingHours?.onlineLabel ||
           (liveProfile as any).work_online_label ||
+          prev.work_online_label ||
           "Available for Work",
         work_offline_label:
           (liveProfile as any).workingHours?.offlineLabel ||
           (liveProfile as any).work_offline_label ||
+          prev.work_offline_label ||
           "Currently Away / Offline",
-      });
+      }));
     }
   }, []);
 
@@ -692,6 +879,7 @@ const Admin: React.FC = () => {
     } else {
       setProfileMessage("Profile successfully saved and synchronized!");
     }
+    await fetchProfileData();
     setTimeout(() => setProfileMessage(""), 4000);
   };
 

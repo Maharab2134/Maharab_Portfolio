@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS public.education (
   period TEXT NOT NULL,
   description TEXT,
   highlights TEXT[] DEFAULT '{}',
+  is_active BOOLEAN DEFAULT true,
   order_index INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -111,9 +112,14 @@ CREATE TABLE IF NOT EXISTS public.certificates (
   link TEXT,
   details TEXT,
   verification_id TEXT,
+  is_active BOOLEAN DEFAULT true,
   order_index INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Safe column additions for existing installations
+ALTER TABLE public.education ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE public.certificates ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 
 -- 7. Create Skill Categories Table
 CREATE TABLE IF NOT EXISTS public.skill_categories (
@@ -283,3 +289,23 @@ SELECT
   '{"enabled": true, "title": "Engineering Workflow", "subtitle": "From concept to production"}'::jsonb,
   '{"enabled": true, "startHour": 9, "endHour": 22, "timezone": "Asia/Dhaka", "onlineLabel": "Available for Work"}'::jsonb
 WHERE NOT EXISTS (SELECT 1 FROM public.profile_info LIMIT 1);
+
+-- ==============================================================================
+-- Quick Migration Script for Existing Projects:
+-- Run this block if your tables already exist and you want to ensure all columns are active:
+-- ==============================================================================
+ALTER TABLE public.education ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE public.certificates ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE public.experience ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS show_intro_video BOOLEAN DEFAULT true;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS intro_video_url TEXT;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS typewriter_prefix TEXT DEFAULT 'I engineer';
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS typewriter_phrases TEXT[] DEFAULT ARRAY['Scalable Full-Stack Web Apps', 'Cross-Platform Mobile Experiences', 'High-Throughput REST & GraphQL APIs', 'Secure Microservices Architecture'];
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS footer_bio TEXT;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS maps_url TEXT;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS experience_config JSONB DEFAULT '{"isActive": true, "showCurrentOnly": false, "enableHighlights": true}'::jsonb;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS development_process JSONB;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS working_hours JSONB;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS about_stats JSONB DEFAULT '[{"value": "2+ Years", "label": "Project Experience"}, {"value": "20+", "label": "Projects"}, {"value": "10+", "label": "Technologies"}, {"value": "CSE", "label": "Academic Background"}]'::jsonb;
+ALTER TABLE public.profile_info ADD COLUMN IF NOT EXISTS testimonials_enabled BOOLEAN DEFAULT true;
+

@@ -251,6 +251,9 @@ export const EducationTab: React.FC<EducationTabProps> = ({
       link: certForm.link.trim(),
       details: certForm.details.trim(),
       verificationId: certForm.verificationId.trim(),
+      isActive: editingCertIndex !== null && editingCertIndex >= 0
+        ? certsList[editingCertIndex]?.isActive !== false
+        : true,
     };
 
     let updatedList: any[];
@@ -277,6 +280,30 @@ export const EducationTab: React.FC<EducationTabProps> = ({
       setTimeout(() => setEduToast(null), 4000);
     } catch (err: any) {
       alert("Failed to save certificate: " + err.message);
+    } finally {
+      setEduSaving(false);
+    }
+  };
+
+  const handleToggleCertActive = async (idx: number) => {
+    const item = certsList[idx];
+    if (!item) return;
+
+    const updated = [...certsList];
+    const newStatus = item.isActive === false ? true : false;
+    updated[idx] = { ...item, isActive: newStatus };
+
+    setCertsList(updated);
+    setEduSaving(true);
+    try {
+      await saveLiveCertificates(updated);
+      setEduToast({
+        message: `"${item.title}" is now ${newStatus ? "ACTIVE (visible)" : "INACTIVE (hidden)"}.`,
+        type: "success",
+      });
+      setTimeout(() => setEduToast(null), 3000);
+    } catch (err: any) {
+      alert("Failed to update certificate status: " + err.message);
     } finally {
       setEduSaving(false);
     }
@@ -835,7 +862,19 @@ export const EducationTab: React.FC<EducationTabProps> = ({
                     <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
                       {cert.type}
                     </span>
-                    <span className="text-xs text-slate-400 font-mono font-semibold">{cert.year}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400 font-mono font-semibold">{cert.year}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-semibold flex items-center gap-1 ${
+                          cert.isActive !== false
+                            ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                            : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${cert.isActive !== false ? "bg-emerald-400" : "bg-rose-400"}`} />
+                        {cert.isActive !== false ? "Visible" : "Hidden"}
+                      </span>
+                    </div>
                   </div>
 
                   <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
@@ -872,6 +911,22 @@ export const EducationTab: React.FC<EducationTabProps> = ({
                   )}
 
                   <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleCertActive(idx)}
+                      disabled={eduSaving}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                        cert.isActive !== false
+                          ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
+                          : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700"
+                      }`}
+                      title={cert.isActive !== false ? "Currently visible on website. Click to hide." : "Currently hidden from website. Click to make visible."}
+                    >
+                      {cert.isActive !== false
+                        ? renderIcon(FaEye, { size: 10 })
+                        : renderIcon(FaEyeSlash, { size: 10 })}
+                      <span>{cert.isActive !== false ? "Active" : "Hidden"}</span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleOpenEditCert(idx)}

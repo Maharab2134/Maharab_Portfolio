@@ -1,26 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { FaGraduationCap, FaAward, FaCalendarAlt } from "react-icons/fa";
-import { EducationItem } from "../data/portfolioData";
-import { getCachedEducationSync } from "../lib/portfolioService";
+import { FaGraduationCap, FaCalendarAlt, FaAward } from "react-icons/fa";
+import { useLiveEducation } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
 
 const Education: React.FC = () => {
-  const [educationList, setEducationList] = useState<EducationItem[]>(getCachedEducationSync);
-
-  useEffect(() => {
-    const handleEduUpdate = () => {
-      const live = getCachedEducationSync();
-      React.startTransition(() => {
-        setEducationList(live);
-      });
-    };
-    window.addEventListener("portfolio_education_updated", handleEduUpdate);
-    return () => window.removeEventListener("portfolio_education_updated", handleEduUpdate);
-  }, []);
+  const educationList = useLiveEducation();
 
   const visibleEducation = educationList.filter(
     (edu) => edu.isActive !== false
