@@ -166,3 +166,72 @@ describe("PortfolioChatbotEngine - Dynamic Project Matching & Clarification", ()
   });
 });
 
+describe("PortfolioChatbotEngine - Quick Actions & Section Intents", () => {
+  const defaultContext: ActiveContext = {
+    view: "home",
+    project: null,
+    section: "hero",
+  };
+
+  test("'What skills do you have?' returns Maharab's technical stack and scrolls to skills, NOT CareerPath AI", () => {
+    const res = PortfolioChatbotEngine.processQuery("What skills do you have?", defaultContext);
+    expect(res.text).toContain("Maharab's core technical stack");
+    expect(res.text).not.toContain("CareerPath AI");
+    expect(res.text).not.toContain("Apni ki eta khujchen naki onno kichu?");
+    expect(res.actions).toBeDefined();
+    expect(res.actions?.some((a) => a.target === "skills" && a.type === "scroll")).toBe(true);
+  });
+
+  test("'What is your career experience?' returns work experience, NOT CareerPath AI", () => {
+    const res = PortfolioChatbotEngine.processQuery("What is your career experience?", defaultContext);
+    expect(res.text).not.toContain("CareerPath AI");
+    expect(res.actions?.some((a) => a.target === "experience" && a.type === "scroll")).toBe(true);
+  });
+
+  test("'Show certifications' returns verified credentials and scroll to certificates", () => {
+    const res = PortfolioChatbotEngine.processQuery("Show certifications", defaultContext);
+    expect(res.text).toContain("certifications");
+    expect(res.actions?.some((a) => a.target === "certificates" && a.type === "scroll")).toBe(true);
+  });
+
+  test("'What projects are available?' returns general projects overview with scroll to projects", () => {
+    const res = PortfolioChatbotEngine.processQuery("What projects are available?", defaultContext);
+    expect(res.text).toContain("verified projects");
+    expect(res.actions?.some((a) => a.target === "projects" && a.type === "scroll")).toBe(true);
+  });
+
+  test("'Guide me through the portfolio' returns quick action grid", () => {
+    const res = PortfolioChatbotEngine.processQuery("Guide me through the portfolio", defaultContext);
+    expect(res.showQuickActionGrid).toBe(true);
+  });
+
+  test("'Tell me about yourself' returns bio and developer overview", () => {
+    const res = PortfolioChatbotEngine.processQuery("Tell me about yourself", defaultContext);
+    expect(res.text).toContain("Full Stack Software Engineer");
+    expect(res.actions?.some((a) => a.target === "about" && a.type === "scroll")).toBe(true);
+  });
+
+  test("'How can I contact you?' returns contact channels", () => {
+    const res = PortfolioChatbotEngine.processQuery("How can I contact you?", defaultContext);
+    expect(res.text).toContain("Email");
+    expect(res.actions?.some((a) => a.target === "contact" && a.type === "scroll")).toBe(true);
+  });
+
+  test("'Where can I find your CV?' returns resume overview and download action", () => {
+    const res = PortfolioChatbotEngine.processQuery("Where can I find your CV?", defaultContext);
+    expect(res.text).toContain("resume (CV)");
+    expect(res.actions?.some((a) => a.type === "url")).toBe(true);
+  });
+
+  test("Direct navigation intents properly resolve to section scroll targets", () => {
+    const navSkills = PortfolioChatbotEngine.processQuery("take me to skills", defaultContext);
+    expect(navSkills.actions?.[0].target).toBe("skills");
+
+    const navProjects = PortfolioChatbotEngine.processQuery("go to projects", defaultContext);
+    expect(navProjects.actions?.[0].target).toBe("projects");
+
+    const navContact = PortfolioChatbotEngine.processQuery("scroll to contact", defaultContext);
+    expect(navContact.actions?.[0].target).toBe("contact");
+  });
+});
+

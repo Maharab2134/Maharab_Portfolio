@@ -412,13 +412,19 @@ export class PortfolioChatbotEngine {
     // ------------------------------------------------------------------------
     // 3. Contact / Social / Hire / Availability Query
     // ------------------------------------------------------------------------
+    const isAvailabilityQuery =
+      (q.includes("available") || q.includes("availability")) &&
+      !q.includes("project") &&
+      !q.includes("app") &&
+      !q.includes("service");
+
     if (
       q.includes("contact") ||
       q.includes("email") ||
       q.includes("phone") ||
       q.includes("whatsapp") ||
       q.includes("hire") ||
-      q.includes("available") ||
+      isAvailabilityQuery ||
       q.includes("working hours") ||
       q.includes("social") ||
       q.includes("linkedin") ||
@@ -502,7 +508,7 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 4.5. Category-Specific Project Inquiries (AI & ML, Mobile, IoT, Web)
+    // Query tokens and intent helpers
     // ------------------------------------------------------------------------
     const queryTokens = q.replace(/[^a-z0-9.+]/g, " ").split(/\s+/).filter(Boolean);
     const mentionsProjects =
@@ -514,6 +520,428 @@ export class PortfolioChatbotEngine {
       queryTokens.includes("projects") ||
       queryTokens.includes("works");
 
+    const hasProjectNameInQuery = projects.some(
+      (p) =>
+        q.includes(p.title.toLowerCase()) ||
+        q.includes(p.id.toLowerCase()) ||
+        (p.title.length > 5 &&
+          p.title.toLowerCase().split(" ")[0].length >= 4 &&
+          q.includes(p.title.toLowerCase().split(" ")[0]))
+    );
+
+    // ------------------------------------------------------------------------
+    // 5. Navigation Request ("Take me to...", "Go to...", "Scroll to...")
+    // ------------------------------------------------------------------------
+    if (
+      q.includes("go to") ||
+      q.includes("take me to") ||
+      q.includes("open") ||
+      q.includes("scroll to") ||
+      q.startsWith("visit ")
+    ) {
+      if (q.includes("project")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Navigating to the **Projects** section!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Scroll to Projects", type: "scroll", target: "projects", primary: true }],
+        };
+      }
+      if (q.includes("contact")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Navigating to the **Contact** section!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Scroll to Contact", type: "scroll", target: "contact", primary: true }],
+        };
+      }
+      if (q.includes("skill")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Navigating to the **Skills** section!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Scroll to Skills", type: "scroll", target: "skills", primary: true }],
+        };
+      }
+      if (q.includes("experience")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Navigating to the **Experience** section!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Scroll to Experience", type: "scroll", target: "experience", primary: true }],
+        };
+      }
+      if (q.includes("education")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Navigating to the **Education** section!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Scroll to Education", type: "scroll", target: "education", primary: true }],
+        };
+      }
+      if (q.includes("certif")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Navigating to the **Certifications** section!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Scroll to Certifications", type: "scroll", target: "certificates", primary: true }],
+        };
+      }
+      if (q.includes("process")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Navigating to the **Development Process** section!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Scroll to Process", type: "scroll", target: "process", primary: true }],
+        };
+      }
+      if (q.includes("review") || q.includes("testimonial")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Navigating to the **Testimonials** section!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Scroll to Testimonials", type: "scroll", target: "testimonials", primary: true }],
+        };
+      }
+      if (q.includes("hire")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Opening the **Hire** page!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Open Hire Page", type: "view", target: "hire", primary: true }],
+        };
+      }
+      if (q.includes("journey")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Opening the **Journey** page!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Open Journey Page", type: "view", target: "journey", primary: true }],
+        };
+      }
+      if (q.includes("case studies") || q.includes("blueprint")) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Opening the **Case Studies** page!`,
+          timestamp: new Date().toISOString(),
+          actions: [{ label: "Open Case Studies", type: "view", target: "case-studies", primary: true }],
+        };
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // 6. What information is available / Help / Guide me
+    // ------------------------------------------------------------------------
+    if (
+      q.includes("guide") ||
+      q.includes("explore") ||
+      q.includes("tour") ||
+      q.includes("what information is available") ||
+      q.includes("help") ||
+      q.includes("what can you do") ||
+      q.includes("options") ||
+      q.includes("ki ache")
+    ) {
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text: `I'm your personal interactive guide to Maharab's portfolio! Select any topic below or ask me directly:`,
+        timestamp: new Date().toISOString(),
+        showQuickActionGrid: true,
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 7. Skills Overview Query
+    // ------------------------------------------------------------------------
+    const isGeneralSkillsQuery =
+      (q.includes("skill") ||
+        q.includes("technology") ||
+        q.includes("technologies") ||
+        q.includes("stack") ||
+        q.includes("tools") ||
+        q.includes("dokhota")) &&
+      !hasProjectNameInQuery &&
+      !((q.includes("project") || q.includes("app") || q.includes("built")) && !q.includes("what skill") && !q.includes("your skill"));
+
+    if (isGeneralSkillsQuery) {
+      const frontend = skills.filter((s) => s.category === "frontend").map((s) => s.name);
+      const mobile = skills.filter((s) => s.category === "mobile").map((s) => s.name);
+      const backend = skills.filter((s) => s.category === "backend").map((s) => s.name);
+      const database = skills.filter((s) => s.category === "database").map((s) => s.name);
+      const tools = skills.filter((s) => s.category === "tools" || s.category === "devops").map((s) => s.name);
+
+      let text = `Here is a quick overview of Maharab's core technical stack:\n\n`;
+      if (mobile.length > 0) text += `- 📱 **Mobile:** ${mobile.join(", ")}\n`;
+      if (frontend.length > 0) text += `- 🌐 **Frontend:** ${frontend.slice(0, 6).join(", ")}\n`;
+      if (backend.length > 0) text += `- ⚙️ **Backend & APIs:** ${backend.slice(0, 6).join(", ")}\n`;
+      if (database.length > 0) text += `- 🗄️ **Databases & Cloud:** ${database.slice(0, 5).join(", ")}\n`;
+      if (tools.length > 0) text += `- 🛠️ **Tools & DevOps:** ${tools.slice(0, 6).join(", ")}\n`;
+      text += `\nNeed someone with a specific tool or language? Just ask me directly!`;
+
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text,
+        timestamp: new Date().toISOString(),
+        actions: [
+          { label: "🛠️ Explore Skills Section", type: "scroll", target: "skills", primary: true },
+          { label: "🚀 View Projects", type: "scroll", target: "projects" },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 8. Experience & Work History Query
+    // ------------------------------------------------------------------------
+    const isExperienceQuery =
+      (q.includes("experience") ||
+        q.includes("work history") ||
+        q.includes("career") ||
+        q.includes("company") ||
+        q.includes("companies") ||
+        q.includes("jobs") ||
+        q.includes("job") ||
+        q.includes("roles")) &&
+      !q.includes("careerpath") &&
+      !hasProjectNameInQuery;
+
+    if (isExperienceQuery) {
+      if (experience.length === 0) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Maharab has **${profile.stats.yearsExperience}** of software engineering experience focusing on building production web and mobile solutions. Detailed corporate history is available upon request or via resume.`,
+          timestamp: new Date().toISOString(),
+          actions: [
+            { label: "📄 Download CV", type: "url", target: profile.resumeUrl, primary: true },
+            { label: "📬 Contact Him", type: "scroll", target: "contact" },
+          ],
+        };
+      }
+
+      let text = `Here is Maharab's work and professional experience:\n\n`;
+      text += experience
+        .map((exp) => {
+          let item = `💼 **${exp.role}** at **${exp.company}**\n`;
+          item += `${exp.period} • ${exp.location || "Remote / On-site"}\n`;
+          item += `${exp.description}\n`;
+          if (exp.technologies && exp.technologies.length > 0) {
+            item += `**Tech:** ${exp.technologies.join(", ")}\n`;
+          }
+          return item;
+        })
+        .join("\n");
+
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text,
+        timestamp: new Date().toISOString(),
+        actions: [
+          { label: "💼 View Experience Section", type: "scroll", target: "experience", primary: true },
+          { label: "📄 Download Resume", type: "url", target: profile.resumeUrl },
+          { label: "📬 Contact", type: "scroll", target: "contact" },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 9. Education & Academic Background Query
+    // ------------------------------------------------------------------------
+    const isEducationQuery =
+      (q.includes("education") ||
+        q.includes("degree") ||
+        q.includes("university") ||
+        q.includes("college") ||
+        q.includes("academic") ||
+        q.includes("study") ||
+        q.includes("bubt") ||
+        q.includes("school") ||
+        q.includes("cgpa")) &&
+      !hasProjectNameInQuery;
+
+    if (isEducationQuery) {
+      let text = `Here is Maharab's academic background:\n\n`;
+      text += education
+        .map((edu) => {
+          let item = `🎓 **${edu.degree}**\n`;
+          item += `${edu.institution} (${edu.period})\n`;
+          item += `${edu.description}\n`;
+          if (edu.highlights && edu.highlights.length > 0) {
+            item += `**Highlights:**\n${edu.highlights.map((h) => `- ${h}`).join("\n")}\n`;
+          }
+          return item;
+        })
+        .join("\n");
+
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text,
+        timestamp: new Date().toISOString(),
+        actions: [
+          { label: "🎓 View Education Section", type: "scroll", target: "education", primary: true },
+          { label: "📄 Download CV", type: "url", target: profile.resumeUrl },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 10. Certifications & Credentials Query
+    // ------------------------------------------------------------------------
+    const isCertificationsQuery =
+      (q.includes("certif") ||
+        q.includes("credential") ||
+        q.includes("achievement") ||
+        q.includes("awards") ||
+        q.includes("licenses")) &&
+      !hasProjectNameInQuery;
+
+    if (isCertificationsQuery) {
+      let text = `Here are Maharab's verified certifications and credentials:\n\n`;
+      text += certificates
+        .slice(0, 4)
+        .map((c) => `- 🏆 **${c.title}** — ${c.issuer} (${c.year}) • ${c.type}`)
+        .join("\n");
+
+      const actions: ChatAction[] = [
+        { label: "🏆 View Certificates Section", type: "scroll", target: "certificates", primary: true },
+      ];
+      if (certificates[0]?.link) {
+        actions.push({ label: `Verify: ${certificates[0].title}`, type: "url", target: certificates[0].link });
+      }
+
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text,
+        timestamp: new Date().toISOString(),
+        actions,
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 11. Development Methodology / Engineering Process / Services
+    // ------------------------------------------------------------------------
+    if (
+      q.includes("process") ||
+      q.includes("methodology") ||
+      q.includes("how do you work") ||
+      q.includes("workflow") ||
+      q.includes("services") ||
+      q.includes("engineering flow")
+    ) {
+      let text = `Here is how Maharab approaches and delivers software projects:\n\n`;
+      text += process.steps
+        .map((s, idx) => `${idx + 1}. **${s.title}** (${s.estimatedDuration || "Phase"}): ${s.description}`)
+        .join("\n\n");
+
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text,
+        timestamp: new Date().toISOString(),
+        actions: [
+          { label: "⚡ View Process Section", type: "scroll", target: "process", primary: true },
+          { label: "💼 Hire Maharab", type: "view", target: "hire" },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 12. Reviews & Testimonials Query
+    // ------------------------------------------------------------------------
+    if (
+      q.includes("review") ||
+      q.includes("testimonial") ||
+      q.includes("feedback") ||
+      q.includes("rating") ||
+      q.includes("client")
+    ) {
+      let text = `Here is what clients and collaborators say about working with Maharab (${profile.stats.satisfactionRate} satisfaction rate):\n\n`;
+      if (reviews.length > 0) {
+        text += `**Recent Feedback:**\n`;
+        text += reviews
+          .slice(0, 3)
+          .map((r) => `> "${r.message}"\n> — **${r.name}** (Rating: ${"★".repeat(r.rating || 5)})`)
+          .join("\n\n");
+      }
+
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text,
+        timestamp: new Date().toISOString(),
+        actions: [
+          { label: "⭐ View All Testimonials", type: "scroll", target: "testimonials", primary: true },
+          { label: "📬 Leave a Review / Contact", type: "scroll", target: "contact" },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 13. General Projects Query ("What projects are available?", "Projects overview", "My projects")
+    // ------------------------------------------------------------------------
+    const isGeneralProjectsOverview =
+      q === "project" ||
+      q === "projects" ||
+      q === "all projects" ||
+      q === "my projects" ||
+      q === "our projects" ||
+      q === "show all projects" ||
+      q === "what projects are available?" ||
+      q === "what projects are available" ||
+      q === "what did he build" ||
+      q === "what did you build" ||
+      q.includes("what did he build") ||
+      q.includes("what did you build") ||
+      q === "works" ||
+      q === "case studies" ||
+      ((q.includes("project") || q.includes("portfolio")) &&
+        !hasProjectNameInQuery &&
+        !q.includes("ai") &&
+        !q.includes("ml") &&
+        !q.includes("iot") &&
+        !q.includes("mobile") &&
+        !q.includes("python") &&
+        !q.includes("react") &&
+        !q.includes("flutter"));
+
+    if (isGeneralProjectsOverview) {
+      let text = `Maharab has built **${projects.length} verified projects** spanning mobile apps, full-stack web platforms, machine learning, and IoT hardware.\n\nHere are some featured highlights:\n\n`;
+      projects.slice(0, 4).forEach((proj) => {
+        text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+      });
+      text += `\nYou can explore the project cards below or visit the Projects section!`;
+
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text,
+        timestamp: new Date().toISOString(),
+        projectsList: projects.slice(0, 4),
+        actions: [
+          { label: "🚀 Browse All Projects", type: "scroll", target: "projects", primary: true },
+          { label: "📐 Case Studies Blueprint", type: "view", target: "case-studies" },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 14. Category-Specific Project Inquiries (AI & ML, Mobile, IoT, Web)
+    // ------------------------------------------------------------------------
     const isAiMlCategory =
       q.includes("ai & ml") ||
       q.includes("ai and ml") ||
@@ -623,28 +1051,12 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 5. Dynamic Project Matching Engine
+    // 15. Dynamic Project Matching Engine
     // (Handles Acronyms like "nlp", "iot", partial titles, technologies, and fuzzy queries)
     // ------------------------------------------------------------------------
-    const isGeneralProjectsOverview =
-      q === "project" ||
-      q === "projects" ||
-      q === "all projects" ||
-      q === "my projects" ||
-      q === "our projects" ||
-      q === "show all projects" ||
-      q === "what projects are available?" ||
-      q === "what projects are available" ||
-      q === "what did he build" ||
-      q === "what did you build" ||
-      q.includes("what did he build") ||
-      q.includes("what did you build") ||
-      q === "works" ||
-      q === "case studies";
-
     const dynamicMatches = findDynamicProjectMatches(projects, rawQuery);
 
-    if (!isGeneralProjectsOverview && dynamicMatches.length > 0) {
+    if (dynamicMatches.length > 0) {
       const topMatch = dynamicMatches[0];
       const isSingleTargetedMatch =
         dynamicMatches.length === 1 ||
@@ -716,10 +1128,9 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 6. Technology / Skill Filtering on Projects fallback
+    // 16. Technology / Skill Filtering on Projects fallback
     // ------------------------------------------------------------------------
     const foundTechKeyword = extractTechnologyKeyword(q);
-
     if (
       (q.includes("project") ||
         q.includes("app") ||
@@ -776,37 +1187,7 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 7. General Projects Query ("What projects are available?", "Projects overview", "My projects")
-    // ------------------------------------------------------------------------
-    if (
-      q.includes("project") ||
-      q.includes("portfolio") ||
-      q.includes("what did he build") ||
-      q.includes("what did you build") ||
-      q.includes("works") ||
-      q.includes("case studies")
-    ) {
-      let text = `Maharab has built **${projects.length} verified projects** spanning mobile apps, full-stack web platforms, machine learning, and IoT hardware.\n\nHere are some featured highlights:\n\n`;
-      projects.slice(0, 4).forEach((proj) => {
-        text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
-      });
-      text += `\nYou can explore the project cards below or visit the Projects section!`;
-
-      return {
-        id: `bot_${Date.now()}`,
-        sender: "bot",
-        text,
-        timestamp: new Date().toISOString(),
-        projectsList: projects.slice(0, 4),
-        actions: [
-          { label: "🚀 Browse All Projects", type: "scroll", target: "projects", primary: true },
-          { label: "📐 Case Studies Blueprint", type: "view", target: "case-studies" },
-        ],
-      };
-    }
-
-    // ------------------------------------------------------------------------
-    // 8. Specific Technology Inquiry ("Do you know Python?", "Flutter skill", etc.)
+    // 17. Specific Technology Inquiry ("Do you know Python?", "Flutter skill", etc.)
     // ------------------------------------------------------------------------
     if (foundTechKeyword) {
       const result = findSkillInPortfolio(skills, projects, foundTechKeyword);
@@ -838,307 +1219,6 @@ export class PortfolioChatbotEngine {
           actions,
         };
       }
-    }
-
-    // ------------------------------------------------------------------------
-    // 9. Skills Overview Query
-    // ------------------------------------------------------------------------
-    if (
-      q.includes("skill") ||
-      q.includes("technology") ||
-      q.includes("technologies") ||
-      q.includes("stack") ||
-      q.includes("tools") ||
-      q.includes("dokhota")
-    ) {
-      const frontend = skills.filter((s) => s.category === "frontend").map((s) => s.name);
-      const mobile = skills.filter((s) => s.category === "mobile").map((s) => s.name);
-      const backend = skills.filter((s) => s.category === "backend").map((s) => s.name);
-      const database = skills.filter((s) => s.category === "database").map((s) => s.name);
-      const tools = skills.filter((s) => s.category === "tools" || s.category === "devops").map((s) => s.name);
-
-      let text = `Here is a quick overview of Maharab's core technical stack:\n\n`;
-      if (mobile.length > 0) text += `- 📱 **Mobile:** ${mobile.join(", ")}\n`;
-      if (frontend.length > 0) text += `- 🌐 **Frontend:** ${frontend.slice(0, 6).join(", ")}\n`;
-      if (backend.length > 0) text += `- ⚙️ **Backend & APIs:** ${backend.slice(0, 6).join(", ")}\n`;
-      if (database.length > 0) text += `- 🗄️ **Databases & Cloud:** ${database.slice(0, 5).join(", ")}\n`;
-      if (tools.length > 0) text += `- 🛠️ **Tools & DevOps:** ${tools.slice(0, 6).join(", ")}\n`;
-      text += `\nNeed someone with a specific tool or language? Just ask me directly!`;
-
-      return {
-        id: `bot_${Date.now()}`,
-        sender: "bot",
-        text,
-        timestamp: new Date().toISOString(),
-        actions: [
-          { label: "🛠️ Explore Skills Section", type: "scroll", target: "skills", primary: true },
-          { label: "🚀 View Projects", type: "scroll", target: "projects" },
-        ],
-      };
-    }
-
-    // ------------------------------------------------------------------------
-    // 10. Experience & Work History Query
-    // ------------------------------------------------------------------------
-    if (
-      q.includes("experience") ||
-      q.includes("work history") ||
-      q.includes("career") ||
-      q.includes("company") ||
-      q.includes("companies") ||
-      q.includes("jobs") ||
-      q.includes("job") ||
-      q.includes("roles")
-    ) {
-      if (experience.length === 0) {
-        return {
-          id: `bot_${Date.now()}`,
-          sender: "bot",
-          text: `Maharab has **${profile.stats.yearsExperience}** of software engineering experience focusing on building production web and mobile solutions. Detailed corporate history is available upon request or via resume.`,
-          timestamp: new Date().toISOString(),
-          actions: [
-            { label: "📄 Download CV", type: "url", target: profile.resumeUrl, primary: true },
-            { label: "📬 Contact Him", type: "scroll", target: "contact" },
-          ],
-        };
-      }
-
-      let text = `Here is Maharab's work and professional experience:\n\n`;
-      text += experience
-        .map((exp) => {
-          let item = `💼 **${exp.role}** at **${exp.company}**\n`;
-          item += `${exp.period} • ${exp.location || "Remote / On-site"}\n`;
-          item += `${exp.description}\n`;
-          if (exp.technologies && exp.technologies.length > 0) {
-            item += `**Tech:** ${exp.technologies.join(", ")}\n`;
-          }
-          return item;
-        })
-        .join("\n");
-
-      return {
-        id: `bot_${Date.now()}`,
-        sender: "bot",
-        text,
-        timestamp: new Date().toISOString(),
-        actions: [
-          { label: "💼 View Experience Section", type: "scroll", target: "experience", primary: true },
-          { label: "📄 Download Resume", type: "url", target: profile.resumeUrl },
-          { label: "📬 Contact", type: "scroll", target: "contact" },
-        ],
-      };
-    }
-
-    // ------------------------------------------------------------------------
-    // 11. Education & Academic Background Query
-    // ------------------------------------------------------------------------
-    if (
-      q.includes("education") ||
-      q.includes("degree") ||
-      q.includes("university") ||
-      q.includes("college") ||
-      q.includes("academic") ||
-      q.includes("study") ||
-      q.includes("bubt") ||
-      q.includes("school") ||
-      q.includes("cgpa")
-    ) {
-      let text = `Here is Maharab's academic background:\n\n`;
-      text += education
-        .map((edu) => {
-          let item = `🎓 **${edu.degree}**\n`;
-          item += `${edu.institution} (${edu.period})\n`;
-          item += `${edu.description}\n`;
-          if (edu.highlights && edu.highlights.length > 0) {
-            item += `**Highlights:**\n${edu.highlights.map((h) => `- ${h}`).join("\n")}\n`;
-          }
-          return item;
-        })
-        .join("\n");
-
-      return {
-        id: `bot_${Date.now()}`,
-        sender: "bot",
-        text,
-        timestamp: new Date().toISOString(),
-        actions: [
-          { label: "🎓 View Education Section", type: "scroll", target: "education", primary: true },
-          { label: "📄 Download CV", type: "url", target: profile.resumeUrl },
-        ],
-      };
-    }
-
-    // ------------------------------------------------------------------------
-    // 12. Certifications & Credentials Query
-    // ------------------------------------------------------------------------
-    if (
-      q.includes("certif") ||
-      q.includes("credential") ||
-      q.includes("achievement") ||
-      q.includes("awards") ||
-      q.includes("licenses")
-    ) {
-      let text = `Here are Maharab's verified certifications and credentials:\n\n`;
-      text += certificates
-        .slice(0, 4)
-        .map((c) => `- 🏆 **${c.title}** — ${c.issuer} (${c.year}) • ${c.type}`)
-        .join("\n");
-
-      const actions: ChatAction[] = [
-        { label: "🏆 View Certificates Section", type: "scroll", target: "certificates", primary: true },
-      ];
-      if (certificates[0]?.link) {
-        actions.push({ label: `Verify: ${certificates[0].title}`, type: "url", target: certificates[0].link });
-      }
-
-      return {
-        id: `bot_${Date.now()}`,
-        sender: "bot",
-        text,
-        timestamp: new Date().toISOString(),
-        actions,
-      };
-    }
-
-    // ------------------------------------------------------------------------
-    // 13. Development Methodology / Engineering Process / Services
-    // ------------------------------------------------------------------------
-    if (
-      q.includes("process") ||
-      q.includes("methodology") ||
-      q.includes("how do you work") ||
-      q.includes("workflow") ||
-      q.includes("services") ||
-      q.includes("engineering flow")
-    ) {
-      let text = `Here is how Maharab approaches and delivers software projects:\n\n`;
-      text += process.steps
-        .map((s, idx) => `${idx + 1}. **${s.title}** (${s.estimatedDuration || "Phase"}): ${s.description}`)
-        .join("\n\n");
-
-      return {
-        id: `bot_${Date.now()}`,
-        sender: "bot",
-        text,
-        timestamp: new Date().toISOString(),
-        actions: [
-          { label: "⚡ View Process Section", type: "scroll", target: "development-process", primary: true },
-          { label: "💼 Hire Maharab", type: "view", target: "hire" },
-        ],
-      };
-    }
-
-    // ------------------------------------------------------------------------
-    // 14. Reviews & Testimonials Query
-    // ------------------------------------------------------------------------
-    if (
-      q.includes("review") ||
-      q.includes("testimonial") ||
-      q.includes("feedback") ||
-      q.includes("rating") ||
-      q.includes("client")
-    ) {
-      let text = `Here is what clients and collaborators say about working with Maharab (${profile.stats.satisfactionRate} satisfaction rate):\n\n`;
-      if (reviews.length > 0) {
-        text += `**Recent Feedback:**\n`;
-        text += reviews
-          .slice(0, 3)
-          .map((r) => `> "${r.message}"\n> — **${r.name}** (Rating: ${"★".repeat(r.rating || 5)})`)
-          .join("\n\n");
-      }
-
-      return {
-        id: `bot_${Date.now()}`,
-        sender: "bot",
-        text,
-        timestamp: new Date().toISOString(),
-        actions: [
-          { label: "⭐ View All Testimonials", type: "scroll", target: "testimonials", primary: true },
-          { label: "📬 Leave a Review / Contact", type: "scroll", target: "contact" },
-        ],
-      };
-    }
-
-    // ------------------------------------------------------------------------
-    // 15. Navigation Request ("Take me to...", "Go to...")
-    // ------------------------------------------------------------------------
-    if (q.includes("go to") || q.includes("take me to") || q.includes("open") || q.includes("scroll to")) {
-      if (q.includes("project")) {
-        return {
-          id: `bot_${Date.now()}`,
-          sender: "bot",
-          text: `Navigating to the **Projects** section!`,
-          timestamp: new Date().toISOString(),
-          actions: [{ label: "Scroll to Projects", type: "scroll", target: "projects", primary: true }],
-        };
-      }
-      if (q.includes("contact")) {
-        return {
-          id: `bot_${Date.now()}`,
-          sender: "bot",
-          text: `Navigating to the **Contact** section!`,
-          timestamp: new Date().toISOString(),
-          actions: [{ label: "Scroll to Contact", type: "scroll", target: "contact", primary: true }],
-        };
-      }
-      if (q.includes("skill")) {
-        return {
-          id: `bot_${Date.now()}`,
-          sender: "bot",
-          text: `Navigating to the **Skills** section!`,
-          timestamp: new Date().toISOString(),
-          actions: [{ label: "Scroll to Skills", type: "scroll", target: "skills", primary: true }],
-        };
-      }
-      if (q.includes("experience")) {
-        return {
-          id: `bot_${Date.now()}`,
-          sender: "bot",
-          text: `Navigating to the **Experience** section!`,
-          timestamp: new Date().toISOString(),
-          actions: [{ label: "Scroll to Experience", type: "scroll", target: "experience", primary: true }],
-        };
-      }
-      if (q.includes("hire")) {
-        return {
-          id: `bot_${Date.now()}`,
-          sender: "bot",
-          text: `Opening the **Hire** page!`,
-          timestamp: new Date().toISOString(),
-          actions: [{ label: "Open Hire Page", type: "view", target: "hire", primary: true }],
-        };
-      }
-      if (q.includes("journey")) {
-        return {
-          id: `bot_${Date.now()}`,
-          sender: "bot",
-          text: `Opening the **Journey** page!`,
-          timestamp: new Date().toISOString(),
-          actions: [{ label: "Open Journey Page", type: "view", target: "journey", primary: true }],
-        };
-      }
-    }
-
-    // ------------------------------------------------------------------------
-    // 16. What information is available / Help / Guide me
-    // ------------------------------------------------------------------------
-    if (
-      q.includes("guide") ||
-      q.includes("explore") ||
-      q.includes("tour") ||
-      q.includes("what information is available") ||
-      q.includes("help") ||
-      q.includes("what can you do") ||
-      q.includes("options") ||
-      q.includes("ki ache")
-    ) {
-      return {
-        id: `bot_${Date.now()}`,
-        sender: "bot",
-        text: `I'm your personal interactive guide to Maharab's portfolio! Select any topic below or ask me directly:`,
-        timestamp: new Date().toISOString(),
-        showQuickActionGrid: true,
-      };
     }
 
     // ------------------------------------------------------------------------

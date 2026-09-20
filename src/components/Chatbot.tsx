@@ -198,13 +198,21 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       if (activeView !== "home" && onNavigateView) {
         onNavigateView("home");
       }
-      setTimeout(() => {
+      const scrollToSection = () => {
         const el = document.getElementById(action.target);
         if (el) {
-          const targetTop = el.getBoundingClientRect().top + window.scrollY - 70;
-          window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+          const headerOffset = 70;
+          const elementPosition = el.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+          window.scrollTo({
+            top: Math.max(0, offsetPosition),
+            behavior: "smooth",
+          });
+          window.history.replaceState(null, "", window.location.pathname + window.location.search + `#${action.target}`);
         }
-      }, 100);
+      };
+      scrollToSection();
+      setTimeout(scrollToSection, 150);
       return;
     }
 
@@ -311,17 +319,52 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     });
   };
 
-  // Prototype Quick Action Buttons
+  // Prototype Quick Action Buttons with direct website section targets
   const quickActions = [
-    { label: "About me", icon: FaUser, prompt: "Tell me about yourself" },
-    { label: "My projects", icon: FaFolder, prompt: "What projects are available?" },
-    { label: "Skills", icon: FaCode, prompt: "What skills do you have?" },
-    { label: "Experience", icon: FaBriefcase, prompt: "What is your career experience?" },
-    { label: "Certifications", icon: FaAward, prompt: "Show certifications" },
-    { label: "Contact", icon: FaEnvelope, prompt: "How can I contact you?" },
-    { label: "Download CV", icon: FaFileAlt, prompt: "Where can I find your CV?" },
-    { label: "Guide me", icon: FaCompass, prompt: "Guide me through the portfolio" },
+    { label: "About me", icon: FaUser, target: "about", prompt: "Tell me about yourself" },
+    { label: "My projects", icon: FaFolder, target: "projects", prompt: "What projects are available?" },
+    { label: "Skills", icon: FaCode, target: "skills", prompt: "What skills do you have?" },
+    { label: "Experience", icon: FaBriefcase, target: "experience", prompt: "What is your career experience?" },
+    { label: "Certifications", icon: FaAward, target: "certificates", prompt: "Show certifications" },
+    { label: "Contact", icon: FaEnvelope, target: "contact", prompt: "How can I contact you?" },
+    { label: "Download CV", icon: FaFileAlt, target: "cv", prompt: "Where can I find your CV?" },
+    { label: "Guide me", icon: FaCompass, target: "process", prompt: "Guide me through the portfolio" },
   ];
+
+  const handleQuickActionClick = (action: (typeof quickActions)[number]) => {
+    cancelAutoCloseTimer();
+
+    // 1. If currently on another page view (like case studies), navigate to home
+    if (activeView !== "home" && onNavigateView) {
+      onNavigateView("home");
+    }
+
+    // 2. Perform direct website section navigation or CV open
+    if (action.target === "cv") {
+      if (profile.resumeUrl) {
+        window.open(profile.resumeUrl, "_blank", "noopener,noreferrer");
+      }
+    } else if (action.target) {
+      const scrollToSection = () => {
+        const el = document.getElementById(action.target);
+        if (el) {
+          const headerOffset = 70;
+          const elementPosition = el.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+          window.scrollTo({
+            top: Math.max(0, offsetPosition),
+            behavior: "smooth",
+          });
+          window.history.replaceState(null, "", window.location.pathname + window.location.search + `#${action.target}`);
+        }
+      };
+      scrollToSection();
+      setTimeout(scrollToSection, 150);
+    }
+
+    // 3. Send query to chatbot for conversational guidance
+    handleSend(action.prompt);
+  };
 
   return (
     <>
@@ -509,7 +552,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                       {quickActions.map((action, idx) => (
                         <button
                           key={idx}
-                          onClick={() => handleSend(action.prompt)}
+                          onClick={() => handleQuickActionClick(action)}
                           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800/80 hover:border-purple-500/50 text-slate-300 hover:text-white transition-all duration-200 cursor-pointer text-left shadow-sm group"
                         >
                           <span className="text-purple-400 group-hover:text-cyan-300 text-xs transition-colors flex-shrink-0">
