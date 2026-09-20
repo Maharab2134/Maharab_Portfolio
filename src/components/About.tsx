@@ -26,17 +26,19 @@ const AVATAR_FALLBACK = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
 const About: React.FC = () => {
   const profile = useLiveProfile();
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const profileImageProp = profile.profileImage;
+  const profileImageAlt = (profile as any).profile_image;
   const activeProfileImage =
-    profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage;
+    profileImageProp || profileImageAlt || PORTFOLIO_INFO.profileImage;
   const [imgSrc, setImgSrc] = useState(toProxyImageUrl(activeProfileImage));
 
   useEffect(() => {
     const currentImg =
-      profile.profileImage || (profile as any).profile_image || PORTFOLIO_INFO.profileImage;
+      profileImageProp || profileImageAlt || PORTFOLIO_INFO.profileImage;
     if (currentImg) {
       setImgSrc(toProxyImageUrl(currentImg));
     }
-  }, [profile.profileImage, (profile as any).profile_image]);
+  }, [profileImageProp, profileImageAlt]);
 
   const rawVideoUrl =
     (profile as any).intro_video_url ||

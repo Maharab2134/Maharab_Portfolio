@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import {
   FaBriefcase,
@@ -8,7 +8,7 @@ import {
   FaBuilding,
   FaExternalLinkAlt,
 } from "react-icons/fa";
-import { ExperienceItem, getCompanyLogoUrl } from "../data/portfolioData";
+import { getCompanyLogoUrl } from "../data/portfolioData";
 import {
   useExperienceConfig,
   useLiveExperience,

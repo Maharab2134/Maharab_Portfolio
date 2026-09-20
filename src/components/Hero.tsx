@@ -237,32 +237,6 @@ const Hero: React.FC = () => {
                 />
               </div>
             </motion.div>
-            {/* Stats Metric Strip */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
-              className="grid grid-cols-3 max-w-md gap-3 p-3 border rounded-2xl bg-white/[0.03] border-white/10 backdrop-blur-xl"
-            >
-              <div className="px-2 py-1 text-left">
-                <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 sm:text-2xl">
-                  {profile.stats.yearsExperience}
-                </p>
-                <p className="text-[11px] font-medium text-slate-400">Years Exp</p>
-              </div>
-              <div className="px-2 py-1 text-left border-x border-white/10">
-                <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 sm:text-2xl">
-                  {profile.stats.projectsCompleted}
-                </p>
-                <p className="text-[11px] font-medium text-slate-400">Projects Built</p>
-              </div>
-              <div className="px-2 py-1 text-left">
-                <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 sm:text-2xl">
-                  {profile.stats.satisfactionRate}
-                </p>
-                <p className="text-[11px] font-medium text-slate-400">Commitment</p>
-              </div>
-            </motion.div>
 
             {/* Interactive Action Buttons */}
             <motion.div

@@ -2,11 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
 import {
   PORTFOLIO_INFO,
-  EDUCATION_DATA,
-  CERTIFICATES_DATA,
-  EXPERIENCE_DATA,
-  DEFAULT_SKILL_CATEGORIES,
-  DEFAULT_SKILLS_DATA,
   SkillCategory,
   SkillItemData,
   ExperienceItem,
