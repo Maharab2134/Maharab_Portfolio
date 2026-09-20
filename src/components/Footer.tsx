@@ -18,8 +18,6 @@ import {
 import { PORTFOLIO_INFO } from "../data/portfolioData";
 import { toProxyImageUrl } from "../data/projectsData";
 import { useLiveProfile } from "../lib/portfolioService";
-import LanguageSelector from "./LanguageSelector";
-
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
 };
@@ -201,7 +199,6 @@ const Footer: React.FC = () => {
           </p>
 
           <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center">
-            <LanguageSelector dropdownAlign="left" isMobileCompact />
             <div className="flex items-center gap-2 text-slate-400">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Available for new opportunities</span>

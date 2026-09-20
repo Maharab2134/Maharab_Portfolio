@@ -371,7 +371,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     <>
       {/* Floating Launcher Button - Positioned with clear gap directly above SmartScrollButton */}
       {!isOpen && (
-        <div className="fixed bottom-[96px] sm:bottom-[100px] right-6 z-40 pointer-events-auto flex items-center gap-3">
+        <div className="fixed bottom-[140px] sm:bottom-[100px] right-4 sm:right-6 z-40 pointer-events-auto flex items-center gap-3">
           {/* Prototype-style Speech Bubble Callout */}
           <motion.div
             initial={{ opacity: 0, x: 8, scale: 0.92 }}
@@ -433,7 +433,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-50 w-[95vw] sm:w-[420px] h-[640px] sm:h-[680px] max-h-[calc(100dvh-2rem)] rounded-3xl bg-slate-950/95 border border-slate-800/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 flex flex-col overflow-hidden text-slate-100"
+            className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-[110] w-[95vw] sm:w-[420px] h-[640px] sm:h-[680px] max-h-[calc(100dvh-2rem)] rounded-3xl bg-slate-950/95 border border-slate-800/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 flex flex-col overflow-hidden text-slate-100"
           >
             {/* Ambient Background Glows */}
             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />

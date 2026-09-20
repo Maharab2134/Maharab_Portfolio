@@ -142,6 +142,54 @@ const resolveProjectSync = (initial?: Project | null): Project | null => {
   return null;
 };
 
+const ExpandableText: React.FC<{ text: string; className?: string }> = ({ text, className }) => {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div>
+      <p className={`${className || ""} ${!expanded ? "line-clamp-3 sm:line-clamp-none" : ""}`}>
+        {text}
+      </p>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="text-cyan-400 hover:text-cyan-300 text-xs mt-2 font-semibold sm:hidden inline-flex items-center gap-1"
+      >
+        {expanded ? "Show Less ↑" : "Read More ↓"}
+      </button>
+    </div>
+  );
+};
+
+const ExpandableList: React.FC<{
+  items: string[];
+  renderItem: (item: string, index: number) => React.ReactNode;
+  className?: string;
+}> = ({ items, renderItem, className }) => {
+  const [expanded, setExpanded] = useState(false);
+  // On desktop (sm and up) we want to show all by default, but we can't easily detect
+  // screen size in JS without a listener. However, we can just hide the button on sm
+  // and use CSS to show all. Wait, if we slice in JS, the DOM elements won't exist on desktop!
+  // We need to render ALL items and hide them via CSS on mobile if not expanded.
+  return (
+    <div>
+      <ul className={`${className || ""}`}>
+        {items.map((item, index) => (
+          <div key={index} className={!expanded && index >= 3 ? "hidden sm:block" : "block"}>
+            {renderItem(item, index)}
+          </div>
+        ))}
+      </ul>
+      {items.length > 3 && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-cyan-400 hover:text-cyan-300 text-xs mt-3 font-semibold sm:hidden inline-flex items-center gap-1"
+        >
+          {expanded ? "Show Less ↑" : `View All ${items.length} ↓`}
+        </button>
+      )}
+    </div>
+  );
+};
+
 const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   initialProject,
   onBack,
@@ -474,9 +522,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                 <span>📋</span>
                 <span>Project Overview</span>
               </h2>
-              <p className="text-base leading-relaxed text-slate-300 whitespace-pre-line">
-                {project.longDescription || project.description}
-              </p>
+              <ExpandableText 
+                text={project.longDescription || project.description}
+                className="text-base leading-relaxed text-slate-300 whitespace-pre-line"
+              />
             </section>
 
             {/* Problem & Solution */}
@@ -487,9 +536,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                     <h3 className="text-base font-bold text-rose-300 mb-2">
                       The Challenge
                     </h3>
-                    <p className="text-sm leading-relaxed text-slate-400">
-                      {project.problem}
-                    </p>
+                    <ExpandableText 
+                      text={project.problem}
+                      className="text-sm leading-relaxed text-slate-400"
+                    />
                   </div>
                 )}
                 {project.solution && (
@@ -497,9 +547,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                     <h3 className="text-base font-bold text-emerald-300 mb-2">
                       The Solution
                     </h3>
-                    <p className="text-sm leading-relaxed text-slate-400">
-                      {project.solution}
-                    </p>
+                    <ExpandableText 
+                      text={project.solution}
+                      className="text-sm leading-relaxed text-slate-400"
+                    />
                   </div>
                 )}
               </div>
@@ -512,20 +563,19 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                   <span>⚡</span>
                   <span>Key Architectural Features</span>
                 </h2>
-                <ul className="space-y-3">
-                  {featuresList.map((feature, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-3 text-sm leading-relaxed text-slate-300"
-                    >
+                <ExpandableList 
+                  items={featuresList}
+                  className="space-y-3"
+                  renderItem={(feature, i) => (
+                    <li className="flex items-start gap-3 text-sm leading-relaxed text-slate-300">
                       {renderIcon(FaCheckCircle, {
                         size: 15,
                         className: "text-purple-400 mt-0.5 flex-shrink-0",
                       })}
                       <span>{feature}</span>
                     </li>
-                  ))}
-                </ul>
+                  )}
+                />
               </section>
             )}
 
@@ -536,17 +586,16 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                   <span>🏆</span>
                   <span>Results &amp; Impact</span>
                 </h2>
-                <ul className="space-y-2.5">
-                  {resultsList.map((res, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center gap-3 text-sm text-slate-300"
-                    >
+                <ExpandableList 
+                  items={resultsList}
+                  className="space-y-2.5"
+                  renderItem={(res, i) => (
+                    <li className="flex items-center gap-3 text-sm text-slate-300">
                       <span className="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0" />
                       <span>{res}</span>
                     </li>
-                  ))}
-                </ul>
+                  )}
+                />
               </section>
             )}
 

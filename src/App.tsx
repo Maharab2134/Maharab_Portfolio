@@ -27,7 +27,6 @@ import { initGoogleTranslateScript } from "./lib/googleTranslate";
 type ActiveView = "home" | "hire" | "journey" | "project" | "admin" | "case-studies";
 
 function App() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeView, setActiveView] = useState<ActiveView>("home");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -453,8 +452,6 @@ function App() {
       {activeView === "home" && (
         <div className="min-h-screen bg-[#030014] text-slate-100 flex flex-col selection:bg-purple-500/30 selection:text-white">
           <Navbar
-            isMenuOpen={isMenuOpen}
-            setIsMenuOpen={setIsMenuOpen}
             onNavigatePage={handleNavigatePage}
           />
           <main className="flex-1">

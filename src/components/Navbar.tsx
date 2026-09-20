@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  FaBars,
-  FaTimes,
   FaUser,
   FaGraduationCap,
   FaCode,
   FaProjectDiagram,
   FaEnvelope,
   FaRocket,
+  FaHome,
 } from "react-icons/fa";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
 import { toProxyImageUrl } from "../data/projectsData";
@@ -16,8 +15,6 @@ import { useLiveProfile, calculateWorkStatus } from "../lib/portfolioService";
 import LanguageSelector from "./LanguageSelector";
 
 interface NavbarProps {
-  isMenuOpen: boolean;
-  setIsMenuOpen: (isOpen: boolean) => void;
   onNavigatePage?: (page: "home" | "hire" | "journey", targetSection?: string) => void;
 }
 
@@ -33,7 +30,7 @@ const navLinks = [
   { name: "Contact", href: "#contact", id: "contact", icon: FaEnvelope },
 ];
 
-const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePage }) => {
+const Navbar: React.FC<NavbarProps> = ({ onNavigatePage }) => {
   const profile = useLiveProfile();
 
   const [scrolled, setScrolled] = useState(false);
@@ -130,17 +127,6 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
     return () => observer.disconnect();
   }, []);
 
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMenuOpen]);
 
   const scrollToTarget = (targetId: string) => {
     // 1. Immediately unlock scroll on body
@@ -194,9 +180,8 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
       e.preventDefault();
       const targetId = href.substring(1);
 
-      // Instantly release body scroll lock and close mobile drawer
+      // Instantly release body scroll lock
       document.body.style.overflow = "";
-      setIsMenuOpen(false);
 
       const element = document.getElementById(targetId);
       if (element) {
@@ -220,6 +205,7 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
     .toUpperCase();
 
   return (
+    <>
     <motion.header
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -333,7 +319,7 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
             </a>
           </nav>
 
-          {/* Mobile Menu Button & Language Switcher */}
+          {/* Mobile Top Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2 md:hidden shrink-0">
             <LanguageSelector isMobileCompact dropdownAlign="right" />
             <a
@@ -342,81 +328,64 @@ const Navbar: React.FC<NavbarProps> = ({ isMenuOpen, setIsMenuOpen, onNavigatePa
                 if (onNavigatePage) onNavigatePage("hire");
                 else window.location.hash = "#hire";
               }}
-              className="shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold text-white rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-md shadow-purple-500/20 active:scale-95 transition-transform"
+              className="shrink-0 whitespace-nowrap px-4 py-2 text-xs font-semibold text-white rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-md shadow-purple-500/20 active:scale-95 transition-transform"
             >
               Hire Me
             </a>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-slate-300 transition-colors rounded-xl bg-white/5 border border-white/10 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 shrink-0"
-              aria-label={isMenuOpen ? "Close menu" : "Open navigation menu"}
-              aria-expanded={isMenuOpen}
-            >
-              {isMenuOpen ? renderIcon(FaTimes, { size: 17 }) : renderIcon(FaBars, { size: 17 })}
-            </button>
           </div>
         </div>
       </div>
-
-      {/* Mobile Drawer Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="md:hidden bg-[#030014]/95 backdrop-blur-2xl border-b border-white/10 overflow-hidden"
-          >
-            <div className="px-4 pt-3 pb-6 space-y-1">
-              {navLinks.map((link) => {
-                const isActive = activeSection === link.id;
-                return (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    onClick={(e) => handleLinkClick(e, link.href)}
-                    className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${isActive
-                        ? "text-white bg-white/10 border border-white/10"
-                        : "text-slate-300 hover:text-white hover:bg-white/5"
-                      }`}
-                  >
-                    <span className="p-2 rounded-lg bg-white/5 text-cyan-400">
-                      {renderIcon(link.icon, { size: 16 })}
-                    </span>
-                    <span>{link.name}</span>
-                  </a>
-                );
-              })}
-
-              <div className="pt-3 my-2 border-t border-white/10 space-y-3">
-                {/* Mobile Drawer Language Row */}
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-                  <span className="text-xs font-medium text-slate-300 flex items-center gap-2">
-                    <span className="text-purple-400">🌐</span>
-                    <span>Website Language</span>
-                  </span>
-                  <LanguageSelector dropdownAlign="right" />
-                </div>
-
-                <a
-                  href="#hire"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    if (onNavigatePage) onNavigatePage("hire");
-                    else window.location.hash = "#hire";
-                  }}
-                  className="flex items-center justify-center gap-2 w-full px-5 py-3 text-base font-semibold text-white rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 shadow-lg shadow-purple-500/20"
-                >
-                  <span>Hire Me / Work Together</span>
-                  {renderIcon(FaRocket, { size: 14 })}
-                </a>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.header>
+
+    {/* Mobile App-Style Bottom Navigation */}
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-[100]">
+      <div className="bg-[#030014]/90 backdrop-blur-2xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.6)] flex items-center justify-around px-2 py-2 pb-safe sm:pb-2">
+        {/* Home */}
+        <a
+          href="#home"
+          onClick={(e) => handleLinkClick(e, "#home")}
+          className={`flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all active:scale-90 relative ${
+            activeSection === "home" ? "text-cyan-400" : "text-slate-400 hover:text-white"
+          }`}
+        >
+          {renderIcon(FaHome, { size: 20, className: "mb-1 z-10 relative" })}
+          <span className="text-[10px] font-medium z-10 relative">Home</span>
+          {activeSection === "home" && (
+            <motion.div
+              layoutId="activeBottomNav"
+              className="absolute inset-0 rounded-xl bg-white/10"
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            />
+          )}
+        </a>
+        
+        {/* Other Links */}
+        {navLinks.filter(l => ["about", "skills", "projects", "contact"].includes(l.id)).map((link) => {
+          const isActive = activeSection === link.id;
+          return (
+            <a
+              key={link.id}
+              href={link.href}
+              onClick={(e) => handleLinkClick(e, link.href)}
+              className={`flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all active:scale-90 relative ${
+                isActive ? "text-cyan-400" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {renderIcon(link.icon, { size: 20, className: "mb-1 z-10 relative" })}
+              <span className="text-[10px] font-medium z-10 relative">{link.name}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="activeBottomNav"
+                  className="absolute inset-0 rounded-xl bg-white/10"
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                />
+              )}
+            </a>
+          );
+        })}
+      </div>
+    </div>
+    </>
   );
 };
 
