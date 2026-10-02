@@ -23,25 +23,21 @@ const SERVICES = [
     id: "web",
     name: "Full-Stack Web App",
     icon: FaCode,
-    desc: "React, Next.js, Node.js, and database architecture",
   },
   {
     id: "mobile",
     name: "Mobile App Development",
     icon: FaMobileAlt,
-    desc: "Cross-platform iOS and Android apps with Flutter",
   },
   {
     id: "api",
     name: "Backend & RESTful API",
     icon: FaServer,
-    desc: "Scalable microservices, database schemas, and auth security",
   },
   {
     id: "consulting",
     name: "Technical Consultation",
     icon: FaRocket,
-    desc: "Architecture review, code optimization, and MVP design",
   },
 ];
 
@@ -214,23 +210,18 @@ const Hire: React.FC = () => {
                         key={s.id}
                         type="button"
                         onClick={() => toggleService(s.id)}
-                        className={`p-3.5 text-left rounded-xl border transition-all duration-200 flex items-start gap-3 ${
+                        className={`p-3 text-left rounded-xl border transition-all duration-200 flex items-center gap-3 ${
                           isSelected
                             ? "bg-purple-600/20 border-purple-500 text-white shadow-md shadow-purple-500/10"
                             : "bg-white/[0.02] border-white/10 text-slate-400 hover:text-white hover:border-white/20"
                         }`}
                       >
-                        <div className={`p-2 rounded-lg mt-0.5 ${isSelected ? "bg-purple-500 text-white" : "bg-white/5 text-slate-400"}`}>
+                        <div className={`p-2 rounded-lg ${isSelected ? "bg-purple-500 text-white" : "bg-white/5 text-slate-400"}`}>
                           {renderIcon(s.icon, { size: 14 })}
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-white">
-                            {s.name}
-                          </p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {s.desc}
-                          </p>
-                        </div>
+                        <span className="text-sm font-semibold text-white">
+                          {s.name}
+                        </span>
                       </button>
                     );
                   })}
