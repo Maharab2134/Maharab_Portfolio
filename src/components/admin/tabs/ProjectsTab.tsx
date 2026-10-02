@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   FaSpinner,
@@ -29,6 +29,8 @@ import {
   FaExclamationTriangle,
   FaGithub,
   FaGlobe,
+  FaThLarge,
+  FaList,
 } from "react-icons/fa";
 import { supabase, isSupabaseConfigured } from "../../../lib/supabaseClient";
 import {
@@ -102,6 +104,22 @@ export const ProjectsTab: React.FC<ProjectsTabProps> = ({
   const [projectToast, setProjectToast] = useState<AdminToast | null>(null);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectCategoryFilter, setProjectCategoryFilter] = useState("all");
+  const [catalogLayout, setCatalogLayout] = useState<"grid" | "list">(() => {
+    try {
+      const saved = localStorage.getItem("admin_projects_layout");
+      return saved === "list" || saved === "grid" ? saved : "grid";
+    } catch {
+      return "grid";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("admin_projects_layout", catalogLayout);
+    } catch (e) {
+      // ignore
+    }
+  }, [catalogLayout]);
 
   // Technology Studio State
   const [techCategoryFilter, setTechCategoryFilter] = useState<string>("all");
@@ -585,6 +603,36 @@ export const ProjectsTab: React.FC<ProjectsTabProps> = ({
                 {renderIcon(FaSortAmountDown, { size: 11, className: "text-amber-400" })}
                 <span>Web Dev First ⭐</span>
               </button>
+
+              {/* View Layout Toggle: Grid & List */}
+              <div className="flex items-center p-1 bg-white/[0.04] border border-white/10 rounded-xl gap-1 flex-shrink-0 ml-auto sm:ml-1">
+                <button
+                  type="button"
+                  onClick={() => setCatalogLayout("grid")}
+                  title="Grid View"
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    catalogLayout === "grid"
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  {renderIcon(FaThLarge, { size: 11 })}
+                  <span>Grid</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCatalogLayout("list")}
+                  title="List View"
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    catalogLayout === "list"
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  {renderIcon(FaList, { size: 11 })}
+                  <span>List</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -613,8 +661,8 @@ export const ProjectsTab: React.FC<ProjectsTabProps> = ({
                 </button>
               )}
             </div>
-          ) : (
-            /* Projects Table / In-Page Cards */
+          ) : catalogLayout === "grid" ? (
+            /* Projects Grid View */
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
               {filteredProjects.map((project) => {
                 const pIndex = projectsList.findIndex(
@@ -750,6 +798,176 @@ export const ProjectsTab: React.FC<ProjectsTabProps> = ({
                           {renderIcon(FaTrash, { size: 11 })}
                         </button>
                       </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* Projects List View */
+            <div className="space-y-2.5">
+              {filteredProjects.map((project) => {
+                const pIndex = projectsList.findIndex(
+                  (p) => (p.id || p.project_id) === (project.id || project.project_id)
+                );
+                const pId = project.id || project.project_id;
+                const liveLink = project.live_url || project.link || project.live;
+                const githubLink = project.github_url || project.github;
+
+                return (
+                  <div
+                    key={pId}
+                    className="p-3 sm:p-3.5 rounded-2xl border border-white/[0.08] bg-[#111726]/70 hover:border-indigo-500/40 hover:bg-[#111726]/90 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 group hover:shadow-lg hover:shadow-indigo-500/5"
+                  >
+                    {/* Left: Reorder controls + Thumbnail + Details */}
+                    <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
+                      {/* Priority Controls + Rank Badge */}
+                      <div className="flex sm:flex-col items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06] flex-shrink-0">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-black text-cyan-300">
+                          #{pIndex >= 0 ? pIndex + 1 : "?"}
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          <button
+                            type="button"
+                            disabled={pIndex <= 0}
+                            onClick={() => handleMoveToTop(pId)}
+                            title="Pin directly to #1 (Top of Portfolio)"
+                            className="p-1 rounded text-slate-400 hover:text-amber-300 hover:bg-amber-400/10 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 cursor-pointer"
+                          >
+                            {renderIcon(FaAngleDoubleUp, { size: 10 })}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={pIndex <= 0}
+                            onClick={() => handleMoveProject(pId, "up")}
+                            title="Move Up (# Higher Priority)"
+                            className="p-1 rounded text-slate-400 hover:text-cyan-300 hover:bg-cyan-400/10 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 cursor-pointer"
+                          >
+                            {renderIcon(FaArrowUp, { size: 10 })}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={pIndex < 0 || pIndex >= projectsList.length - 1}
+                            onClick={() => handleMoveProject(pId, "down")}
+                            title="Move Down (# Lower Priority)"
+                            className="p-1 rounded text-slate-400 hover:text-cyan-300 hover:bg-cyan-400/10 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 cursor-pointer"
+                          >
+                            {renderIcon(FaArrowDown, { size: 10 })}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Thumbnail */}
+                      <div className="w-16 h-12 sm:w-24 sm:h-16 rounded-xl overflow-hidden bg-slate-900 border border-white/10 flex-shrink-0 relative">
+                        <img
+                          src={toProxyImageUrl(project.image_url || project.image)}
+                          alt={project.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            const fileId = extractGoogleDriveFileId(project.image_url || project.image || "");
+                            if (fileId && !e.currentTarget.src.includes("googleusercontent.com")) {
+                              e.currentTarget.src = toGoogleDriveDirectUrl(project.image_url || project.image);
+                              return;
+                            }
+                            e.currentTarget.src = "https://placehold.co/600x400/0f172a/cbd5e1?text=Preview";
+                          }}
+                        />
+                      </div>
+
+                      {/* Main Details */}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors truncate max-w-xs sm:max-w-md">
+                            {project.title}
+                          </h3>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-950/80 border border-white/10 text-cyan-300 capitalize">
+                            {project.category}
+                          </span>
+                          {project.featured && (
+                            <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-400 text-slate-950 shadow-sm">
+                              ★ FEATURED
+                            </span>
+                          )}
+                          {liveLink && (
+                            <a
+                              href={liveLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Open Live Preview"
+                              className="text-slate-400 hover:text-cyan-300 transition-colors p-1"
+                            >
+                              {renderIcon(FaExternalLinkAlt, { size: 10 })}
+                            </a>
+                          )}
+                          {githubLink && (
+                            <a
+                              href={githubLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Open GitHub Repository"
+                              className="text-slate-400 hover:text-white transition-colors p-1"
+                            >
+                              {renderIcon(FaGithub, { size: 11 })}
+                            </a>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-slate-400 line-clamp-1 leading-relaxed">
+                          {project.short_desc || project.shortDescription || project.description}
+                        </p>
+
+                        {/* Tech tags */}
+                        {project.technologies && (
+                          <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                            {getSelectedTechs(project.technologies).slice(0, 5).map((tech, idx) => (
+                              <span
+                                key={idx}
+                                className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.04] border border-white/[0.06] text-slate-300"
+                              >
+                                {tech}
+                              </span>
+                            ))}
+                            {getSelectedTechs(project.technologies).length > 5 && (
+                              <span className="px-1 py-0.5 rounded text-[9px] font-mono text-slate-500">
+                                +{getSelectedTechs(project.technologies).length - 5}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-2 self-end lg:self-center flex-shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06] w-full lg:w-auto justify-end">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleFeatured(project)}
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                          project.featured
+                            ? "border-amber-400/40 text-amber-300 bg-amber-400/10 font-medium"
+                            : "border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        {project.featured ? "★ Featured" : "★ Feature"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditProject(project)}
+                        className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-lg transition-colors cursor-pointer"
+                      >
+                        {renderIcon(FaEdit, { size: 11 })}
+                        <span>Edit</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProject(pId)}
+                        className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        title="Delete Project"
+                      >
+                        {renderIcon(FaTrash, { size: 11 })}
+                      </button>
                     </div>
                   </div>
                 );
