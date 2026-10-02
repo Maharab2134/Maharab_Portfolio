@@ -323,7 +323,7 @@ export const MILESTONES_DATA: MilestoneItem[] = [
     description:
       "Designed and deployed production platforms for real businesses (PurchifyShop, Midtown Aabashon Ltd, TripFly BD). Broadened scope into AI/ML and IoT hardware.",
     highlights: [
-      "Crossed milestone of 50+ total projects engineered",
+      "Crossed milestone of 20+ total projects engineered",
       "Built AuthNova security hardening and real-time WebSocket systems",
       "Awarded IEEE ICRCS Certificate of Excellence",
       "Engineered ESP32 IoT and machine learning computer vision pipelines",

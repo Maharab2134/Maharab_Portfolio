@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   motion,
   useMotionValue,
@@ -20,8 +20,8 @@ import { SiReact, SiFlutter, SiNodedotjs } from "react-icons/si";
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { TypeAnimation } from "react-type-animation";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
-import { toProxyImageUrl } from "../data/projectsData";
-import { useLiveProfile } from "../lib/portfolioService";
+import { toProxyImageUrl, getAllProjectsSync } from "../data/projectsData";
+import { useLiveProfile, getLiveProjects } from "../lib/portfolioService";
 
 const renderIcon = (Icon: any, props: any = {}) => {
   return <Icon {...props} />;
@@ -31,6 +31,33 @@ const Hero: React.FC = () => {
   const profile = useLiveProfile();
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [showAllTech, setShowAllTech] = useState(false);
+
+  const [projectCount, setProjectCount] = useState<number>(() => {
+    const list = getAllProjectsSync();
+    return list.length > 0 ? list.length : 20;
+  });
+
+  useEffect(() => {
+    let active = true;
+    getLiveProjects().then((live) => {
+      if (active && live && live.length > 0) {
+        setProjectCount(live.length);
+      }
+    });
+
+    const handleProjectsUpdate = () => {
+      const live = getAllProjectsSync();
+      if (live && live.length > 0) {
+        setProjectCount(live.length);
+      }
+    };
+
+    window.addEventListener("portfolio_projects_updated", handleProjectsUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener("portfolio_projects_updated", handleProjectsUpdate);
+    };
+  }, []);
 
   // Dynamic Animated Typewriter Configuration from Admin
   const typewriterPrefix =
@@ -475,19 +502,23 @@ const Hero: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Quick Performance Strip */}
+                {/* Quick Performance Strip - Real Dynamic Metrics */}
                 <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
                   <div className="py-2 px-1 rounded-lg bg-white/[0.02] border border-white/5">
-                    <p className="text-xs font-bold text-cyan-400">{profile.stats?.projectsCompleted || "20+"}</p>
+                    <p className="text-xs font-bold text-cyan-400">{projectCount}+</p>
                     <p className="text-[10px] text-slate-400">Projects</p>
                   </div>
                   <div className="py-2 px-1 rounded-lg bg-white/[0.02] border border-white/5">
-                    <p className="text-xs font-bold text-emerald-400">&lt;50ms</p>
-                    <p className="text-[10px] text-slate-400">Fast APIs</p>
+                    <p className="text-xs font-bold text-emerald-400">
+                      {profile.stats?.yearsExperience || (profile as any).years_experience || "2+ Years"}
+                    </p>
+                    <p className="text-[10px] text-slate-400">Experience</p>
                   </div>
                   <div className="py-2 px-1 rounded-lg bg-white/[0.02] border border-white/5">
-                    <p className="text-xs font-bold text-purple-400">100%</p>
-                    <p className="text-[10px] text-slate-400">Commitment</p>
+                    <p className="text-xs font-bold text-purple-400">
+                      {profile.stats?.satisfactionRate || (profile as any).satisfaction_rate || "100%"}
+                    </p>
+                    <p className="text-[10px] text-slate-400">Satisfaction</p>
                   </div>
                 </div>
               </div>

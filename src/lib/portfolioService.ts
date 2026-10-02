@@ -1,6 +1,6 @@
 import { useState, useEffect, startTransition } from "react";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
-import { PROJECTS, Project } from "../data/projectsData";
+import { PROJECTS, Project, getAllProjectsSync } from "../data/projectsData";
 import {
   PORTFOLIO_INFO,
   EDUCATION_DATA,
@@ -1206,7 +1206,9 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
           stats: {
             ...PORTFOLIO_INFO.stats,
             yearsExperience: baseProfile.years_experience || baseProfile.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
-            projectsCompleted: baseProfile.projects_completed || baseProfile.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
+            projectsCompleted: (baseProfile.projects_completed && baseProfile.projects_completed !== "50+")
+              ? baseProfile.projects_completed
+              : `${(getAllProjectsSync().length || 20)}+`,
             satisfactionRate: baseProfile.satisfaction_rate || baseProfile.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
           },
           aboutStats:
@@ -1340,7 +1342,9 @@ export const getLiveProfile = async (): Promise<typeof PORTFOLIO_INFO> => {
       stats: {
         ...PORTFOLIO_INFO.stats,
         yearsExperience: parsedCached.years_experience || parsedCached.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
-        projectsCompleted: parsedCached.projects_completed || parsedCached.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
+        projectsCompleted: (parsedCached.projects_completed && parsedCached.projects_completed !== "50+")
+          ? parsedCached.projects_completed
+          : `${(getAllProjectsSync().length || 20)}+`,
         satisfactionRate: parsedCached.satisfaction_rate || parsedCached.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
       },
       aboutStats:
@@ -1637,7 +1641,9 @@ export const useLiveProfile = (): typeof PORTFOLIO_INFO => {
             stats: {
               ...PORTFOLIO_INFO.stats,
               yearsExperience: parsed.years_experience || parsed.stats?.yearsExperience || PORTFOLIO_INFO.stats.yearsExperience,
-              projectsCompleted: parsed.projects_completed || parsed.stats?.projectsCompleted || PORTFOLIO_INFO.stats.projectsCompleted,
+              projectsCompleted: (parsed.projects_completed && parsed.projects_completed !== "50+")
+                ? parsed.projects_completed
+                : `${(getAllProjectsSync().length || 20)}+`,
               satisfactionRate: parsed.satisfaction_rate || parsed.stats?.satisfactionRate || PORTFOLIO_INFO.stats.satisfactionRate,
             },
             aboutStats:
