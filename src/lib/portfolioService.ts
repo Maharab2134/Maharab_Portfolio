@@ -1872,7 +1872,15 @@ export const getCachedCertificatesSync = (): CertificateItem[] => {
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map((c: any) => ({
+          ...c,
+          isActive:
+            c.isActive !== undefined && c.isActive !== null
+              ? (c.isActive === true || c.isActive === "true")
+              : c.is_active !== undefined && c.is_active !== null
+              ? (c.is_active === true || c.is_active === "true")
+              : true,
+        }));
       }
     }
   } catch (e) {}
@@ -1911,9 +1919,11 @@ export const getLiveCertificates = async (): Promise<CertificateItem[]> => {
             verificationId: c.verification_id || c.verificationId || "",
             isActive:
               c.is_active !== undefined && c.is_active !== null
-                ? Boolean(c.is_active)
-                : localMatch?.isActive !== undefined
-                ? localMatch.isActive
+                ? (c.is_active === true || c.is_active === "true")
+                : c.isActive !== undefined && c.isActive !== null
+                ? (c.isActive === true || c.isActive === "true")
+                : localMatch?.isActive !== undefined && localMatch?.isActive !== null
+                ? (localMatch.isActive === true || (localMatch as any).isActive === "true")
                 : true,
           };
         });

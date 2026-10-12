@@ -464,7 +464,53 @@ export class PortfolioChatbotEngine {
     }
 
     // ------------------------------------------------------------------------
-    // 4. About / Who is Maharab / Bio / Intro Query
+    // 4. Bot Identity Query ("who are you", "what are you", "ke tumi", etc.)
+    // ------------------------------------------------------------------------
+    const isBotIdentityQuery =
+      q === "who are you" ||
+      q === "who are you?" ||
+      q.startsWith("who are you") ||
+      q === "what are you" ||
+      q === "what are you?" ||
+      q.startsWith("what are you") ||
+      q === "ke tumi" ||
+      q === "ke tumi?" ||
+      q === "tumi ke" ||
+      q === "tumi ke?" ||
+      q === "apni ke" ||
+      q === "apni ke?" ||
+      q.includes("what is your name") ||
+      q.includes("who created you") ||
+      q.includes("who made you");
+
+    if (isBotIdentityQuery) {
+      const devName = profile.shortName || profile.name || "Maharab";
+      let text = `I am **${devName}'s Portfolio AI Assistant**! 🤖\n\n`;
+      text += `I was created to help you navigate and explore **${profile.name}**'s portfolio — including his projects, technical stack, career experience, and verified credentials.\n\n`;
+      text += `**About ${devName}:**\n`;
+      text += `**${profile.name}** is a **${profile.title}** based in **${profile.location}**.\n\n`;
+      text += `**Quick Snapshot:**\n`;
+      text += `- 🚀 **${profile.stats.projectsCompleted} Projects** completed across mobile, web, and IoT\n`;
+      text += `- 💼 **${profile.stats.yearsExperience} Experience** in building modern apps\n`;
+      text += `- 🎓 **B.Sc. in CSE** at BUBT\n`;
+      text += `- ⭐ **${profile.stats.satisfactionRate} Satisfaction** from clients and teammates\n`;
+
+      return {
+        id: `bot_${Date.now()}`,
+        sender: "bot",
+        text,
+        timestamp: new Date().toISOString(),
+        actions: [
+          { label: "🔍 View About Section", type: "scroll", target: "about", primary: true },
+          { label: "🚀 View Projects", type: "scroll", target: "projects" },
+          { label: "📄 Download CV", type: "url", target: profile.resumeUrl },
+          { label: "📬 Contact Him", type: "scroll", target: "contact" },
+        ],
+      };
+    }
+
+    // ------------------------------------------------------------------------
+    // 4b. About Developer / Who is Maharab / Bio Query
     // ------------------------------------------------------------------------
     const isAboutDeveloper =
       q === "about" ||
@@ -472,9 +518,10 @@ export class PortfolioChatbotEngine {
       q === "about you" ||
       q === "about him" ||
       q === "about maharab" ||
-      q.includes("who are you") ||
-      q.includes("who is") ||
+      q.includes("who is maharab") ||
+      q.includes("who is he") ||
       q.includes("tell me about him") ||
+      q.includes("tell me about maharab") ||
       q.includes("tell me about yourself") ||
       q.includes("about maharab") ||
       q === "bio" ||
@@ -482,13 +529,21 @@ export class PortfolioChatbotEngine {
       q.includes("his bio") ||
       q === "intro" ||
       q.includes("introduce yourself") ||
+      q.includes("introduce him") ||
       q.includes("profile") ||
-      q.includes("ke tumi") ||
       q.includes("maharab ke");
 
     if (isAboutDeveloper) {
+      let cleanBio = (profile.bio || "").trim();
+      if (/^a\s/i.test(cleanBio)) {
+        cleanBio = "He is " + cleanBio.charAt(0).toLowerCase() + cleanBio.slice(1);
+      }
+      cleanBio = cleanBio.replace(/\bI focus on\b/g, "He focuses on");
+
       let text = `**${profile.name}** is a **${profile.title}** based in **${profile.location}**.\n\n`;
-      text += `${profile.bio}\n\n`;
+      if (cleanBio) {
+        text += `${cleanBio}\n\n`;
+      }
       text += `**Quick Snapshot:**\n`;
       text += `- 🚀 **${profile.stats.projectsCompleted} Projects** completed across mobile, web, and IoT\n`;
       text += `- 💼 **${profile.stats.yearsExperience} Experience** in building modern apps\n`;

@@ -160,18 +160,33 @@ const syncCertificates = async () => {
       .select("*")
       .order("order_index", { ascending: true });
 
-    if (!error && Array.isArray(data) && data.length > 0) {
-      const mapped: CertificateItem[] = data.map((c: any) => ({
-        title: c.title || "",
-        issuer: c.issuer || "",
-        year: c.year || "",
-        type: c.type || "Professional",
-        link: c.link || "",
-        details: c.details || "",
-        verificationId: c.verification_id || c.verificationId || "",
-      }));
       const rawCached = localStorage.getItem(STORAGE_CERTIFICATES_KEY);
-      const parsedCached = rawCached ? JSON.parse(rawCached) : null;
+      const parsedCached = rawCached ? JSON.parse(rawCached) : [];
+      const mapped: CertificateItem[] = data.map((c: any) => {
+        const localMatch = Array.isArray(parsedCached)
+          ? parsedCached.find((p: any) => p.title === c.title)
+          : null;
+
+        const resolvedActive =
+          c.is_active !== undefined && c.is_active !== null
+            ? Boolean(c.is_active)
+            : c.isActive !== undefined && c.isActive !== null
+            ? Boolean(c.isActive)
+            : localMatch?.isActive !== undefined && localMatch?.isActive !== null
+            ? Boolean(localMatch.isActive)
+            : true;
+
+        return {
+          title: c.title || "",
+          issuer: c.issuer || "",
+          year: c.year || "",
+          type: c.type || "Professional",
+          link: c.link || "",
+          details: c.details || "",
+          verificationId: c.verification_id || c.verificationId || "",
+          isActive: resolvedActive,
+        };
+      });
 
       if (!isContentEqual(parsedCached, mapped)) {
         localStorage.setItem(STORAGE_CERTIFICATES_KEY, JSON.stringify(mapped));

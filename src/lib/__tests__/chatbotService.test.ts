@@ -263,5 +263,31 @@ describe("PortfolioChatbotEngine - Quick Actions & Section Intents", () => {
     const navContact = PortfolioChatbotEngine.processQuery("scroll to contact", defaultContext);
     expect(navContact.actions?.[0].target).toBe("contact");
   });
+
+  test("'who are you?' introduces bot as Portfolio AI Assistant", () => {
+    const res = PortfolioChatbotEngine.processQuery("who are you?", defaultContext);
+    expect(res.text).toContain("AI Assistant");
+    expect(res.text).toContain("Quick Snapshot");
+  });
+
+  test("certificates with snake_case is_active: false are excluded", () => {
+    localStorage.setItem(
+      "maharab_cached_certificates",
+      JSON.stringify([
+        {
+          title: "Database Hidden Certificate",
+          issuer: "Cloud Org",
+          year: "2026",
+          type: "Professional",
+          is_active: false,
+        },
+      ])
+    );
+
+    const res = PortfolioChatbotEngine.processQuery("Show certifications", defaultContext);
+    expect(res.text).not.toContain("Database Hidden Certificate");
+
+    localStorage.removeItem("maharab_cached_certificates");
+  });
 });
 
