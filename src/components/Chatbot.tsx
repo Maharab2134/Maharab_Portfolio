@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaTimes,
@@ -24,7 +24,7 @@ import {
 import { ActiveContext } from "../lib/chatbotKnowledge";
 import { Project, getAllProjectsSync, toProxyImageUrl } from "../data/projectsData";
 import { PORTFOLIO_INFO } from "../data/portfolioData";
-import { useLiveProfile, useLiveChatbotQA } from "../lib/portfolioService";
+import { useLiveProfile, useLiveChatbotQA, calculateWorkStatus } from "../lib/portfolioService";
 
 interface ChatbotProps {
   activeView: "home" | "hire" | "journey" | "project" | "admin" | "case-studies";
@@ -55,6 +55,10 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+
+  const workStatus = useMemo(() => {
+    return calculateWorkStatus((profile as any).workingHours);
+  }, [profile]);
 
   const context: ActiveContext = {
     view: activeView,
@@ -409,12 +413,31 @@ export const Chatbot: React.FC<ChatbotProps> = ({
               className="w-full h-full object-contain rounded-full"
             />
 
-            {/* Red / Coral Notification Dot */}
+            {/* Live Status / Notification Dot */}
             <span
-              className={`absolute top-0 right-0 w-3.5 h-3.5 bg-rose-500 border-2 border-slate-950 rounded-full shadow-sm ${
-                hasUnread ? "animate-bounce" : ""
-              }`}
-            />
+              className="absolute top-0 right-0 flex items-center justify-center w-3.5 h-3.5"
+              title={
+                hasUnread
+                  ? "New response from Assistant"
+                  : workStatus.isOnline
+                  ? "Active & Online"
+                  : "Currently Away"
+              }
+            >
+              {hasUnread ? (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 border-2 border-slate-950 animate-bounce shadow-sm" />
+                </>
+              ) : workStatus.isOnline ? (
+                <>
+                  <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 opacity-60" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border-2 border-slate-950 shadow-[0_0_8px_#34d399]" />
+                </>
+              ) : (
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-400 border-2 border-slate-950 shadow-sm" />
+              )}
+            </span>
           </motion.button>
         </div>
       )}
