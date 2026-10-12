@@ -260,8 +260,14 @@ export function initGoogleTranslateScript() {
     }
   };
 
-  // Inject Google Translate script if not yet loaded
-  if (!document.getElementById("google-translate-script")) {
+  // Inject Google Translate script if not yet loaded or present in DOM
+  const scriptAlreadyExists =
+    document.getElementById("google-translate-script") ||
+    document.querySelector('script[src*="element.js"]') ||
+    document.querySelector('script[src*="translate.google.com"]') ||
+    ((window as any).google && (window as any).google.translate);
+
+  if (!scriptAlreadyExists) {
     const script = document.createElement("script");
     script.id = "google-translate-script";
     script.type = "text/javascript";
