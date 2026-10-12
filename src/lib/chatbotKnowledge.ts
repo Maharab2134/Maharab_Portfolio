@@ -125,9 +125,9 @@ export const getDynamicPortfolioSnapshot = (context: ActiveContext): DynamicPort
   const allExp = getCachedExperienceSync().filter((item) => item.isActive !== false);
   const experienceConfig = getLiveExperienceConfig();
   const allEdu = getCachedEducationSync().filter((item) => item.isActive !== false);
-  const allCerts = getCachedCertificatesSync();
+  const allCerts = getCachedCertificatesSync().filter((item) => item.isActive !== false);
   const process = getLiveProcessSync();
-  const reviews = getCachedReviewsSync();
+  const reviews = getCachedReviewsSync().filter((item: any) => item.isActive !== false);
   const chatbotQA = getCachedChatbotQASync();
 
   return {

@@ -191,7 +191,37 @@ describe("PortfolioChatbotEngine - Quick Actions & Section Intents", () => {
   test("'Show certifications' returns verified credentials and scroll to certificates", () => {
     const res = PortfolioChatbotEngine.processQuery("Show certifications", defaultContext);
     expect(res.text).toContain("certifications");
+    expect(res.text).not.toContain("—");
+    expect(res.text).toContain("-");
     expect(res.actions?.some((a) => a.target === "certificates" && a.type === "scroll")).toBe(true);
+  });
+
+  test("hidden/inactive certificates (isActive: false) are not included in chatbot answers", () => {
+    localStorage.setItem(
+      "maharab_cached_certificates",
+      JSON.stringify([
+        {
+          title: "Hidden Secret Certificate",
+          issuer: "Secret Org",
+          year: "2026",
+          type: "Professional",
+          isActive: false,
+        },
+        {
+          title: "Active Public Certificate",
+          issuer: "Public Org",
+          year: "2026",
+          type: "Professional",
+          isActive: true,
+        },
+      ])
+    );
+
+    const res = PortfolioChatbotEngine.processQuery("Show certifications", defaultContext);
+    expect(res.text).not.toContain("Hidden Secret Certificate");
+    expect(res.text).toContain("Active Public Certificate");
+
+    localStorage.removeItem("maharab_cached_certificates");
   });
 
   test("'What projects are available?' returns general projects overview with scroll to projects", () => {

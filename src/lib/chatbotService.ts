@@ -812,17 +812,36 @@ export class PortfolioChatbotEngine {
       !hasProjectNameInQuery;
 
     if (isCertificationsQuery) {
+      const activeCerts = certificates.filter((c) => c.isActive !== false);
+
+      if (activeCerts.length === 0) {
+        return {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: `Maharab's verified certifications and credentials are currently being updated! You can explore his skills and projects in the meantime.`,
+          timestamp: new Date().toISOString(),
+          actions: [
+            { label: "⚡ View Skills", type: "scroll", target: "skills", primary: true },
+            { label: "🚀 View Projects", type: "scroll", target: "projects" },
+          ],
+        };
+      }
+
       let text = `Here are Maharab's verified certifications and credentials:\n\n`;
-      text += certificates
+      text += activeCerts
         .slice(0, 4)
-        .map((c) => `- 🏆 **${c.title}** — ${c.issuer} (${c.year}) • ${c.type}`)
+        .map((c) => {
+          const cleanTitle = c.title.replace(/\s*—\s*/g, " - ");
+          return `- 🏆 **${cleanTitle}** - ${c.issuer} (${c.year}) • ${c.type}`;
+        })
         .join("\n");
 
       const actions: ChatAction[] = [
         { label: "🏆 View Certificates Section", type: "scroll", target: "certificates", primary: true },
       ];
-      if (certificates[0]?.link) {
-        actions.push({ label: `Verify: ${certificates[0].title}`, type: "url", target: certificates[0].link });
+      if (activeCerts[0]?.link) {
+        const cleanFirstTitle = activeCerts[0].title.replace(/\s*—\s*/g, " - ");
+        actions.push({ label: `Verify: ${cleanFirstTitle}`, type: "url", target: activeCerts[0].link });
       }
 
       return {
@@ -877,7 +896,7 @@ export class PortfolioChatbotEngine {
         text += `**Recent Feedback:**\n`;
         text += reviews
           .slice(0, 3)
-          .map((r) => `> "${r.message}"\n> — **${r.name}** (Rating: ${"★".repeat(r.rating || 5)})`)
+          .map((r) => `> "${r.message}"\n> - **${r.name}** (Rating: ${"★".repeat(r.rating || 5)})`)
           .join("\n\n");
       }
 
@@ -924,7 +943,7 @@ export class PortfolioChatbotEngine {
     if (isGeneralProjectsOverview) {
       let text = `Maharab has built **${projects.length} verified projects** spanning mobile apps, full-stack web platforms, machine learning, and IoT hardware.\n\nHere are some featured highlights:\n\n`;
       projects.slice(0, 4).forEach((proj) => {
-        text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+        text += `- **${proj.title}** (${proj.categoryLabel}) - ${proj.technologies.slice(0, 3).join(", ")}\n`;
       });
       text += `\nYou can explore the project cards below or visit the Projects section!`;
 
@@ -975,7 +994,7 @@ export class PortfolioChatbotEngine {
         let text = `I found **${aiMlProjects.length} projects** in **AI & Machine Learning**:\n\n`;
         text += `Are you looking for one of these? *(Apni ki egulor moddhe konta khujchen naki onno kichu?)*\n\n`;
         aiMlProjects.slice(0, 6).forEach((proj) => {
-          text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+          text += `- **${proj.title}** (${proj.categoryLabel}) - ${proj.technologies.slice(0, 3).join(", ")}\n`;
         });
         text += `\nClick any project card below to see full details or live demo!`;
 
@@ -1002,7 +1021,7 @@ export class PortfolioChatbotEngine {
         let text = `I found **${iotProjects.length} projects** in **IoT & Hardware**:\n\n`;
         text += `Are you looking for one of these? *(Apni ki egulor moddhe konta khujchen naki onno kichu?)*\n\n`;
         iotProjects.slice(0, 6).forEach((proj) => {
-          text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+          text += `- **${proj.title}** (${proj.categoryLabel}) - ${proj.technologies.slice(0, 3).join(", ")}\n`;
         });
         text += `\nClick any project card below to see full details or live demo!`;
 
@@ -1034,7 +1053,7 @@ export class PortfolioChatbotEngine {
         let text = `I found **${mobileProjects.length} projects** in **Mobile App Development**:\n\n`;
         text += `Are you looking for one of these? *(Apni ki egulor moddhe konta khujchen naki onno kichu?)*\n\n`;
         mobileProjects.slice(0, 6).forEach((proj) => {
-          text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+          text += `- **${proj.title}** (${proj.categoryLabel}) - ${proj.technologies.slice(0, 3).join(", ")}\n`;
         });
         text += `\nClick any project card below to see full details or live demo!`;
 
@@ -1112,7 +1131,7 @@ export class PortfolioChatbotEngine {
       let text = `I found **${dynamicMatches.length} projects** related to your query:\n\n`;
       text += `Are you looking for one of these? *(Apni ki egulor moddhe konta khujchen naki onno kichu?)*\n\n`;
       matchedProjects.forEach((proj) => {
-        text += `- **${proj.title}** (${proj.categoryLabel}) — ${proj.technologies.slice(0, 3).join(", ")}\n`;
+        text += `- **${proj.title}** (${proj.categoryLabel}) - ${proj.technologies.slice(0, 3).join(", ")}\n`;
       });
       text += `\nClick any project card below to see full details or live demo!`;
 
@@ -1162,7 +1181,7 @@ export class PortfolioChatbotEngine {
           const others = proj.technologies.filter((t) => !matched.includes(t));
           const prioritizedTechs = [...matched, ...others].slice(0, 3).join(", ");
 
-          text += `- **${proj.title}** (${proj.categoryLabel}) — ${prioritizedTechs}\n`;
+          text += `- **${proj.title}** (${proj.categoryLabel}) - ${prioritizedTechs}\n`;
         });
         text += `\nClick any project card below to see full details or live demo!`;
 
