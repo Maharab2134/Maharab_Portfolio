@@ -160,6 +160,7 @@ const syncCertificates = async () => {
       .select("*")
       .order("order_index", { ascending: true });
 
+    if (!error && Array.isArray(data) && data.length > 0) {
       const rawCached = localStorage.getItem(STORAGE_CERTIFICATES_KEY);
       const parsedCached = rawCached ? JSON.parse(rawCached) : [];
       const mapped: CertificateItem[] = data.map((c: any) => {
