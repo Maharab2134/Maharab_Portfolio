@@ -7,7 +7,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://dev-maharab.netlify.app/</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -15,7 +15,7 @@
   <!-- Hire Page -->
   <url>
     <loc>https://dev-maharab.netlify.app/hire</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -23,7 +23,7 @@
   <!-- Journey Page -->
   <url>
     <loc>https://dev-maharab.netlify.app/journey</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -31,7 +31,7 @@
   <!-- About Section -->
   <url>
     <loc>https://dev-maharab.netlify.app/#about</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -39,7 +39,7 @@
   <!-- Skills Section -->
   <url>
     <loc>https://dev-maharab.netlify.app/#skills</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -47,7 +47,7 @@
   <!-- Projects Section -->
   <url>
     <loc>https://dev-maharab.netlify.app/#projects</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -55,7 +55,7 @@
   <!-- Experience Section -->
   <url>
     <loc>https://dev-maharab.netlify.app/#experience</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -63,7 +63,7 @@
   <!-- Education Section -->
   <url>
     <loc>https://dev-maharab.netlify.app/#education</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -71,7 +71,7 @@
   <!-- Certificates Section -->
   <url>
     <loc>https://dev-maharab.netlify.app/#certificates</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -79,7 +79,7 @@
   <!-- Contact Section -->
   <url>
     <loc>https://dev-maharab.netlify.app/#contact</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -87,7 +87,15 @@
   <!-- Project: Amin WebTech -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=amin-webtech</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Amin WebTech -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=f4ec8d8d-1223-480c-902a-049f0197bcff</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -95,15 +103,39 @@
   <!-- Project: AuthNova Security Suite -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=authnova</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: AuthNova Security Suite -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=247393e7-3c07-42c2-9959-6bd11992f40a</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project: BachLife Finance Tracker -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=bachlife</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Project: BachLife Finance Tracker -->
   <url>
-    <loc>https://dev-maharab.netlify.app/?project=bachlife</loc>
-    <lastmod>2026-09-20</lastmod>
+    <loc>https://dev-maharab.netlify.app/?project=b5dcbb4b-d109-4cb4-9630-c7d7a0ee50bf</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project: CareerPath AI - Smart Career Recommendation & Guidance System -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=ddec2125-7ac8-416a-9fae-6f7f93c8f2f0</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -111,7 +143,39 @@
   <!-- Project: Deep Image Classifier -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=image-classification</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Deep Image Classifier -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=d22510ea-d725-4295-82b0-2499874bb55f</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project: Dhaka Tesla Pool -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=6a7ab649-c357-41fc-a2f1-01cd637bf670</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Evaluating Machine Learning Models for Heart Disease Classification Using a Hybrid Ensemble Framework -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=55453860-989e-4f37-a9c4-5f3b220508e4</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Flutter Live Location Tracking Mega Attendance App -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=ec2abb27-4844-49f8-b52c-e3abb1c0ae6d</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -119,7 +183,15 @@
   <!-- Project: Food Express Mobile App -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=food-delivery-app</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Food Express Mobile App -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=eb7aa2e0-acea-427f-be54-019167b49e38</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -127,7 +199,23 @@
   <!-- Project: FoodShare Community Web -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=foodshare-web</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: FoodShare Community Web -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=d89757c5-714e-4a4b-80e1-eee706d1cc39</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Islamic Life Assistant  Flutter Application -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=690bf8f8-0eda-4852-8b06-77b3e6d86861</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -135,23 +223,47 @@
   <!-- Project: Midtown Aabashon Ltd -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=midtown-aabashon</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Midtown Aabashon Ltd -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=cb9f7520-2c11-46eb-83ce-f3d0d3827869</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project: NetBagZ E-commerce Mobile App -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=netbagz</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Project: NetBagZ E-commerce Mobile App -->
   <url>
-    <loc>https://dev-maharab.netlify.app/?project=netbagz</loc>
-    <lastmod>2026-09-20</lastmod>
+    <loc>https://dev-maharab.netlify.app/?project=ed2c7244-e9f3-451d-929f-62ec9ca8d7bd</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project: NLP Sentiment Analyzer -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=sentiment-analyzer</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Project: NLP Sentiment Analyzer -->
   <url>
-    <loc>https://dev-maharab.netlify.app/?project=sentiment-analyzer</loc>
-    <lastmod>2026-09-20</lastmod>
+    <loc>https://dev-maharab.netlify.app/?project=4e0a2a67-015a-4747-a4a7-d3a24c0c70fc</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -159,7 +271,15 @@
   <!-- Project: PathPilot Career Platform -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=pathpilot</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: PathPilot Career Platform -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=29189fc8-ad13-42b5-b431-cbe5896d52b9</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -167,7 +287,15 @@
   <!-- Project: Predictive Time-Series Forecaster -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=time-series-forecasting</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Predictive Time-Series Forecaster -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=6928123d-929e-4bc4-8793-3c84f6a28a56</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -175,7 +303,15 @@
   <!-- Project: Pulse Social Mobile App -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=social-media-app</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Pulse Social Mobile App -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=fba9012f-695d-421d-bc04-fde0a0855b49</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -183,7 +319,23 @@
   <!-- Project: PurchifyShop -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=purchifyshop</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: PurchifyShop -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=8f46a5dc-4f92-4e68-9111-695b5a5b86a5</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project: RailEase BD - বাংলাদেশ রেলওয়ে ট্রাভেল প্ল্যাটফর্ম রিডিজাইন (স্বতন্ত্র প্রকল্প) -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=c1e33996-f890-4b52-83c2-02ac66333311</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -191,23 +343,47 @@
   <!-- Project: Saytica - Web Platform & Admin Dashboard -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=saytica</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Saytica - Web Platform & Admin Dashboard -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=05dc3db0-9840-409e-9bf9-acf9e429d0ec</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project: Smart Agriculture Monitoring -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=agricultural-monitoring</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Project: Smart Agriculture Monitoring -->
   <url>
-    <loc>https://dev-maharab.netlify.app/?project=agricultural-monitoring</loc>
-    <lastmod>2026-09-20</lastmod>
+    <loc>https://dev-maharab.netlify.app/?project=087ac322-7cb5-4460-9b57-38f58b5bacf4</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project: Smart Home Automation Hub -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=smart-home-iot</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Project: Smart Home Automation Hub -->
   <url>
-    <loc>https://dev-maharab.netlify.app/?project=smart-home-iot</loc>
-    <lastmod>2026-09-20</lastmod>
+    <loc>https://dev-maharab.netlify.app/?project=0b1a17ed-467f-473d-9fe2-8bcdf633acfa</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -215,15 +391,39 @@
   <!-- Project: Student Projects Platform -->
   <url>
     <loc>https://dev-maharab.netlify.app/?project=student-projects-platform</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: Student Projects Platform -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=d5da16b7-515f-4dd6-b303-f9b35e0a0e05</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Project: TaskFlow - Task & Project Management SaaS -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=e65dea92-62c5-4fd3-8e92-4bc29f373f0f</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project: TripFly BD -->
+  <url>
+    <loc>https://dev-maharab.netlify.app/?project=tripfly-bd</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Project: TripFly BD -->
   <url>
-    <loc>https://dev-maharab.netlify.app/?project=tripfly-bd</loc>
-    <lastmod>2026-09-20</lastmod>
+    <loc>https://dev-maharab.netlify.app/?project=3fec1970-ad27-469d-86ae-7cc399b9f7ee</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
